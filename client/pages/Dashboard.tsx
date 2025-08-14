@@ -55,8 +55,13 @@ export default function Dashboard() {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            <Link to="/teams">
+              <Button variant="ghost" size="icon" title="Back to Teams">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
             <h1 className="text-xl font-semibold">Team Dashboard</h1>
-            <Badge variant="secondary">{user?.teamName || 'My Team'}</Badge>
+            <Badge variant="secondary">{user?.currentTeam?.name || user?.teamName || 'My Team'}</Badge>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="icon">
