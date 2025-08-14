@@ -28,8 +28,8 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/chat" element={<Placeholder title="Team Chat" description="Real-time messaging and AI assistant" feature="chat" />} />
-          <Route path="/tasks" element={<Placeholder title="Task Management" description="Create, assign, and track team tasks" feature="task management" />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/tasks" element={<Tasks />} />
           <Route path="/resources" element={<Placeholder title="Resource Hub" description="File storage and link organization" feature="resource management" />} />
           <Route path="/calendar" element={<Placeholder title="Team Calendar" description="Schedule and deadline tracking" feature="calendar" />} />
           <Route path="/reports" element={<Placeholder title="Progress Reports" description="AI-generated team analytics" feature="reporting" />} />
