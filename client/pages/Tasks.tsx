@@ -202,29 +202,41 @@ export default function Tasks() {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Task Title</Label>
-                  <Input id="title" placeholder="Enter task title" />
+                  <Input
+                    id="title"
+                    placeholder="Enter task title"
+                    value={newTask.title}
+                    onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="Task description..." />
+                  <Textarea
+                    id="description"
+                    placeholder="Task description..."
+                    value={newTask.description}
+                    onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="assignee">Assignee</Label>
-                    <Select>
+                    <Select value={newTask.assignee} onValueChange={(value) => setNewTask({...newTask, assignee: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select member" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="john">John Doe</SelectItem>
-                        <SelectItem value="alice">Alice Smith</SelectItem>
-                        <SelectItem value="bob">Bob Johnson</SelectItem>
+                        {currentTeam.members?.map((member: any) => (
+                          <SelectItem key={member.email} value={member.email}>
+                            {member.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="priority">Priority</Label>
-                    <Select>
+                    <Select value={newTask.priority} onValueChange={(value) => setNewTask({...newTask, priority: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select priority" />
                       </SelectTrigger>
@@ -238,9 +250,21 @@ export default function Tasks() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dueDate">Due Date</Label>
-                  <Input id="dueDate" type="date" />
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={newTask.dueDate}
+                    onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                  />
                 </div>
-                <Button className="w-full" onClick={() => setIsCreateOpen(false)}>
+                {user.email === currentTeam.createdBy && (
+                  <div className="bg-primary/10 p-3 rounded-lg">
+                    <p className="text-sm text-primary">
+                      <strong>Team Leader:</strong> You can assign tasks to any team member.
+                    </p>
+                  </div>
+                )}
+                <Button className="w-full" onClick={handleCreateTask}>
                   Create Task
                 </Button>
               </div>
