@@ -217,47 +217,54 @@ export default function Teams() {
           {/* Teams List */}
           {userTeams.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userTeams.map((team) => (
-                <Card key={team.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{team.name}</CardTitle>
-                      <Badge variant="secondary">{team.role}</Badge>
-                    </div>
-                    <CardDescription>
-                      {team.members} members • Last active {team.lastActivity}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span>Project Progress</span>
-                          <span>{team.progress}%</span>
-                        </div>
-                        <Progress value={team.progress} className="h-2" />
+              {userTeams.map((team) => {
+                const progress = calculateTeamProgress(team);
+                const totalTasks = team.tasks ? team.tasks.length : 0;
+                const completedTasks = team.tasks ? team.tasks.filter((t: any) => t.status === 'completed').length : 0;
+                const pendingTasks = totalTasks - completedTasks;
+
+                return (
+                  <Card key={team.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{team.name}</CardTitle>
+                        <Badge variant="secondary">{team.role}</Badge>
                       </div>
-                      
-                      <div className="flex justify-between items-center text-sm">
-                        <div className="flex items-center space-x-4">
-                          <span className="flex items-center">
-                            <MessageSquare className="w-4 h-4 mr-1" />
-                            {team.unreadMessages} new
-                          </span>
-                          <span className="flex items-center">
-                            <CheckSquare className="w-4 h-4 mr-1" />
-                            {team.upcomingTasks} tasks
-                          </span>
+                      <CardDescription>
+                        {team.description || 'No description'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div>
+                          <div className="flex justify-between text-sm mb-2">
+                            <span>Project Progress</span>
+                            <span>{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
                         </div>
+
+                        <div className="flex justify-between items-center text-sm">
+                          <div className="flex items-center space-x-4">
+                            <span className="flex items-center">
+                              <CheckSquare className="w-4 h-4 mr-1" />
+                              {completedTasks}/{totalTasks} done
+                            </span>
+                            <span className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {pendingTasks} pending
+                            </span>
+                          </div>
+                        </div>
+
+                        <Link to={`/dashboard?team=${team.id}`}>
+                          <Button className="w-full">Open Team</Button>
+                        </Link>
                       </div>
-                      
-                      <Link to="/dashboard">
-                        <Button className="w-full">Open Team</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <Card className="text-center py-12">
