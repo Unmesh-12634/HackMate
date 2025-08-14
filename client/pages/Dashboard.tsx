@@ -183,10 +183,10 @@ export default function Dashboard() {
           <Card className="lg:col-span-3">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Recent Tasks</CardTitle>
-                <CardDescription>Your assigned tasks and updates</CardDescription>
+                <CardTitle>Your Tasks</CardTitle>
+                <CardDescription>Tasks assigned to you</CardDescription>
               </div>
-              <Link to="/tasks">
+              <Link to={`/tasks?team=${currentTeam.id}`}>
                 <Button size="sm">
                   <Plus className="w-4 h-4 mr-2" />
                   View All Tasks
@@ -194,38 +194,43 @@ export default function Dashboard() {
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CheckSquare className="w-4 h-4 text-green-600" />
-                    <div>
-                      <div className="font-medium">API Integration</div>
-                      <div className="text-sm text-muted-foreground">Due in 2 hours</div>
+              {userTasks.length > 0 ? (
+                <div className="space-y-3">
+                  {userTasks.map((task: any) => (
+                    <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <CheckSquare className={`w-4 h-4 ${
+                          task.status === 'completed' ? 'text-green-600' :
+                          task.status === 'in_progress' ? 'text-yellow-600' : 'text-muted-foreground'
+                        }`} />
+                        <div>
+                          <div className="font-medium">{task.title}</div>
+                          <div className="text-sm text-muted-foreground">
+                            Due {new Date(task.dueDate).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={
+                        task.priority === 'high' ? 'destructive' :
+                        task.priority === 'medium' ? 'default' : 'secondary'
+                      }>
+                        {task.priority}
+                      </Badge>
                     </div>
-                  </div>
-                  <Badge variant="secondary">High</Badge>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CheckSquare className="w-4 h-4 text-yellow-600" />
-                    <div>
-                      <div className="font-medium">UI Design Review</div>
-                      <div className="text-sm text-muted-foreground">Due tomorrow</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline">Medium</Badge>
+              ) : (
+                <div className="text-center py-6">
+                  <CheckSquare className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-muted-foreground">No tasks assigned to you</p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.email === currentTeam.createdBy
+                      ? "Create tasks for your team!"
+                      : "Your team leader will assign tasks to you."
+                    }
+                  </p>
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <CheckSquare className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">Database Schema</div>
-                      <div className="text-sm text-muted-foreground">Due in 3 days</div>
-                    </div>
-                  </div>
-                  <Badge variant="outline">Low</Badge>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
