@@ -27,6 +27,12 @@ import {
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [newMember, setNewMember] = useState({
+    email: '',
+    name: '',
+    role: 'Team Member'
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
