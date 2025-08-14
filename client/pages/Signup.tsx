@@ -107,23 +107,8 @@ export default function Signup() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="teamName">Team Name</Label>
-                <Input
-                  id="teamName"
-                  placeholder="Awesome Team"
-                  value={formData.teamName}
-                  onChange={(e) => handleInputChange('teamName', e.target.value)}
-                  required
-                />
-              </div>
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Note:</strong> As the team creator, you'll automatically become the Team Leader. You can assign roles to members as they join your team.
-                </p>
-              </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating Team...' : 'Create Team & Sign Up'}
+                {isLoading ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </form>
             <div className="text-center">
