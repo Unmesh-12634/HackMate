@@ -19,48 +19,36 @@ import {
   UserPlus
 } from 'lucide-react';
 
-// Mock data for existing teams
-const mockTeams = [
-  {
-    id: 1,
-    name: "Awesome Team",
-    role: "Team Leader",
-    members: 5,
-    progress: 68,
-    lastActivity: "2 hours ago",
-    unreadMessages: 3,
-    upcomingTasks: 2
-  }
-];
+// Helper function to calculate team progress
+const calculateTeamProgress = (team: any) => {
+  if (!team.tasks || team.tasks.length === 0) return 0;
+  const completedTasks = team.tasks.filter((task: any) => task.status === 'completed').length;
+  return Math.round((completedTasks / team.tasks.length) * 100);
+};
 
-// Mock data for recent activity
-const recentChats = [
-  {
-    id: 1,
-    teamName: "Awesome Team",
-    lastMessage: "Great progress on the API integration!",
-    sender: "Alice Smith",
-    time: "2 min ago",
-    unread: 2
-  }
-];
+// Helper function to get upcoming tasks
+const getUpcomingTasks = (teams: any[]) => {
+  const allTasks: any[] = [];
+  teams.forEach(team => {
+    if (team.tasks) {
+      team.tasks.forEach((task: any) => {
+        if (task.status !== 'completed') {
+          allTasks.push({
+            ...task,
+            teamName: team.name
+          });
+        }
+      });
+    }
+  });
+  return allTasks.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).slice(0, 3);
+};
 
-const upcomingTasks = [
-  {
-    id: 1,
-    title: "API Integration",
-    teamName: "Awesome Team",
-    dueDate: "Today, 6:00 PM",
-    priority: "high"
-  },
-  {
-    id: 2,
-    title: "UI Design Review",
-    teamName: "Awesome Team", 
-    dueDate: "Tomorrow, 10:00 AM",
-    priority: "medium"
-  }
-];
+// Helper function to get recent activity (placeholder for real chat data)
+const getRecentActivity = (teams: any[]) => {
+  // In a real app, this would come from chat/activity API
+  return [];
+};
 
 export default function Teams() {
   const [user, setUser] = useState<any>(null);
