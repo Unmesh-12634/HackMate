@@ -22,7 +22,7 @@ export default function Signup() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.teamName) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       return;
     }
 
@@ -30,14 +30,13 @@ export default function Signup() {
 
     // Simulate account creation - in a real app, this would call your auth API
     setTimeout(() => {
-      // Store user data with automatic team leader role
+      // Store user data without team assignment initially
       localStorage.setItem('user', JSON.stringify({
         email: formData.email,
         name: `${formData.firstName} ${formData.lastName}`,
-        role: 'Team Leader', // Automatically assigned as team leader
-        teamName: formData.teamName
+        teams: [] // User starts with no teams
       }));
-      navigate('/dashboard');
+      navigate('/teams');
       setIsLoading(false);
     }, 1000);
   };
