@@ -186,12 +186,14 @@ export default function Tasks() {
             <Badge variant="outline">{totalTasks} Total Tasks</Badge>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                New Task
-              </Button>
-            </DialogTrigger>
+            {user.email === currentTeam.createdBy && (
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Task
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Create New Task</DialogTitle>
