@@ -24,7 +24,8 @@ import {
   LogOut,
   ArrowLeft,
   UserPlus,
-  Mail
+  Mail,
+  User
 } from 'lucide-react';
 
 export default function Dashboard() {
