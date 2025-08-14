@@ -339,10 +339,72 @@ export default function Dashboard() {
                   </div>
                 )}
                 {user.email === currentTeam.createdBy && (
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Member
-                  </Button>
+                  <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Member
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Add Team Member</DialogTitle>
+                        <DialogDescription>
+                          Invite a new member to join your team
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="memberEmail">Email Address</Label>
+                          <Input
+                            id="memberEmail"
+                            type="email"
+                            placeholder="member@example.com"
+                            value={newMember.email}
+                            onChange={(e) => setNewMember({...newMember, email: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="memberName">Full Name</Label>
+                          <Input
+                            id="memberName"
+                            placeholder="John Doe"
+                            value={newMember.name}
+                            onChange={(e) => setNewMember({...newMember, name: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="memberRole">Role</Label>
+                          <Select value={newMember.role} onValueChange={(value) => setNewMember({...newMember, role: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Developer">Developer</SelectItem>
+                              <SelectItem value="Designer">Designer</SelectItem>
+                              <SelectItem value="Team Member">Team Member</SelectItem>
+                              <SelectItem value="Researcher">Researcher</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <div className="flex items-start space-x-2">
+                            <Mail className="w-4 h-4 text-primary mt-0.5" />
+                            <div>
+                              <p className="text-sm font-medium text-primary">Invitation</p>
+                              <p className="text-sm text-muted-foreground">
+                                In a real app, this would send an email invitation to the member.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <Button className="w-full" onClick={handleAddMember}>
+                          <UserPlus className="w-4 h-4 mr-2" />
+                          Add Member
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 )}
               </div>
             </CardContent>
