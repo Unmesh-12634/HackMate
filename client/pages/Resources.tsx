@@ -57,8 +57,117 @@ const getLinkIcon = (type: string) => {
 };
 
 export default function Resources() {
+  const [user, setUser] = useState<any>(null);
+  const [currentTeam, setCurrentTeam] = useState<any>(null);
+  const [resources, setResources] = useState({ files: [], links: [] });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isLinkOpen, setIsLinkOpen] = useState(false);
+  const [newFile, setNewFile] = useState({
+    name: '',
+    type: 'pdf',
+    size: ''
+  });
+  const [newLink, setNewLink] = useState({
+    name: '',
+    url: '',
+    type: 'web'
+  });
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const teamId = searchParams.get('team');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+
+      // Find current team
+      const team = parsedUser.teams?.find((t: any) => t.id.toString() === teamId) || parsedUser.teams?.[0];
+      if (team) {
+        setCurrentTeam(team);
+        setResources(team.resources || { files: [], links: [] });
+      } else {
+        navigate('/teams');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [teamId, navigate]);
+
+  const handleUploadFile = () => {
+    if (!newFile.name || !newFile.size) return;
+
+    const fileData = {
+      id: Date.now(),
+      name: newFile.name,
+      type: newFile.type,
+      size: newFile.size,
+      uploadedBy: user.name,
+      date: new Date().toISOString(),
+      pinned: false
+    };
+
+    const updatedResources = {
+      ...resources,
+      files: [...resources.files, fileData]
+    };
+
+    setResources(updatedResources);
+    const updatedUser = updateTeamResources(user, currentTeam.id.toString(), updatedResources);
+    setUser(updatedUser);
+
+    setNewFile({ name: '', type: 'pdf', size: '' });
+    setIsUploadOpen(false);
+  };
+
+  const handleAddLink = () => {
+    if (!newLink.name || !newLink.url) return;
+
+    const linkData = {
+      id: Date.now(),
+      name: newLink.name,
+      url: newLink.url,
+      type: newLink.type,
+      addedBy: user.name,
+      date: new Date().toISOString(),
+      pinned: false
+    };
+
+    const updatedResources = {
+      ...resources,
+      links: [...resources.links, linkData]
+    };
+
+    setResources(updatedResources);
+    const updatedUser = updateTeamResources(user, currentTeam.id.toString(), updatedResources);
+    setUser(updatedUser);
+
+    setNewLink({ name: '', url: '', type: 'web' });
+    setIsLinkOpen(false);
+  };
+
+  const togglePin = (type: 'files' | 'links', id: number) => {
+    const updatedResources = {
+      ...resources,
+      [type]: resources[type].map((item: any) =>
+        item.id === id ? { ...item, pinned: !item.pinned } : item
+      )
+    };
+
+    setResources(updatedResources);
+    const updatedUser = updateTeamResources(user, currentTeam.id.toString(), updatedResources);
+    setUser(updatedUser);
+  };
+
+  if (!user || !currentTeam) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
