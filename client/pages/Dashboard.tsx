@@ -268,46 +268,46 @@ export default function Dashboard() {
 
         {/* Quick Access */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link to="/chat">
+          <Link to={`/chat?team=${currentTeam.id}`}>
             <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-3">
                 <MessageSquare className="w-8 h-8 text-primary" />
                 <div>
                   <div className="font-medium">Team Chat</div>
-                  <div className="text-sm text-muted-foreground">5 new messages</div>
+                  <div className="text-sm text-muted-foreground">Start chatting</div>
                 </div>
               </div>
             </Card>
           </Link>
-          <Link to="/resources">
+          <Link to={`/resources?team=${currentTeam.id}`}>
             <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-3">
                 <FileText className="w-8 h-8 text-primary" />
                 <div>
                   <div className="font-medium">Resources</div>
-                  <div className="text-sm text-muted-foreground">12 files shared</div>
+                  <div className="text-sm text-muted-foreground">Files & links</div>
                 </div>
               </div>
             </Card>
           </Link>
-          <Link to="/calendar">
+          <Link to={`/calendar?team=${currentTeam.id}`}>
             <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-3">
                 <Calendar className="w-8 h-8 text-primary" />
                 <div>
                   <div className="font-medium">Schedule</div>
-                  <div className="text-sm text-muted-foreground">3 upcoming</div>
+                  <div className="text-sm text-muted-foreground">Team calendar</div>
                 </div>
               </div>
             </Card>
           </Link>
-          <Link to="/chat">
+          <Link to={`/chat?team=${currentTeam.id}`}>
             <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-center space-x-3">
                 <Users className="w-8 h-8 text-primary" />
                 <div>
                   <div className="font-medium">AI Assistant</div>
-                  <div className="text-sm text-muted-foreground">Ask anything</div>
+                  <div className="text-sm text-muted-foreground">Get help</div>
                 </div>
               </div>
             </Card>
