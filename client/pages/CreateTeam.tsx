@@ -37,7 +37,7 @@ export default function CreateTeam() {
       if (userData) {
         const user = JSON.parse(userData);
         
-        // Create new team
+        // Create new team with proper structure
         const newTeam = {
           id: Date.now(),
           name: formData.teamName,
@@ -45,12 +45,19 @@ export default function CreateTeam() {
           category: formData.category,
           targetSize: parseInt(formData.size),
           role: 'Team Leader',
-          members: 1,
-          progress: 0,
-          lastActivity: 'Just now',
-          unreadMessages: 0,
-          upcomingTasks: 0,
-          createdAt: new Date().toISOString()
+          members: [
+            {
+              id: user.email,
+              name: user.name,
+              email: user.email,
+              role: 'Team Leader',
+              joinedAt: new Date().toISOString()
+            }
+          ],
+          tasks: [], // Start with empty tasks array
+          projects: [], // Start with empty projects array
+          createdAt: new Date().toISOString(),
+          createdBy: user.email
         };
         
         // Update user with new team
