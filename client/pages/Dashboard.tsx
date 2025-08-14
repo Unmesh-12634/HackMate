@@ -182,11 +182,11 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="text-sm font-medium">John Doe</div>
-                    <div className="text-xs text-muted-foreground">Team Leader</div>
+                    <div className="text-sm font-medium">{user?.name || 'User'}</div>
+                    <div className="text-xs text-muted-foreground">{user?.role || 'Team Member'}</div>
                   </div>
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 </div>
