@@ -577,6 +577,9 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* AI Chat Box */}
+      <AIChatBox teamName={currentTeam.name} />
     </div>
   );
 }
