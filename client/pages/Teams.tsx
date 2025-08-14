@@ -128,33 +128,32 @@ export default function Teams() {
         {/* Quick Overview */}
         {userTeams.length > 0 && (
           <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            {/* Recent Chats */}
+            {/* Recent Activity */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <MessageSquare className="w-5 h-5 mr-2" />
-                  Recent Chats
+                  Recent Activity
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {recentChats.map((chat) => (
-                    <div key={chat.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium text-sm">{chat.teamName}</span>
-                          {chat.unread > 0 && (
-                            <Badge variant="destructive" className="h-5 text-xs">
-                              {chat.unread}
-                            </Badge>
-                          )}
+                {getRecentActivity(userTeams).length > 0 ? (
+                  <div className="space-y-3">
+                    {getRecentActivity(userTeams).map((activity: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <div className="flex-1">
+                          <p className="text-sm text-muted-foreground">{activity.message}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">{chat.lastMessage}</p>
-                        <p className="text-xs text-muted-foreground">{chat.sender} • {chat.time}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <MessageSquare className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">No recent activity</p>
+                    <p className="text-sm text-muted-foreground">Start chatting with your team!</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -167,25 +166,33 @@ export default function Teams() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {upcomingTasks.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="font-medium text-sm">{task.title}</span>
-                          <Badge variant={task.priority === 'high' ? 'destructive' : 'secondary'} className="h-5 text-xs">
-                            {task.priority}
-                          </Badge>
+                {getUpcomingTasks(userTeams).length > 0 ? (
+                  <div className="space-y-3">
+                    {getUpcomingTasks(userTeams).map((task: any) => (
+                      <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-sm">{task.title}</span>
+                            <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'} className="h-5 text-xs">
+                              {task.priority}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{task.teamName}</p>
+                          <p className="text-xs text-muted-foreground flex items-center">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {new Date(task.dueDate).toLocaleDateString()}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">{task.teamName}</p>
-                        <p className="text-xs text-muted-foreground flex items-center">
-                          <Calendar className="w-3 h-3 mr-1" />
-                          {task.dueDate}
-                        </p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <CheckSquare className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground">No upcoming tasks</p>
+                    <p className="text-sm text-muted-foreground">Create tasks to track progress!</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
