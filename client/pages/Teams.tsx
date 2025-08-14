@@ -60,15 +60,10 @@ export default function Teams() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      
-      // Load user's teams (in real app, this would be an API call)
+
+      // Load user's teams - purely from user data, no mock data
       const teams = parsedUser.teams || [];
-      if (teams.length === 0) {
-        // For demo, if user has no teams, show mock team for team leader demo
-        setUserTeams(mockTeams);
-      } else {
-        setUserTeams(teams);
-      }
+      setUserTeams(teams);
     } else {
       navigate('/login');
     }
