@@ -24,9 +24,9 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify({
         email,
         name: email.split('@')[0],
-        role: 'Team Leader'
+        teams: [] // Start with empty teams array
       }));
-      navigate('/dashboard');
+      navigate('/teams');
       setIsLoading(false);
     }, 1000);
   };
