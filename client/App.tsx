@@ -10,6 +10,8 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Tasks from "./pages/Tasks";
+import Chat from "./pages/Chat";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 
