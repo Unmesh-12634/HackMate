@@ -1,9 +1,10 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Users,
   CheckSquare,
@@ -13,7 +14,8 @@ import {
   Plus,
   Bell,
   Settings,
-  Search
+  Search,
+  LogOut
 } from 'lucide-react';
 
 export default function Dashboard() {
