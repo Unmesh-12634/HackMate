@@ -189,42 +189,50 @@ export default function Dashboard() {
 
         {/* Quick Access */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <MessageSquare className="w-8 h-8 text-primary" />
-              <div>
-                <div className="font-medium">Team Chat</div>
-                <div className="text-sm text-muted-foreground">5 new messages</div>
+          <Link to="/chat">
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <MessageSquare className="w-8 h-8 text-primary" />
+                <div>
+                  <div className="font-medium">Team Chat</div>
+                  <div className="text-sm text-muted-foreground">5 new messages</div>
+                </div>
               </div>
-            </div>
-          </Card>
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <FileText className="w-8 h-8 text-primary" />
-              <div>
-                <div className="font-medium">Resources</div>
-                <div className="text-sm text-muted-foreground">12 files shared</div>
+            </Card>
+          </Link>
+          <Link to="/resources">
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-8 h-8 text-primary" />
+                <div>
+                  <div className="font-medium">Resources</div>
+                  <div className="text-sm text-muted-foreground">12 files shared</div>
+                </div>
               </div>
-            </div>
-          </Card>
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <Calendar className="w-8 h-8 text-primary" />
-              <div>
-                <div className="font-medium">Schedule</div>
-                <div className="text-sm text-muted-foreground">3 upcoming</div>
+            </Card>
+          </Link>
+          <Link to="/calendar">
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <Calendar className="w-8 h-8 text-primary" />
+                <div>
+                  <div className="font-medium">Schedule</div>
+                  <div className="text-sm text-muted-foreground">3 upcoming</div>
+                </div>
               </div>
-            </div>
-          </Card>
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
-            <div className="flex items-center space-x-3">
-              <Users className="w-8 h-8 text-primary" />
-              <div>
-                <div className="font-medium">AI Assistant</div>
-                <div className="text-sm text-muted-foreground">Ask anything</div>
+            </Card>
+          </Link>
+          <Link to="/chat">
+            <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center space-x-3">
+                <Users className="w-8 h-8 text-primary" />
+                <div>
+                  <div className="font-medium">AI Assistant</div>
+                  <div className="text-sm text-muted-foreground">Ask anything</div>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </div>
       </div>
     </div>
