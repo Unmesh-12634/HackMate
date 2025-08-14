@@ -27,6 +27,28 @@ export default function Dashboard() {
     const userData = localStorage.getItem('user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
+
+      // Migrate existing data to ensure proper structure
+      if (parsedUser.teams) {
+        parsedUser.teams = parsedUser.teams.map((team: any) => ({
+          ...team,
+          members: Array.isArray(team.members) ? team.members : [
+            {
+              id: parsedUser.email,
+              name: parsedUser.name,
+              email: parsedUser.email,
+              role: team.role || 'Team Leader',
+              joinedAt: team.createdAt || new Date().toISOString()
+            }
+          ],
+          tasks: Array.isArray(team.tasks) ? team.tasks : [],
+          projects: Array.isArray(team.projects) ? team.projects : []
+        }));
+
+        // Update localStorage with migrated data
+        localStorage.setItem('user', JSON.stringify(parsedUser));
+      }
+
       setUser(parsedUser);
 
       // Get team from URL params or use first team
