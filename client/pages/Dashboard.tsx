@@ -50,7 +50,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-semibold">Team Dashboard</h1>
-            <Badge variant="secondary">Awesome Team</Badge>
+            <Badge variant="secondary">{user?.teamName || 'My Team'}</Badge>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="icon">
@@ -62,8 +62,11 @@ export default function Dashboard() {
             <Button variant="ghost" size="icon">
               <Settings className="w-4 h-4" />
             </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+              <LogOut className="w-4 h-4" />
+            </Button>
             <Avatar className="w-8 h-8">
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>{user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
             </Avatar>
           </div>
         </div>
