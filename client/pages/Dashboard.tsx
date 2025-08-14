@@ -30,12 +30,21 @@ import {
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [newMember, setNewMember] = useState({
     email: '',
     name: '',
     role: 'Team Member'
   });
   const navigate = useNavigate();
+
+  // Mock notifications data
+  const notifications = [
+    { id: 1, message: "New task assigned: API Integration", time: "2 min ago", unread: true },
+    { id: 2, message: "Alice completed UI Design Review", time: "1 hour ago", unread: true },
+    { id: 3, message: "Team deadline approaching in 2 days", time: "3 hours ago", unread: false }
+  ];
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
