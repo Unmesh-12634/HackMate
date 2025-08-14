@@ -14,6 +14,7 @@ import Tasks from "./pages/Tasks";
 import Chat from "./pages/Chat";
 import Resources from "./pages/Resources";
 import Placeholder from "./pages/Placeholder";
+import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
