@@ -15,7 +15,8 @@ import {
   Bell,
   Settings,
   Search,
-  LogOut
+  LogOut,
+  ArrowLeft
 } from 'lucide-react';
 
 export default function Dashboard() {
