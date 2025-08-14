@@ -181,7 +181,8 @@ export default function Resources() {
               </Button>
             </Link>
             <h1 className="text-xl font-semibold">Team Resources</h1>
-            <Badge variant="secondary">
+            <Badge variant="secondary">{currentTeam.name}</Badge>
+            <Badge variant="outline">
               {resources.files.length + resources.links.length} items
             </Badge>
           </div>
