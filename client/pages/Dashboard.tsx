@@ -88,6 +88,42 @@ export default function Dashboard() {
     navigate('/');
   };
 
+  const handleAddMember = () => {
+    if (!newMember.email || !newMember.name) return;
+
+    // Get current team and update members
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamId = urlParams.get('team');
+    const currentTeam = teamId
+      ? user.teams?.find((t: any) => t.id.toString() === teamId)
+      : user.teams?.[0];
+
+    if (!currentTeam) return;
+
+    const newMemberData = {
+      id: newMember.email,
+      name: newMember.name,
+      email: newMember.email,
+      role: newMember.role,
+      joinedAt: new Date().toISOString()
+    };
+
+    // Update team members
+    const updatedTeams = user.teams.map((team: any) =>
+      team.id === currentTeam.id
+        ? { ...team, members: [...team.members, newMemberData] }
+        : team
+    );
+
+    const updatedUser = { ...user, teams: updatedTeams };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+
+    // Reset form
+    setNewMember({ email: '', name: '', role: 'Team Member' });
+    setIsAddMemberOpen(false);
+  };
+
   if (!user) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <p>Loading...</p>
