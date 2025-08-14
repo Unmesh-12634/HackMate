@@ -303,7 +303,7 @@ export default function Tasks() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Tasks</p>
-                  <p className="text-2xl font-bold">20</p>
+                  <p className="text-2xl font-bold">{totalTasks}</p>
                 </div>
                 <Circle className="w-8 h-8 text-muted-foreground" />
               </div>
@@ -314,7 +314,7 @@ export default function Tasks() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">In Progress</p>
-                  <p className="text-2xl font-bold text-yellow-600">5</p>
+                  <p className="text-2xl font-bold text-yellow-600">{inProgressTasks}</p>
                 </div>
                 <PlayCircle className="w-8 h-8 text-yellow-600" />
               </div>
@@ -325,7 +325,7 @@ export default function Tasks() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">12</p>
+                  <p className="text-2xl font-bold text-green-600">{completedTasks}</p>
                 </div>
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
@@ -335,10 +335,10 @@ export default function Tasks() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Overdue</p>
-                  <p className="text-2xl font-bold text-red-600">3</p>
+                  <p className="text-sm text-muted-foreground">Pending</p>
+                  <p className="text-2xl font-bold text-orange-600">{pendingTasks}</p>
                 </div>
-                <Clock className="w-8 h-8 text-red-600" />
+                <Clock className="w-8 h-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
