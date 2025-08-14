@@ -59,7 +59,7 @@ export default function Signup() {
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>
-              Create your account and set up your first team workspace
+              Create your account to join or create hackathon teams
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
