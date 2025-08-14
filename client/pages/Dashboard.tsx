@@ -25,7 +25,13 @@ export default function Dashboard() {
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+
+      // Check if user has a current team, if not redirect to teams page
+      if (!parsedUser.currentTeam && (!parsedUser.teams || parsedUser.teams.length === 0)) {
+        navigate('/teams');
+      }
     } else {
       // Redirect to login if no user data
       navigate('/login');
