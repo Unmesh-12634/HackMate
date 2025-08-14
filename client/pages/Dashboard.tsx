@@ -96,7 +96,7 @@ export default function Dashboard() {
               </Button>
             </Link>
             <h1 className="text-xl font-semibold">Team Dashboard</h1>
-            <Badge variant="secondary">{user?.currentTeam?.name || user?.teamName || 'My Team'}</Badge>
+            <Badge variant="secondary">{currentTeam.name}</Badge>
           </div>
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="icon">
