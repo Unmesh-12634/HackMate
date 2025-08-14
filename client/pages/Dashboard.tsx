@@ -60,6 +60,30 @@ export default function Dashboard() {
     </div>;
   }
 
+  // Get current team
+  const urlParams = new URLSearchParams(window.location.search);
+  const teamId = urlParams.get('team');
+  const currentTeam = teamId
+    ? user.teams?.find((t: any) => t.id.toString() === teamId)
+    : user.teams?.[0];
+
+  if (!currentTeam) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <p>No team found. <Link to="/teams">Go to Teams</Link></p>
+    </div>;
+  }
+
+  // Calculate dynamic data
+  const tasks = currentTeam.tasks || [];
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter((t: any) => t.status === 'completed').length;
+  const inProgressTasks = tasks.filter((t: any) => t.status === 'in_progress').length;
+  const pendingTasks = tasks.filter((t: any) => t.status === 'pending').length;
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // Get user's assigned tasks
+  const userTasks = tasks.filter((t: any) => t.assignee === user.email && t.status !== 'completed').slice(0, 3);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
