@@ -19,6 +19,30 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    } else {
+      // Redirect to login if no user data
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/');
+  };
+
+  if (!user) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <p>Loading...</p>
+    </div>;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
