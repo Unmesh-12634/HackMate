@@ -3,12 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Users, 
-  CheckSquare, 
-  MessageSquare, 
-  Calendar, 
-  FileText, 
+import { Link } from 'react-router-dom';
+import {
+  Users,
+  CheckSquare,
+  MessageSquare,
+  Calendar,
+  FileText,
   Plus,
   Bell,
   Settings,
