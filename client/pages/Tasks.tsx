@@ -55,6 +55,39 @@ const statusIcons = {
 export default function Tasks() {
   const [filter, setFilter] = useState("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [currentTeam, setCurrentTeam] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [newTask, setNewTask] = useState({
+    title: '',
+    description: '',
+    assignee: '',
+    priority: 'medium',
+    dueDate: ''
+  });
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const teamId = searchParams.get('team');
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+
+      // Find current team
+      const team = parsedUser.teams?.find((t: any) => t.id.toString() === teamId) || parsedUser.teams?.[0];
+      if (team) {
+        setCurrentTeam(team);
+        setTasks(team.tasks || []);
+      } else {
+        navigate('/teams');
+      }
+    } else {
+      navigate('/login');
+    }
+  }, [teamId, navigate]);
 
   const filteredTasks = tasks.filter(task => {
     if (filter === "all") return true;
@@ -68,6 +101,74 @@ export default function Tasks() {
       default: return "text-muted-foreground";
     }
   };
+
+  const handleCreateTask = () => {
+    if (!newTask.title || !newTask.description || !newTask.assignee || !newTask.dueDate) {
+      return;
+    }
+
+    const task = {
+      id: Date.now(),
+      title: newTask.title,
+      description: newTask.description,
+      status: 'pending',
+      priority: newTask.priority,
+      assignee: newTask.assignee,
+      dueDate: newTask.dueDate,
+      progress: 0,
+      createdBy: user.email,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedTasks = [...tasks, task];
+    setTasks(updatedTasks);
+
+    // Update user data
+    const updatedUser = updateTeamTasks(user, currentTeam.id.toString(), updatedTasks);
+    setUser(updatedUser);
+
+    // Reset form
+    setNewTask({
+      title: '',
+      description: '',
+      assignee: '',
+      priority: 'medium',
+      dueDate: ''
+    });
+    setIsCreateOpen(false);
+  };
+
+  const handleTaskStatusChange = (taskId: number, newStatus: string) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === taskId
+        ? {
+            ...task,
+            status: newStatus,
+            progress: newStatus === 'completed' ? 100 : newStatus === 'in_progress' ? 50 : 0,
+            completedAt: newStatus === 'completed' ? new Date().toISOString() : undefined
+          }
+        : task
+    );
+
+    setTasks(updatedTasks);
+
+    // Update user data
+    const updatedUser = updateTeamTasks(user, currentTeam.id.toString(), updatedTasks);
+    setUser(updatedUser);
+  };
+
+  if (!user || !currentTeam) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  const totalTasks = tasks.length;
+  const completedTasks = tasks.filter(t => t.status === 'completed').length;
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+  const pendingTasks = tasks.filter(t => t.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-background">
