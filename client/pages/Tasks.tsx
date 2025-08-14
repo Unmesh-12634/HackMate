@@ -346,53 +346,103 @@ export default function Tasks() {
 
         {/* Task List */}
         <div className="space-y-4">
-          {filteredTasks.map((task) => {
-            const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
-            return (
-              <Card key={task.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <StatusIcon className={`w-6 h-6 mt-1 ${getStatusColor(task.status)}`} />
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold text-lg">{task.title}</h3>
-                          <Badge variant={priorityColors[task.priority as keyof typeof priorityColors] as any}>
-                            {task.priority}
-                          </Badge>
-                        </div>
-                        <p className="text-muted-foreground mb-4">{task.description}</p>
-                        
-                        {task.status === "in_progress" && (
-                          <div className="mb-4">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Progress</span>
-                              <span>{task.progress}%</span>
-                            </div>
-                            <Progress value={task.progress} className="h-2" />
-                          </div>
-                        )}
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map((task) => {
+              const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
+              const assignedMember = currentTeam.members?.find((m: any) => m.email === task.assignee);
+              const canChangeStatus = user.email === task.assignee || user.email === currentTeam.createdBy;
 
-                        <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                          <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4" />
-                            <span>{task.assignee}</span>
+              return (
+                <Card key={task.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4 flex-1">
+                        <StatusIcon className={`w-6 h-6 mt-1 ${getStatusColor(task.status)}`} />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h3 className="font-semibold text-lg">{task.title}</h3>
+                            <Badge variant={priorityColors[task.priority as keyof typeof priorityColors] as any}>
+                              {task.priority}
+                            </Badge>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                          <p className="text-muted-foreground mb-4">{task.description}</p>
+
+                          {task.status === "in_progress" && (
+                            <div className="mb-4">
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Progress</span>
+                                <span>{task.progress}%</span>
+                              </div>
+                              <Progress value={task.progress} className="h-2" />
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                              <div className="flex items-center space-x-2">
+                                <User className="w-4 h-4" />
+                                <span>{assignedMember?.name || task.assignee}</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="w-4 h-4" />
+                                <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+
+                            {canChangeStatus && (
+                              <div className="flex space-x-2">
+                                {task.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleTaskStatusChange(task.id, 'in_progress')}
+                                  >
+                                    Start Task
+                                  </Button>
+                                )}
+                                {task.status === 'in_progress' && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleTaskStatusChange(task.id, 'completed')}
+                                  >
+                                    Mark Complete
+                                  </Button>
+                                )}
+                                {task.status === 'completed' && (
+                                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                    ✓ Completed
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card className="text-center py-12">
+              <CardContent>
+                <CheckCircle2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No tasks yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  {user.email === currentTeam.createdBy
+                    ? "Create your first task to get started!"
+                    : "Your team leader will create tasks for the team."
+                  }
+                </p>
+                {user.email === currentTeam.createdBy && (
+                  <Button onClick={() => setIsCreateOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create First Task
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
