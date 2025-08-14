@@ -11,8 +11,7 @@ export default function Signup() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
-    teamName: ''
+    password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
