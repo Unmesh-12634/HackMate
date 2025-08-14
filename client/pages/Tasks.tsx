@@ -182,7 +182,8 @@ export default function Tasks() {
               </Button>
             </Link>
             <h1 className="text-xl font-semibold">Task Management</h1>
-            <Badge variant="secondary">20 Total Tasks</Badge>
+            <Badge variant="secondary">{currentTeam.name}</Badge>
+            <Badge variant="outline">{totalTasks} Total Tasks</Badge>
           </div>
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
