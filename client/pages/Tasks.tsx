@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,14 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Filter, 
-  Search, 
-  Calendar, 
-  User, 
-  Flag, 
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  Plus,
+  Filter,
+  Search,
+  Calendar,
+  User,
+  Flag,
   Clock,
   CheckCircle2,
   Circle,
