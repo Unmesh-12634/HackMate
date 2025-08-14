@@ -26,48 +26,19 @@ import {
   MoreHorizontal
 } from 'lucide-react';
 
-const tasks = [
-  {
-    id: 1,
-    title: "API Integration",
-    description: "Integrate payment gateway with backend API",
-    status: "in_progress",
-    priority: "high",
-    assignee: "John Doe",
-    dueDate: "2024-01-15",
-    progress: 75
-  },
-  {
-    id: 2,
-    title: "UI Design Review",
-    description: "Review and finalize the user interface designs",
-    status: "pending",
-    priority: "medium",
-    assignee: "Alice Smith",
-    dueDate: "2024-01-16",
-    progress: 0
-  },
-  {
-    id: 3,
-    title: "Database Schema",
-    description: "Design and implement database schema for user data",
-    status: "completed",
-    priority: "high",
-    assignee: "Bob Johnson",
-    dueDate: "2024-01-14",
-    progress: 100
-  },
-  {
-    id: 4,
-    title: "Testing Implementation",
-    description: "Write unit tests for core functionality",
-    status: "pending",
-    priority: "low",
-    assignee: "Carol White",
-    dueDate: "2024-01-18",
-    progress: 0
-  }
-];
+// Helper functions for task management
+const updateTeamTasks = (user: any, teamId: string, updatedTasks: any[]) => {
+  const updatedUser = {
+    ...user,
+    teams: user.teams.map((team: any) =>
+      team.id.toString() === teamId
+        ? { ...team, tasks: updatedTasks }
+        : team
+    )
+  };
+  localStorage.setItem('user', JSON.stringify(updatedUser));
+  return updatedUser;
+};
 
 const priorityColors = {
   high: "destructive",
