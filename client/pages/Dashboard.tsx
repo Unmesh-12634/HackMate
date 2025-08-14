@@ -237,7 +237,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Team Members</CardTitle>
-              <CardDescription>{currentTeam.members?.length || 1} members</CardDescription>
+              <CardDescription>{Array.isArray(currentTeam.members) ? currentTeam.members.length : 1} members</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
