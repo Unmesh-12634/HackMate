@@ -124,29 +124,39 @@ export default function Dashboard() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Project Progress</CardTitle>
-              <CardDescription>Overall team progress for Hack2024</CardDescription>
+              <CardDescription>Overall team progress for {currentTeam.name}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">68%</span>
+                  <span className="text-sm text-muted-foreground">{progress}%</span>
                 </div>
-                <Progress value={68} className="h-2" />
+                <Progress value={progress} className="h-2" />
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-green-600">12</div>
+                    <div className="text-2xl font-bold text-green-600">{completedTasks}</div>
                     <div className="text-xs text-muted-foreground">Completed</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-yellow-600">5</div>
+                    <div className="text-2xl font-bold text-yellow-600">{inProgressTasks}</div>
                     <div className="text-xs text-muted-foreground">In Progress</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-muted-foreground">3</div>
+                    <div className="text-2xl font-bold text-muted-foreground">{pendingTasks}</div>
                     <div className="text-xs text-muted-foreground">Pending</div>
                   </div>
                 </div>
+                {totalTasks === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">No tasks created yet!</p>
+                    {user.email === currentTeam.createdBy && (
+                      <Link to={`/tasks?team=${currentTeam.id}`}>
+                        <Button size="sm" className="mt-2">Create First Task</Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
