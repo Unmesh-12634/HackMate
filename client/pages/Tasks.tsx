@@ -228,11 +228,15 @@ export default function Tasks() {
                         <SelectValue placeholder="Select member" />
                       </SelectTrigger>
                       <SelectContent>
-                        {currentTeam.members?.map((member: any) => (
+                        {Array.isArray(currentTeam.members) ? currentTeam.members.map((member: any) => (
                           <SelectItem key={member.email} value={member.email}>
                             {member.name}
                           </SelectItem>
-                        ))}
+                        )) : (
+                          <SelectItem value={user.email}>
+                            {user.name} (You)
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
