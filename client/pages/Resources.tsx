@@ -24,19 +24,18 @@ import {
   Globe
 } from 'lucide-react';
 
-const resources = {
-  files: [
-    { id: 1, name: "Project Requirements.pdf", type: "pdf", size: "2.4 MB", uploadedBy: "John Doe", date: "2024-01-15", pinned: true },
-    { id: 2, name: "UI Mockups.fig", type: "figma", size: "15.2 MB", uploadedBy: "Alice Smith", date: "2024-01-14", pinned: false },
-    { id: 3, name: "demo-video.mp4", type: "video", size: "45.8 MB", uploadedBy: "Bob Johnson", date: "2024-01-13", pinned: false },
-    { id: 4, name: "api-docs.md", type: "markdown", size: "156 KB", uploadedBy: "Carol White", date: "2024-01-12", pinned: true }
-  ],
-  links: [
-    { id: 1, name: "GitHub Repository", url: "https://github.com/team/hackathon-project", type: "github", addedBy: "John Doe", date: "2024-01-15", pinned: true },
-    { id: 2, name: "Figma Design System", url: "https://figma.com/design-system", type: "figma", addedBy: "Alice Smith", date: "2024-01-14", pinned: true },
-    { id: 3, name: "Live Demo", url: "https://demo.hackmate.com", type: "web", addedBy: "Bob Johnson", date: "2024-01-13", pinned: false },
-    { id: 4, name: "API Documentation", url: "https://docs.api.com", type: "web", addedBy: "Carol White", date: "2024-01-12", pinned: false }
-  ]
+// Helper function to update team resources
+const updateTeamResources = (user: any, teamId: string, updatedResources: any) => {
+  const updatedUser = {
+    ...user,
+    teams: user.teams.map((team: any) =>
+      team.id.toString() === teamId
+        ? { ...team, resources: updatedResources }
+        : team
+    )
+  };
+  localStorage.setItem('user', JSON.stringify(updatedUser));
+  return updatedUser;
 };
 
 const getFileIcon = (type: string) => {
