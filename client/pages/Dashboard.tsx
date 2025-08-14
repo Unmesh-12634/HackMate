@@ -29,8 +29,18 @@ export default function Dashboard() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
 
-      // Check if user has a current team, if not redirect to teams page
-      if (!parsedUser.currentTeam && (!parsedUser.teams || parsedUser.teams.length === 0)) {
+      // Get team from URL params or use first team
+      const urlParams = new URLSearchParams(window.location.search);
+      const teamId = urlParams.get('team');
+
+      let currentTeam = null;
+      if (teamId) {
+        currentTeam = parsedUser.teams?.find((t: any) => t.id.toString() === teamId);
+      } else {
+        currentTeam = parsedUser.teams?.[0];
+      }
+
+      if (!currentTeam) {
         navigate('/teams');
       }
     } else {
