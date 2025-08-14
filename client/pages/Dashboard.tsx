@@ -101,10 +101,12 @@ export default function Dashboard() {
                 <CardTitle>Recent Tasks</CardTitle>
                 <CardDescription>Your assigned tasks and updates</CardDescription>
               </div>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                New Task
-              </Button>
+              <Link to="/tasks">
+                <Button size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  View All Tasks
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
