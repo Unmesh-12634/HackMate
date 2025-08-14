@@ -51,8 +51,8 @@ export default function Signup() {
             </div>
             <span className="text-xl font-bold text-foreground">HackMate</span>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Create your team</h1>
-          <p className="text-muted-foreground">Start your hackathon journey today</p>
+          <h1 className="text-2xl font-bold text-foreground">Join HackMate</h1>
+          <p className="text-muted-foreground">Create your account to get started</p>
         </div>
 
         <Card>
