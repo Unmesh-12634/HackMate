@@ -12,6 +12,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import Chat from "./pages/Chat";
+import Resources from "./pages/Resources";
 import Placeholder from "./pages/Placeholder";
 import NotFound from "./pages/NotFound";
 
