@@ -241,20 +241,33 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {currentTeam.members?.map((member: any) => (
+                {Array.isArray(currentTeam.members) ? currentTeam.members.map((member: any) => (
                   <div key={member.email} className="flex items-center space-x-3">
                     <Avatar className="w-8 h-8">
                       <AvatarFallback>
-                        {member.name.split(' ').map((n: string) => n[0]).join('')}
+                        {member.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <div className="text-sm font-medium">{member.name}</div>
-                      <div className="text-xs text-muted-foreground">{member.role}</div>
+                      <div className="text-sm font-medium">{member.name || 'Unknown'}</div>
+                      <div className="text-xs text-muted-foreground">{member.role || 'Member'}</div>
                     </div>
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   </div>
-                ))}
+                )) : (
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback>
+                        {user?.name?.split(' ').map((n: string) => n[0]).join('') || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{user?.name || 'You'}</div>
+                      <div className="text-xs text-muted-foreground">Team Leader</div>
+                    </div>
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  </div>
+                )}
                 {user.email === currentTeam.createdBy && (
                   <Button variant="outline" size="sm" className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
