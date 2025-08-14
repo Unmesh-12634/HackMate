@@ -31,7 +31,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/tasks" element={<Tasks />} />
-          <Route path="/resources" element={<Placeholder title="Resource Hub" description="File storage and link organization" feature="resource management" />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/calendar" element={<Placeholder title="Team Calendar" description="Schedule and deadline tracking" feature="calendar" />} />
           <Route path="/reports" element={<Placeholder title="Progress Reports" description="AI-generated team analytics" feature="reporting" />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
