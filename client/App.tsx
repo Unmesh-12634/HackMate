@@ -29,12 +29,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/calendar" element={<Placeholder title="Team Calendar" description="Schedule and deadline tracking" feature="calendar" />} />
-          <Route path="/reports" element={<Placeholder title="Progress Reports" description="AI-generated team analytics" feature="reporting" />} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+          <Route path="/tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+          <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><Placeholder title="Team Calendar" description="Schedule and deadline tracking" feature="calendar" /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><Placeholder title="Progress Reports" description="AI-generated team analytics" feature="reporting" /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
