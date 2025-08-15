@@ -445,8 +445,8 @@ export default function Dashboard() {
               <div className="text-center">
                 {currentTeam.projectDeadline ? (
                   <>
-                    <div id="countdown-timer" className="text-3xl font-bold text-primary">
-                      Loading...
+                    <div className={`text-3xl font-bold ${isTimeUp ? 'text-destructive' : 'text-primary'}`}>
+                      {countdownDisplay || 'Loading...'}
                     </div>
                     <div className="text-sm text-muted-foreground">Days : Hours : Minutes : Seconds</div>
                   </>
