@@ -28,8 +28,10 @@ export default function Chat() {
   const [user, setUser] = useState<any>(null);
   const [currentTeam, setCurrentTeam] = useState<any>(null);
   const [newMessage, setNewMessage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
   const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize real-time chat
   const { 
