@@ -9,45 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Zap, Users, Search, Calendar, Star } from 'lucide-react';
 
-// Mock data for available teams
-const availableTeams = [
-  {
-    id: 1,
-    name: "Web Warriors",
-    description: "Building a revolutionary e-commerce platform with AI recommendations",
-    category: "Web Development",
-    members: 3,
-    targetSize: 5,
-    skills: ["React", "Node.js", "AI/ML"],
-    timeLeft: "2 days left",
-    rating: 4.8,
-    leader: "Sarah Johnson"
-  },
-  {
-    id: 2,
-    name: "Mobile Mavens",
-    description: "Creating a fitness app that gamifies workout routines",
-    category: "Mobile App",
-    members: 2,
-    targetSize: 4,
-    skills: ["Flutter", "Firebase", "UI/UX"],
-    timeLeft: "5 days left",
-    rating: 4.6,
-    leader: "Alex Chen"
-  },
-  {
-    id: 3,
-    name: "AI Innovators",
-    description: "Developing an AI-powered code review tool for developers",
-    category: "AI/Machine Learning",
-    members: 4,
-    targetSize: 6,
-    skills: ["Python", "TensorFlow", "DevOps"],
-    timeLeft: "1 day left",
-    rating: 4.9,
-    leader: "Marcus Davis"
-  }
-];
+// Available teams will be loaded from a real backend or team sharing system
+const availableTeams: any[] = [];
 
 export default function JoinTeam() {
   const [inviteCode, setInviteCode] = useState('');
