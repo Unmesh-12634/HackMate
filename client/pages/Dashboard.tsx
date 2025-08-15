@@ -105,6 +105,44 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (!user) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamId = urlParams.get('team');
+    const currentTeam = user.teams?.find((t: any) => t.id.toString() === teamId);
+
+    if (!currentTeam?.projectDeadline) return;
+
+    const updateCountdown = () => {
+      const deadline = new Date(currentTeam.projectDeadline);
+      const now = new Date();
+      const difference = deadline.getTime() - now.getTime();
+
+      const timerElement = document.getElementById('countdown-timer');
+      if (!timerElement) return;
+
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        timerElement.textContent = `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      } else {
+        timerElement.textContent = 'Time\'s up!';
+        timerElement.className = 'text-3xl font-bold text-destructive';
+      }
+    };
+
+    // Update immediately and then every second
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/');
