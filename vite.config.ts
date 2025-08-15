@@ -30,32 +30,8 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     configureServer(server) {
-      const httpServer = createServer();
-
-      // Start the HTTP server on a separate port for Socket.io
-      const port = 3001;
-      httpServer.listen(port, () => {
-        console.log(`🔧 Express + Socket.io server running on port ${port}`);
-      });
-
-      // Proxy API requests to the Express server
-      server.middlewares.use('/api', (req, res, next) => {
-        req.url = req.url || '';
-        const proxyUrl = `http://localhost:${port}${req.url}`;
-
-        // Simple proxy implementation
-        import('node:http').then(({ default: http }) => {
-          const proxyReq = http.request(proxyUrl, {
-            method: req.method,
-            headers: req.headers
-          }, (proxyRes) => {
-            res.writeHead(proxyRes.statusCode!, proxyRes.headers);
-            proxyRes.pipe(res);
-          });
-
-          req.pipe(proxyReq);
-        });
-      });
+      // For development, we'll run a separate Socket.io server
+      console.log('⚠️  Real-time chat requires running: pnpm dev:socket in a separate terminal');
     },
   };
 }
