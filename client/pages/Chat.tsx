@@ -301,6 +301,34 @@ export default function Chat() {
                       </div>
                       <div className="text-sm text-foreground leading-relaxed">
                         {message.message}
+                        {message.fileAttachment && (
+                          <div className="mt-2 p-2 bg-muted rounded border">
+                            <div className="flex items-center space-x-2">
+                              <Paperclip className="w-4 h-4" />
+                              <div className="flex-1">
+                                <a
+                                  href={`${process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:3001'}${message.fileAttachment.url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline"
+                                >
+                                  {message.fileAttachment.originalname}
+                                </a>
+                                <div className="text-xs text-muted-foreground">
+                                  {(message.fileAttachment.size / 1024 / 1024).toFixed(2)} MB
+                                </div>
+                              </div>
+                            </div>
+                            {message.fileAttachment.mimetype.startsWith('image/') && (
+                              <img
+                                src={`${process.env.NODE_ENV === 'production' ? window.location.origin : 'http://localhost:3001'}${message.fileAttachment.url}`}
+                                alt={message.fileAttachment.originalname}
+                                className="mt-2 max-w-xs rounded border"
+                                loading="lazy"
+                              />
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </>
