@@ -172,6 +172,7 @@ export function useSocket(teamId: string | null, userId: string, userName: strin
     typingUsers,
     isConnected,
     sendMessage,
+    uploadFile,
     startTyping,
     stopTyping
   };
