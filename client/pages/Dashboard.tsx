@@ -393,16 +393,65 @@ export default function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Time Remaining</CardTitle>
-              <CardDescription>Until submission deadline</CardDescription>
+              <CardTitle>Project Deadline</CardTitle>
+              <CardDescription>
+                {currentTeam.projectDeadline ? 'Time remaining until submission' : 'No deadline set'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center">
-                <div className="text-3xl font-bold text-primary">47:23:15</div>
-                <div className="text-sm text-muted-foreground">Hours : Minutes : Seconds</div>
-                <Button className="w-full mt-4" variant="outline">
-                  Set Focus Timer
-                </Button>
+                {currentTeam.projectDeadline ? (
+                  <>
+                    <div id="countdown-timer" className="text-3xl font-bold text-primary">
+                      Loading...
+                    </div>
+                    <div className="text-sm text-muted-foreground">Days : Hours : Minutes : Seconds</div>
+                  </>
+                ) : (
+                  <div className="text-muted-foreground">No deadline set</div>
+                )}
+
+                {(user.email === currentTeam.createdBy ||
+                  currentTeam.members?.find((m: any) => m.email === user.email)?.role === 'Team Leader') && (
+                  <Dialog open={isTimerSettingOpen} onOpenChange={setIsTimerSettingOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full mt-4" variant="outline">
+                        {currentTeam.projectDeadline ? 'Update Deadline' : 'Set Project Deadline'}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Set Project Deadline</DialogTitle>
+                        <DialogDescription>
+                          Set the submission deadline for your team project
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="deadline-date">Deadline Date</Label>
+                          <Input
+                            id="deadline-date"
+                            type="date"
+                            value={timerSettings.deadline}
+                            onChange={(e) => setTimerSettings({...timerSettings, deadline: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="deadline-time">Deadline Time</Label>
+                          <Input
+                            id="deadline-time"
+                            type="time"
+                            value={timerSettings.time}
+                            onChange={(e) => setTimerSettings({...timerSettings, time: e.target.value})}
+                          />
+                        </div>
+                        <Button className="w-full" onClick={handleSetDeadline}>
+                          Set Deadline
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
             </CardContent>
           </Card>
