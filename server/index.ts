@@ -46,14 +46,15 @@ export function createServer() {
 
     // Handle chat messages
     socket.on("send_message", (data) => {
-      const { teamId, message, userId, userName } = data;
+      const { teamId, message, userId, userName, fileAttachment } = data;
 
       const messageData = {
         id: Date.now().toString(),
         message,
         userId,
         userName,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        fileAttachment: fileAttachment || null
       };
 
       // Broadcast to all team members including sender
