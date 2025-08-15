@@ -44,6 +44,8 @@ export default function Dashboard() {
     deadline: '',
     time: ''
   });
+  const [countdownDisplay, setCountdownDisplay] = useState('');
+  const [isTimeUp, setIsTimeUp] = useState(false);
   const navigate = useNavigate();
 
   // Mock notifications data
