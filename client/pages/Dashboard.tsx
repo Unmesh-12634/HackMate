@@ -34,10 +34,15 @@ export default function Dashboard() {
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTimerSettingOpen, setIsTimerSettingOpen] = useState(false);
   const [newMember, setNewMember] = useState({
     email: '',
     name: '',
     role: 'Team Member'
+  });
+  const [timerSettings, setTimerSettings] = useState({
+    deadline: '',
+    time: ''
   });
   const navigate = useNavigate();
 
