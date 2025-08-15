@@ -147,16 +147,21 @@ export default function Dashboard() {
     </div>;
   }
 
-  // Get current team
+  // Get current team from URL params
   const urlParams = new URLSearchParams(window.location.search);
   const teamId = urlParams.get('team');
-  const currentTeam = teamId
-    ? user.teams?.find((t: any) => t.id.toString() === teamId)
-    : user.teams?.[0];
+
+  if (!teamId) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">
+      <p>No team selected. <Link to="/teams">Go to Teams</Link></p>
+    </div>;
+  }
+
+  const currentTeam = user.teams?.find((t: any) => t.id.toString() === teamId);
 
   if (!currentTeam) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
-      <p>No team found. <Link to="/teams">Go to Teams</Link></p>
+      <p>Team not found or access denied. <Link to="/teams">Go to Teams</Link></p>
     </div>;
   }
 
