@@ -34,13 +34,14 @@ export default function Chat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Initialize real-time chat
-  const { 
-    messages, 
-    typingUsers, 
-    isConnected, 
-    sendMessage, 
-    startTyping, 
-    stopTyping 
+  const {
+    messages,
+    typingUsers,
+    isConnected,
+    sendMessage,
+    uploadFile,
+    startTyping,
+    stopTyping
   } = useSocket(
     currentTeam?.id?.toString() || null,
     user?.email || '',
