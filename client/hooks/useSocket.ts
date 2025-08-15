@@ -26,7 +26,11 @@ export function useSocket(teamId: string | null, userId: string, userName: strin
     if (!teamId) return;
 
     // Connect to Socket.io server
-    const newSocket = io(window.location.origin, {
+    const socketUrl = process.env.NODE_ENV === 'production'
+      ? window.location.origin
+      : 'http://localhost:3001';
+
+    const newSocket = io(socketUrl, {
       transports: ['websocket', 'polling']
     });
 
