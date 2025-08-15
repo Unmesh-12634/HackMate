@@ -1,14 +1,381 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hello world project</title>
-  </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackMate - The Ultimate Hackathon Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
 
-  <body>
-    <div id="root"></div>
+    <!-- Navigation -->
+    <nav id="navbar" class="navbar hidden">
+        <div class="container">
+            <div class="nav-brand">
+                <div class="nav-logo">
+                    <i data-lucide="zap"></i>
+                </div>
+                <span class="nav-title">HackMate</span>
+            </div>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How it Works</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" onclick="showPage('login')">Sign In</button>
+                <button class="btn btn-primary" onclick="showPage('signup')">Get Started</button>
+            </div>
+        </div>
+    </nav>
 
-    <script type="module" src="/client/App.tsx"></script>
-  </body>
+    <!-- Page Content Container -->
+    <div id="app-content">
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <!-- Header -->
+            <header class="header">
+                <div class="container">
+                    <div class="nav-brand">
+                        <div class="nav-logo">
+                            <i data-lucide="zap"></i>
+                        </div>
+                        <span class="nav-title">HackMate</span>
+                    </div>
+                    <nav class="nav-menu">
+                        <a href="#features" class="nav-link">Features</a>
+                        <a href="#how-it-works" class="nav-link">How it Works</a>
+                        <a href="#pricing" class="nav-link">Pricing</a>
+                    </nav>
+                    <div class="nav-actions">
+                        <button class="btn btn-ghost" onclick="showPage('login')">Sign In</button>
+                        <button class="btn btn-primary" onclick="showPage('signup')">Get Started</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="container">
+                    <div class="hero-content">
+                        <div class="badge">🚀 The Ultimate Hackathon Platform</div>
+                        <h1 class="hero-title">
+                            Build winning teams.<br />
+                            <span class="text-primary">Ship faster together.</span>
+                        </h1>
+                        <p class="hero-description">
+                            HackMate is the complete team hub for hackathons and competitions. Organize tasks, chat with AI, track progress, and never miss a deadline again.
+                        </p>
+                        <div class="hero-actions">
+                            <button class="btn btn-primary btn-lg" onclick="showPage('signup')">Start Your Team</button>
+                            <button class="btn btn-outline btn-lg">Watch Demo</button>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat">
+                                <div class="stat-number">10k+</div>
+                                <div class="stat-label">Teams</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">500+</div>
+                                <div class="stat-label">Hackathons</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">98%</div>
+                                <div class="stat-label">Success Rate</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">24/7</div>
+                                <div class="stat-label">AI Support</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="features">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">Everything your team needs to win</h2>
+                        <p class="section-description">
+                            From idea to submission, HackMate provides all the tools to keep your team organized and productive.
+                        </p>
+                    </div>
+
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <i data-lucide="users" class="feature-icon"></i>
+                            <h3 class="feature-title">Team Management</h3>
+                            <p class="feature-description">
+                                Create teams, assign roles, and manage members with clear responsibilities and permissions.
+                            </p>
+                        </div>
+
+                        <div class="feature-card">
+                            <i data-lucide="check-square" class="feature-icon"></i>
+                            <h3 class="feature-title">Smart Task Tracking</h3>
+                            <p class="feature-description">
+                                Create, assign, and track tasks with deadlines, priorities, and dependencies. Never lose track of progress.
+                            </p>
+                        </div>
+
+                        <div class="feature-card">
+                            <i data-lucide="message-square" class="feature-icon"></i>
+                            <h3 class="feature-title">Real-time Chat</h3>
+                            <p class="feature-description">
+                                Team chat, task-specific discussions, file sharing, and mentions to keep everyone in sync.
+                            </p>
+                        </div>
+
+                        <div class="feature-card">
+                            <i data-lucide="bot" class="feature-icon"></i>
+                            <h3 class="feature-title">AI Assistant</h3>
+                            <p class="feature-description">
+                                Get coding help, design feedback, strategy advice, and automated report generation from your team AI.
+                            </p>
+                        </div>
+
+                        <div class="feature-card">
+                            <i data-lucide="file-text" class="feature-icon"></i>
+                            <h3 class="feature-title">Resource Hub</h3>
+                            <p class="feature-description">
+                                Centralized file storage, link organization, and quick access to all your project resources.
+                            </p>
+                        </div>
+
+                        <div class="feature-card">
+                            <i data-lucide="timer" class="feature-icon"></i>
+                            <h3 class="feature-title">Time Management</h3>
+                            <p class="feature-description">
+                                Countdown timers, deadlines tracking, Pomodoro sessions, and calendar integration.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How it Works -->
+            <section id="how-it-works" class="how-it-works">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">From team to trophy in 4 steps</h2>
+                        <p class="section-description">
+                            Simple workflow that scales from small teams to large competitions
+                        </p>
+                    </div>
+
+                    <div class="steps-grid">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h3 class="step-title">Create Team</h3>
+                            <p class="step-description">Set up your workspace, add team members, and define roles</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h3 class="step-title">Plan & Organize</h3>
+                            <p class="step-description">Break down your project into tasks and set deadlines</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h3 class="step-title">Build Together</h3>
+                            <p class="step-description">Collaborate with chat, AI assistance, and progress tracking</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <h3 class="step-title">Ship & Win</h3>
+                            <p class="step-description">Submit your project and generate winning reports</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="cta">
+                <div class="container">
+                    <div class="cta-content">
+                        <h2 class="cta-title">Ready to win your next hackathon?</h2>
+                        <p class="cta-description">
+                            Join thousands of teams already using HackMate to build better, faster, and together.
+                        </p>
+                        <div class="cta-actions">
+                            <button class="btn btn-secondary btn-lg" onclick="showPage('signup')">Start Free Team</button>
+                            <button class="btn btn-outline-light btn-lg">Contact Sales</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="container">
+                    <div class="footer-content">
+                        <div class="footer-brand">
+                            <div class="nav-brand">
+                                <div class="nav-logo">
+                                    <i data-lucide="zap"></i>
+                                </div>
+                                <span class="nav-title">HackMate</span>
+                            </div>
+                            <p class="footer-description">
+                                The complete hackathon team hub for winning teams.
+                            </p>
+                        </div>
+                        <div class="footer-links">
+                            <div>
+                                <h4>Product</h4>
+                                <ul>
+                                    <li><a href="#">Features</a></li>
+                                    <li><a href="#">Pricing</a></li>
+                                    <li><a href="#">API</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4>Company</h4>
+                                <ul>
+                                    <li><a href="#">About</a></li>
+                                    <li><a href="#">Blog</a></li>
+                                    <li><a href="#">Careers</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4>Support</h4>
+                                <ul>
+                                    <li><a href="#">Help Center</a></li>
+                                    <li><a href="#">Contact</a></li>
+                                    <li><a href="#">Status</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-bottom">
+                        <p>&copy; 2024 HackMate. All rights reserved.</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login-page" class="page auth-page">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="nav-brand">
+                        <div class="nav-logo">
+                            <i data-lucide="zap"></i>
+                        </div>
+                        <span class="nav-title">HackMate</span>
+                    </div>
+                    <h1>Welcome back</h1>
+                    <p>Sign in to your team workspace</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sign In</h2>
+                        <p class="card-description">Enter your credentials to access your team dashboard</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="login-form" class="form">
+                            <div class="form-group">
+                                <label for="login-email">Email</label>
+                                <input type="email" id="login-email" placeholder="you@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Password</label>
+                                <input type="password" id="login-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span class="btn-text">Sign In</span>
+                                <span class="btn-loading hidden">Signing In...</span>
+                            </button>
+                        </form>
+                        <div class="auth-links">
+                            <a href="#" class="link">Forgot password?</a>
+                        </div>
+                        <div class="auth-switch">
+                            <span>Don't have an account? </span>
+                            <a href="#" onclick="showPage('signup')" class="link">Sign up</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Page -->
+        <div id="signup-page" class="page auth-page">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="nav-brand">
+                        <div class="nav-logo">
+                            <i data-lucide="zap"></i>
+                        </div>
+                        <span class="nav-title">HackMate</span>
+                    </div>
+                    <h1>Join HackMate</h1>
+                    <p>Create your account to get started</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sign Up</h2>
+                        <p class="card-description">Create your account to join or create hackathon teams</p>
+                    </div>
+                    <div class="card-content">
+                        <form id="signup-form" class="form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="signup-firstName">First Name</label>
+                                    <input type="text" id="signup-firstName" placeholder="John" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signup-lastName">Last Name</label>
+                                    <input type="text" id="signup-lastName" placeholder="Doe" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-email">Email</label>
+                                <input type="email" id="signup-email" placeholder="you@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-password">Password</label>
+                                <input type="password" id="signup-password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span class="btn-text">Sign Up</span>
+                                <span class="btn-loading hidden">Creating Account...</span>
+                            </button>
+                        </form>
+                        <div class="auth-switch">
+                            <span>Already have an account? </span>
+                            <a href="#" onclick="showPage('login')" class="link">Sign in</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page dashboard-page">
+            <div class="dashboard-container">
+                <h1>Dashboard coming soon...</h1>
+                <p>You're successfully logged in!</p>
+                <button class="btn btn-primary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
 </html>
