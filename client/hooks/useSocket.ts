@@ -97,14 +97,40 @@ export function useSocket(teamId: string | null, userId: string, userName: strin
     };
   }, [teamId, userId, userName]);
 
-  const sendMessage = (message: string) => {
-    if (socket && teamId && message.trim()) {
+  const sendMessage = (message: string, fileAttachment?: any) => {
+    if (socket && teamId && (message.trim() || fileAttachment)) {
       socket.emit('send_message', {
         teamId,
         message: message.trim(),
         userId,
-        userName
+        userName,
+        fileAttachment
       });
+    }
+  };
+
+  const uploadFile = async (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const socketUrl = process.env.NODE_ENV === 'production'
+        ? window.location.origin
+        : 'http://localhost:3001';
+
+      const response = await fetch(`${socketUrl}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('File upload failed');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('File upload error:', error);
+      throw error;
     }
   };
 
