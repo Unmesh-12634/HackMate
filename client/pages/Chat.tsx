@@ -72,10 +72,22 @@ export default function Chat() {
     }
   }, [navigate]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Debounced auto-scroll to prevent layout thrashing
+  const scrollToBottom = useCallback(() => {
+    const element = messagesEndRef.current;
+    if (element) {
+      // Use requestAnimationFrame to avoid layout thrashing
+      requestAnimationFrame(() => {
+        element.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive (debounced)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages, scrollToBottom]);
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
