@@ -7,6 +7,13 @@ export interface ChatMessage {
   userId: string;
   userName: string;
   timestamp: string;
+  fileAttachment?: {
+    filename: string;
+    originalname: string;
+    mimetype: string;
+    size: number;
+    url: string;
+  };
 }
 
 export interface TypingUser {
