@@ -231,8 +231,8 @@ export default function Chat() {
         </div>
 
         {/* Messages Area */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 p-4" style={{ height: 'calc(100vh - 200px)' }}>
+          <div className="space-y-4" style={{ minHeight: '100%' }}>
             {messages.length === 0 && (
               <div className="text-center py-8">
                 <div className="text-muted-foreground mb-2">
