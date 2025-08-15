@@ -354,8 +354,20 @@ export default function Chat() {
 
         {/* Message Input */}
         <div className="border-t p-4 bg-card/50">
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileUpload}
+            className="hidden"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          />
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleFileButtonClick}
+              disabled={isUploading}
+            >
               <Paperclip className="w-4 h-4" />
             </Button>
             <div className="flex-1 relative">
