@@ -169,8 +169,8 @@ export default function AIChatBox({ teamName = 'your team' }: AIChatBoxProps) {
         </CardHeader>
         <CardContent className="flex-1 flex flex-col p-0">
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 p-4" style={{ maxHeight: '300px', minHeight: '200px' }}>
+            <div className="space-y-4" style={{ minHeight: '100%' }}>
               {messages.map((message) => (
                 <div
                   key={message.id}
