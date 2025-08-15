@@ -146,6 +146,34 @@ export default function Dashboard() {
     setIsAddMemberOpen(false);
   };
 
+  const handleSetDeadline = () => {
+    if (!timerSettings.deadline || !timerSettings.time) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const teamId = urlParams.get('team');
+    const currentTeam = user.teams?.find((t: any) => t.id.toString() === teamId);
+
+    if (!currentTeam) return;
+
+    // Combine date and time into a deadline timestamp
+    const deadlineDateTime = new Date(`${timerSettings.deadline}T${timerSettings.time}`);
+
+    // Update team with deadline
+    const updatedTeams = user.teams.map((team: any) =>
+      team.id === currentTeam.id
+        ? { ...team, projectDeadline: deadlineDateTime.toISOString() }
+        : team
+    );
+
+    const updatedUser = { ...user, teams: updatedTeams };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
+
+    // Reset form
+    setTimerSettings({ deadline: '', time: '' });
+    setIsTimerSettingOpen(false);
+  };
+
   if (!user) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
       <p>Loading...</p>
