@@ -115,15 +115,16 @@ export default function Dashboard() {
     const teamId = urlParams.get('team');
     const currentTeam = user.teams?.find((t: any) => t.id.toString() === teamId);
 
-    if (!currentTeam?.projectDeadline) return;
+    if (!currentTeam?.projectDeadline) {
+      setCountdownDisplay('');
+      setIsTimeUp(false);
+      return;
+    }
 
     const updateCountdown = () => {
       const deadline = new Date(currentTeam.projectDeadline);
       const now = new Date();
       const difference = deadline.getTime() - now.getTime();
-
-      const timerElement = document.getElementById('countdown-timer');
-      if (!timerElement) return;
 
       if (difference > 0) {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -131,10 +132,12 @@ export default function Dashboard() {
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        timerElement.textContent = `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const display = `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        setCountdownDisplay(display);
+        setIsTimeUp(false);
       } else {
-        timerElement.textContent = 'Time\'s up!';
-        timerElement.className = 'text-3xl font-bold text-destructive';
+        setCountdownDisplay('Time\'s up!');
+        setIsTimeUp(true);
       }
     };
 
