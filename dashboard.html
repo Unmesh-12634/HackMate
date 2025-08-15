@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Dashboard - HackMate</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <a href="teams.html" class="btn btn-ghost" style="padding: 0.5rem;">
+                    <i data-lucide="arrow-left"></i>
+                </a>
+                <h1 style="font-size: 1.25rem; font-weight: 600; margin: 0;">Team Dashboard</h1>
+                <span id="team-badge" class="badge">Loading...</span>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-ghost" title="Search">
+                    <i data-lucide="search"></i>
+                </button>
+                <button class="btn btn-ghost" title="Notifications" onclick="showNotifications()">
+                    <i data-lucide="bell"></i>
+                    <span id="notification-count" class="notification-badge" style="display: none;">2</span>
+                </button>
+                <button class="btn btn-ghost" onclick="logout()">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container" style="padding: 1.5rem;">
+        <!-- Project Overview -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Project Progress</h2>
+                    <p class="card-description" id="progress-description">Overall team progress</p>
+                </div>
+                <div class="card-content">
+                    <div style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.875rem; font-weight: 500;">Overall Progress</span>
+                            <span id="progress-percentage" style="font-size: 0.875rem; color: var(--muted-foreground);">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                        <div>
+                            <div id="completed-tasks" style="font-size: 1.5rem; font-weight: 700; color: #10B981;">0</div>
+                            <div style="font-size: 0.75rem; color: var(--muted-foreground);">Completed</div>
+                        </div>
+                        <div>
+                            <div id="in-progress-tasks" style="font-size: 1.5rem; font-weight: 700; color: #F59E0B;">0</div>
+                            <div style="font-size: 0.75rem; color: var(--muted-foreground);">In Progress</div>
+                        </div>
+                        <div>
+                            <div id="pending-tasks" style="font-size: 1.5rem; font-weight: 700; color: var(--muted-foreground);">0</div>
+                            <div style="font-size: 0.75rem; color: var(--muted-foreground);">Pending</div>
+                        </div>
+                    </div>
+                    <div id="no-tasks-message" style="text-align: center; padding: 2rem 0; display: none;">
+                        <p style="color: var(--muted-foreground);">No tasks created yet!</p>
+                        <button class="btn btn-primary" style="margin-top: 0.5rem;" onclick="window.location.href='tasks.html?team=' + getTeamId()">Create First Task</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Project Deadline</h2>
+                    <p class="card-description" id="deadline-description">No deadline set</p>
+                </div>
+                <div class="card-content" style="text-align: center;">
+                    <div id="countdown-display" style="font-size: 2rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">
+                        No deadline set
+                    </div>
+                    <div id="countdown-labels" style="font-size: 0.875rem; color: var(--muted-foreground); display: none;">
+                        Days : Hours : Minutes : Seconds
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 1rem;" onclick="showDeadlineModal()">
+                        Set Project Deadline
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions & Team -->
+        <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 class="card-title">Your Tasks</h2>
+                        <p class="card-description">Tasks assigned to you</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='tasks.html?team=' + getTeamId()">
+                        <i data-lucide="plus"></i>
+                        View All Tasks
+                    </button>
+                </div>
+                <div class="card-content">
+                    <div id="user-tasks-list">
+                        <!-- User tasks will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Team Members</h2>
+                    <p class="card-description" id="members-count">1 member</p>
+                </div>
+                <div class="card-content">
+                    <div id="team-members-list">
+                        <!-- Team members will be loaded here -->
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 1rem;" onclick="showAddMemberModal()">
+                        <i data-lucide="plus"></i>
+                        Add Member
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div class="card" style="padding: 1rem; cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='chat.html?team=' + getTeamId()">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="message-square" style="width: 2rem; height: 2rem; color: var(--primary);"></i>
+                    <div>
+                        <div style="font-weight: 500;">Team Chat</div>
+                        <div style="font-size: 0.875rem; color: var(--muted-foreground);">Start chatting</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="padding: 1rem; cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='resources.html?team=' + getTeamId()">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="file-text" style="width: 2rem; height: 2rem; color: var(--primary);"></i>
+                    <div>
+                        <div style="font-weight: 500;">Resources</div>
+                        <div style="font-size: 0.875rem; color: var(--muted-foreground);">Files & links</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="padding: 1rem; cursor: pointer; transition: transform 0.2s;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="calendar" style="width: 2rem; height: 2rem; color: var(--primary);"></i>
+                    <div>
+                        <div style="font-weight: 500;">Schedule</div>
+                        <div style="font-size: 0.875rem; color: var(--muted-foreground);">Team calendar</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="padding: 1rem; cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='chat.html?team=' + getTeamId()">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i data-lucide="bot" style="width: 2rem; height: 2rem; color: var(--primary);"></i>
+                    <div>
+                        <div style="font-weight: 500;">AI Assistant</div>
+                        <div style="font-size: 0.875rem; color: var(--muted-foreground);">Get help</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deadline Modal -->
+    <div id="deadline-modal" class="modal" style="display: none;">
+        <div class="modal-content card" style="max-width: 400px; margin: 2rem auto; padding: 2rem;">
+            <div class="card-header" style="text-align: center; margin-bottom: 1.5rem;">
+                <h2 class="card-title">Set Project Deadline</h2>
+                <p class="card-description">Set the submission deadline for your team project</p>
+            </div>
+            <form id="deadline-form" class="form">
+                <div class="form-group">
+                    <label for="deadline-date">Deadline Date</label>
+                    <input type="date" id="deadline-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="deadline-time">Deadline Time</label>
+                    <input type="time" id="deadline-time" required>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline btn-full" onclick="hideDeadlineModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-full">Set Deadline</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div id="add-member-modal" class="modal" style="display: none;">
+        <div class="modal-content card" style="max-width: 400px; margin: 2rem auto; padding: 2rem;">
+            <div class="card-header" style="text-align: center; margin-bottom: 1.5rem;">
+                <h2 class="card-title">Add Team Member</h2>
+                <p class="card-description">Invite a new member to join your team</p>
+            </div>
+            <form id="add-member-form" class="form">
+                <div class="form-group">
+                    <label for="member-email">Email Address</label>
+                    <input type="email" id="member-email" placeholder="member@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-name">Full Name</label>
+                    <input type="text" id="member-name" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-role">Role</label>
+                    <select id="member-role" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--background);">
+                        <option value="Developer">Developer</option>
+                        <option value="Designer">Designer</option>
+                        <option value="Team Member">Team Member</option>
+                        <option value="Researcher">Researcher</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-outline btn-full" onclick="hideAddMemberModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-full">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Check authentication and load data
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = 'login.html';
+        }
+
+        let currentUser = JSON.parse(localStorage.getItem('user'));
+        let currentTeam = null;
+        let countdownInterval = null;
+
+        function getTeamId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('team');
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('isLoggedIn');
+            window.location.href = 'index.html';
+        }
+
+        function showDeadlineModal() {
+            document.getElementById('deadline-modal').style.display = 'block';
+        }
+
+        function hideDeadlineModal() {
+            document.getElementById('deadline-modal').style.display = 'none';
+        }
+
+        function showAddMemberModal() {
+            document.getElementById('add-member-modal').style.display = 'block';
+        }
+
+        function hideAddMemberModal() {
+            document.getElementById('add-member-modal').style.display = 'none';
+        }
+
+        function showNotifications() {
+            alert('Notifications:\n\n• New task assigned: API Integration\n• Alice completed UI Design Review\n• Team deadline approaching in 2 days');
+        }
+
+        function loadTeamData() {
+            const teamId = getTeamId();
+            if (!teamId) {
+                window.location.href = 'teams.html';
+                return;
+            }
+
+            currentTeam = currentUser.teams?.find(t => t.id.toString() === teamId);
+            if (!currentTeam) {
+                window.location.href = 'teams.html';
+                return;
+            }
+
+            // Update page title and team badge
+            document.getElementById('team-badge').textContent = currentTeam.name;
+            document.getElementById('progress-description').textContent = `Overall team progress for ${currentTeam.name}`;
+
+            loadProjectProgress();
+            loadDeadline();
+            loadUserTasks();
+            loadTeamMembers();
+        }
+
+        function loadProjectProgress() {
+            const tasks = currentTeam.tasks || [];
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.status === 'completed').length;
+            const inProgressTasks = tasks.filter(t => t.status === 'in_progress').length;
+            const pendingTasks = tasks.filter(t => t.status === 'pending').length;
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('progress-percentage').textContent = `${progress}%`;
+            document.getElementById('progress-fill').style.width = `${progress}%`;
+            document.getElementById('completed-tasks').textContent = completedTasks;
+            document.getElementById('in-progress-tasks').textContent = inProgressTasks;
+            document.getElementById('pending-tasks').textContent = pendingTasks;
+
+            if (totalTasks === 0) {
+                document.getElementById('no-tasks-message').style.display = 'block';
+            }
+        }
+
+        function loadDeadline() {
+            if (currentTeam.projectDeadline) {
+                document.getElementById('deadline-description').textContent = 'Time remaining until submission';
+                document.getElementById('countdown-labels').style.display = 'block';
+                startCountdown();
+            }
+        }
+
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            function updateCountdown() {
+                const deadline = new Date(currentTeam.projectDeadline);
+                const now = new Date();
+                const difference = deadline.getTime() - now.getTime();
+
+                if (difference > 0) {
+                    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+                    document.getElementById('countdown-display').textContent = 
+                        `${days}:${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    document.getElementById('countdown-display').style.color = 'var(--primary)';
+                } else {
+                    document.getElementById('countdown-display').textContent = "Time's up!";
+                    document.getElementById('countdown-display').style.color = 'var(--destructive)';
+                }
+            }
+
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        function loadUserTasks() {
+            const tasks = currentTeam.tasks || [];
+            const userTasks = tasks.filter(t => t.assignee === currentUser.email && t.status !== 'completed').slice(0, 3);
+            const userTasksList = document.getElementById('user-tasks-list');
+
+            if (userTasks.length === 0) {
+                userTasksList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem 0;">
+                        <i data-lucide="check-square" style="width: 3rem; height: 3rem; color: var(--muted-foreground); margin-bottom: 0.5rem;"></i>
+                        <p style="color: var(--muted-foreground);">No tasks assigned to you</p>
+                        <p style="font-size: 0.875rem; color: var(--muted-foreground);">Your team leader will assign tasks to you.</p>
+                    </div>
+                `;
+            } else {
+                userTasksList.innerHTML = userTasks.map(task => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i data-lucide="check-square" style="width: 1rem; height: 1rem; color: ${task.status === 'in_progress' ? '#F59E0B' : 'var(--muted-foreground)'};"></i>
+                            <div>
+                                <div style="font-weight: 500;">${task.title}</div>
+                                <div style="font-size: 0.875rem; color: var(--muted-foreground);">
+                                    Due ${new Date(task.dueDate).toLocaleDateString()}
+                                </div>
+                            </div>
+                        </div>
+                        <span class="badge" style="background: ${task.priority === 'high' ? 'var(--destructive)' : task.priority === 'medium' ? 'var(--primary)' : 'var(--secondary)'}; color: ${task.priority === 'high' ? 'var(--destructive-foreground)' : task.priority === 'medium' ? 'var(--primary-foreground)' : 'var(--secondary-foreground)'};">
+                            ${task.priority}
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        function loadTeamMembers() {
+            const members = currentTeam.members || [];
+            const membersCount = document.getElementById('members-count');
+            const membersList = document.getElementById('team-members-list');
+
+            membersCount.textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
+
+            membersList.innerHTML = members.map(member => `
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div style="width: 2rem; height: 2rem; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-foreground); font-weight: 600; font-size: 0.875rem;">
+                        ${(member.name || 'U').split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.875rem; font-weight: 500;">${member.name || 'Unknown'}</div>
+                        <div style="font-size: 0.75rem; color: var(--muted-foreground);">${member.role || 'Member'}</div>
+                    </div>
+                    <div style="width: 0.5rem; height: 0.5rem; background: #10B981; border-radius: 50%;"></div>
+                </div>
+            `).join('');
+        }
+
+        // Handle deadline form
+        document.getElementById('deadline-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const date = document.getElementById('deadline-date').value;
+            const time = document.getElementById('deadline-time').value;
+            
+            if (!date || !time) return;
+            
+            const deadline = new Date(`${date}T${time}`);
+            currentTeam.projectDeadline = deadline.toISOString();
+            
+            // Update localStorage
+            currentUser.teams = currentUser.teams.map(team => 
+                team.id === currentTeam.id ? currentTeam : team
+            );
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            hideDeadlineModal();
+            loadDeadline();
+        });
+
+        // Handle add member form
+        document.getElementById('add-member-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('member-email').value;
+            const name = document.getElementById('member-name').value;
+            const role = document.getElementById('member-role').value;
+            
+            if (!email || !name) return;
+            
+            const newMember = {
+                id: email,
+                name: name,
+                email: email,
+                role: role,
+                joinedAt: new Date().toISOString()
+            };
+            
+            currentTeam.members.push(newMember);
+            
+            // Update localStorage
+            currentUser.teams = currentUser.teams.map(team => 
+                team.id === currentTeam.id ? currentTeam : team
+            );
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            hideAddMemberModal();
+            loadTeamMembers();
+            
+            // Reset form
+            document.getElementById('add-member-form').reset();
+        });
+
+        // Load team data on page load
+        loadTeamData();
+    </script>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-xl);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: var(--muted);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--destructive);
+            color: var(--destructive-foreground);
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        @media (max-width: 768px) {
+            .container > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+</body>
+</html>
