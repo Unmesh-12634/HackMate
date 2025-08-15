@@ -76,19 +76,23 @@ export default function Dashboard() {
 
       setUser(parsedUser);
 
-      // Get team from URL params or use first team
+      // Get team from URL params - require explicit team selection
       const urlParams = new URLSearchParams(window.location.search);
       const teamId = urlParams.get('team');
 
-      let currentTeam = null;
-      if (teamId) {
-        currentTeam = parsedUser.teams?.find((t: any) => t.id.toString() === teamId);
-      } else {
-        currentTeam = parsedUser.teams?.[0];
+      if (!teamId) {
+        // If no team specified, redirect to teams overview
+        navigate('/teams');
+        return;
       }
 
+      // Find the specific team
+      const currentTeam = parsedUser.teams?.find((t: any) => t.id.toString() === teamId);
+
       if (!currentTeam) {
+        // If team not found or user not member, redirect to teams overview
         navigate('/teams');
+        return;
       }
     } else {
       // Redirect to login if no user data
