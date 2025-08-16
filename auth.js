@@ -1,243 +1,127 @@
-// Shared authentication utilities
+// auth.js
 
-// Check if user is logged in
-function checkAuth() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const user = localStorage.getItem('user');
-    
-    if (!isLoggedIn || !user) {
-        return false;
-    }
-    
+// Import necessary modular Firebase functions
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js'; // Use current modular CDN version
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    GoogleAuthProvider, 
+    GithubAuthProvider, 
+    signInWithPopup, 
+    sendPasswordResetEmail 
+} from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js'; // Use current modular CDN version
+import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-firestore.js'; // Use current modular CDN version
+
+
+// Your Firebase project configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCYV3V0KhHjGcQhmH3Dsg9Se2PFOf5G0qY",
+  authDomain: "hackmate-f9127.firebaseapp.com",
+  projectId: "hackmate-f9127",
+  storageBucket: "hackmate-f9127.appspot.com",
+  messagingSenderId: "617200538584",
+  appId: "1:617200538584:web:0204c1ce29dbe8caf798ad",
+  measurementId: "G-XDMK184368"
+};
+
+// Initialize Firebase App
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase services
+const auth = getAuth(app);
+const db = getFirestore(app); // If you're using Firestore
+
+// --- Login Form Submission ---
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+
     try {
-        JSON.parse(user);
-        return true;
-    } catch (e) {
-        // Invalid user data, clear storage
-        localStorage.removeItem('user');
-        localStorage.removeItem('isLoggedIn');
-        return false;
+        document.getElementById('login-btn').classList.add('loading');
+        // Use the modular function for sign-in
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = 'teams.html'; // Redirect on success
+    } catch (error) {
+        document.getElementById('login-btn').classList.remove('loading');
+        // Clear previous errors
+        document.getElementById('email-error').style.display = 'none';
+        document.getElementById('password-error').style.display = 'none';
+
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-email') {
+            document.getElementById('email-error').textContent = 'No user found with this email or invalid format.';
+            document.getElementById('email-error').style.display = 'block';
+        } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') { // 'invalid-credential' is a more generic error for wrong username/password since v9
+            document.getElementById('password-error').textContent = 'Incorrect password.';
+            document.getElementById('password-error').style.display = 'block';
+        } else {
+            console.error("Login error:", error);
+            alert(`Login failed: ${error.message}`);
+        }
     }
-}
+});
 
-// Redirect to login if not authenticated
-function requireAuth() {
-    if (!checkAuth()) {
-        window.location.href = 'login.html';
-        return false;
-    }
-    return true;
-}
-
-// Get current user data
-function getCurrentUser() {
-    if (!checkAuth()) {
-        return null;
-    }
-    
-    try {
-        return JSON.parse(localStorage.getItem('user'));
-    } catch (e) {
-        return null;
-    }
-}
-
-// Update user data
-function updateUser(userData) {
-    localStorage.setItem('user', JSON.stringify(userData));
-}
-
-// Logout user
-function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('isLoggedIn');
-    window.location.href = 'index.html';
-}
-
-// Simulate login process
-function simulateLogin(email, password) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const userData = {
-                email: email,
-                name: email.split('@')[0],
-                teams: []
-            };
-            
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('isLoggedIn', 'true');
-            
-            resolve(userData);
-        }, 1000);
-    });
-}
-
-// Simulate signup process
-function simulateSignup(firstName, lastName, email, password) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const userData = {
-                email: email,
-                name: `${firstName} ${lastName}`,
-                teams: []
-            };
-            
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('isLoggedIn', 'true');
-            
-            resolve(userData);
-        }, 1000);
-    });
-}
-
-// Show/hide loading state on buttons
-function setButtonLoading(buttonId, isLoading) {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return;
-    
-    const textSpan = btn.querySelector('.btn-text');
-    const loadingSpan = btn.querySelector('.btn-loading');
-    
-    if (isLoading) {
-        btn.classList.add('loading');
-        btn.disabled = true;
-        if (textSpan) textSpan.style.display = 'none';
-        if (loadingSpan) loadingSpan.style.display = 'inline';
+// --- Toggle password visibility ---
+document.getElementById('toggle-password').addEventListener('click', () => {
+    const passwordInput = document.getElementById('login-password');
+    const toggleButton = document.getElementById('toggle-password');
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleButton.innerHTML = '<i data-lucide="eye-off" style="width: 1rem; height: 1rem;"></i>';
     } else {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        if (textSpan) textSpan.style.display = 'inline';
-        if (loadingSpan) loadingSpan.style.display = 'none';
+        passwordInput.type = 'password';
+        toggleButton.innerHTML = '<i data-lucide="eye" style="width: 1rem; height: 1rem;"></i>';
     }
-}
+    // Re-create Lucide icons if dynamically added/changed
+    lucide.createIcons(); 
+});
 
-// Utility function to get team from URL parameter
-function getTeamFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const teamId = urlParams.get('team');
-    
-    if (!teamId) return null;
-    
-    const user = getCurrentUser();
-    if (!user || !user.teams) return null;
-    
-    return user.teams.find(team => team.id.toString() === teamId);
-}
 
-// Utility function to save team data back to localStorage
-function saveTeamData(updatedTeam) {
-    const user = getCurrentUser();
-    if (!user) return false;
-    
-    user.teams = user.teams.map(team => 
-        team.id === updatedTeam.id ? updatedTeam : team
-    );
-    
-    updateUser(user);
-    return true;
-}
+// --- Social Sign-in Functions (Modular style) ---
+// Make these functions globally accessible so HTML `onclick` can call them.
+// This is done by attaching them to the window object or by directly handling events in auth.js.
+// For simplicity with your current HTML, window attachment is shown, but direct event listeners are often cleaner.
 
-// Generate unique ID
-function generateId() {
-    return Date.now().toString() + Math.random().toString(36).substr(2, 9);
-}
-
-// Format date for display
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
-}
-
-// Format date and time for display
-function formatDateTime(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-// Show toast notification (simple implementation)
-function showToast(message, type = 'info') {
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'error' ? '#EF4444' : type === 'success' ? '#10B981' : '#3B82F6'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        z-index: 10000;
-        font-family: inherit;
-        font-size: 14px;
-        max-width: 300px;
-        word-wrap: break-word;
-        opacity: 0;
-        transform: translateX(100%);
-        transition: all 0.3s ease;
-    `;
-    
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    // Animate in
-    setTimeout(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateX(0)';
-    }, 10);
-    
-    // Remove after delay
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
-    }, 3000);
-}
-
-// Initialize common page functionality
-function initializePage() {
-    // Re-initialize Lucide icons after dynamic content changes
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
+window.signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        window.location.href = 'teams.html';
+    } catch (error) {
+        console.error("Google Sign-in error:", error);
+        alert(`Google Sign-in failed: ${error.message}`);
     }
-    
-    // Close modals when clicking outside
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
-        }
-    });
-    
-    // Handle escape key to close modals
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modals = document.querySelectorAll('.modal');
-            modals.forEach(modal => {
-                if (modal.style.display === 'block') {
-                    modal.style.display = 'none';
-                }
-            });
-        }
-    });
-}
+};
 
-// Call initialization when DOM is loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-    initializePage();
-}
+window.signInWithGitHub = async () => {
+    const provider = new GithubAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        window.location.href = 'teams.html';
+    } catch (error) {
+        console.error("GitHub Sign-in error:", error);
+        alert(`GitHub Sign-in failed: ${error.message}`);
+    }
+};
+
+// --- Forgot Password Modal Functions ---
+window.showForgotPasswordModal = () => {
+    document.getElementById('forgot-password-modal').style.display = 'block';
+};
+
+window.hideForgotPasswordModal = () => {
+    document.getElementById('forgot-password-modal').style.display = 'none';
+};
+
+document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('reset-email').value;
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert('Password reset link sent to your email!');
+        hideForgotPasswordModal();
+    } catch (error) {
+        console.error("Password reset error:", error);
+        alert(`Failed to send reset email: ${error.message}`);
+    }
+});
