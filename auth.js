@@ -93,6 +93,21 @@ window.signInWithGoogle = async () => {
     }
 };
 
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  auth.signInWithPopup(provider)
+    .then((result) => {
+      console.log("User signed in:", result.user);
+
+      // Redirect to dashboard.html
+      window.location.href = "dashboard.html";
+    })
+    .catch((error) => {
+      console.error("Error during sign in:", error);
+      alert("Sign-in failed. Please try again.");
+    });
+
 window.signInWithGitHub = async () => {
     const provider = new GithubAuthProvider();
     try {
@@ -125,3 +140,4 @@ document.getElementById('forgot-password-form').addEventListener('submit', async
         alert(`Failed to send reset email: ${error.message}`);
     }
 });
+
