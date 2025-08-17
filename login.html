@@ -103,7 +103,7 @@
                 })
                 .then(() => {
                     // Redirect to the teams page after a successful login
-                    window.location.href = 'teams.html'; 
+                     window.location.href = 'dashboard.html'; 
                 })
                 .catch((error) => {
                     console.error("Sign-In Error:", error.code, error.message);
@@ -114,7 +114,7 @@
         function logout() {
             signOut(auth).then(() => {
                 // Redirect to the login page after signing out
-                window.location.href = 'login.html';
+                  window.location.href = 'dashboard.html'; 
             }).catch((error) => {
                 console.error("Sign Out Error:", error);
             });
@@ -141,6 +141,7 @@
         } else if (isUserLoggedIn && isCurrentPageAuthPage) {
             // CASE 2: User IS logged in but is on the login, signup, or index page.
             // ACTION: Redirect to their main dashboard/teams page.
+             window.location.href = 'dashboard.html';
             window.location.href = 'teams.html';
         }
         // Otherwise, do nothing and let the user stay on the page.
