@@ -120,18 +120,33 @@
             });
         }
         
-        function checkAuthState() {
-            const protectedPages = ['teams.html', 'profile.html', 'dashboard.html', 'resources.html'];
-            const currentPage = window.location.pathname.split('/').pop();
-            
-            onAuthStateChanged(auth, user => {
-                if (!user && protectedPages.includes(currentPage)) {
-                    // If user is not logged in and is on a protected page, redirect to login
-                    window.location.href = 'login.html';
-                }
-            });
+      function checkAuthState() {
+    // List of pages that require a user to be logged in
+    const protectedPages = ['teams.html', 'profile.html', 'dashboard.html', 'resources.html'];
+    
+    // List of pages a logged-in user should be redirected AWAY from
+    const authPages = ['login.html', 'signup.html', 'index.html'];
+
+    const currentPage = window.location.pathname.split('/').pop();
+
+    onAuthStateChanged(auth, user => {
+        const isUserLoggedIn = !!user; // This will be true if user object exists, false if it's null
+        const isCurrentPageProtected = protectedPages.includes(currentPage);
+        const isCurrentPageAuthPage = authPages.includes(currentPage);
+
+        if (!isUserLoggedIn && isCurrentPageProtected) {
+            // CASE 1: User is NOT logged in and is trying to access a protected page.
+            // ACTION: Redirect to the login page.
+            window.location.href = 'login.html';
+        } else if (isUserLoggedIn && isCurrentPageAuthPage) {
+            // CASE 2: User IS logged in but is on the login, signup, or index page.
+            // ACTION: Redirect to their main dashboard/teams page.
+            window.location.href = 'teams.html';
         }
-        
+        // Otherwise, do nothing and let the user stay on the page.
+        // This covers logged-in users on protected pages and non-logged-in users on public pages.
+    });
+}
         // Because we are using a module, the functions are not global by default.
         // We need to attach the signInWithGoogle function to the window object
         // so the `onclick` attribute in your HTML can find it.
