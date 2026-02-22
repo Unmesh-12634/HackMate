@@ -5,7 +5,8 @@
 
   ## Running the code
 
-  Run `npm i` to install the dependencies.
+  Run 
+pm i to install the dependencies.
 
-  Run `npm run dev` to start the development server.
-  
+  Run 
+pm run dev to start the development server.
