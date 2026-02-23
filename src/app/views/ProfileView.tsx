@@ -21,7 +21,9 @@ import {
    Activity as ActivityIcon,
    GitCommit,
    PlusCircle,
-   Heart
+   Heart,
+   ShieldCheck,
+   Gauge
 } from "lucide-react";
 import { cn } from "../components/ui/utils";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,6 +39,7 @@ export function ProfileView() {
       teams: currentTeams,
       followerCount: currentFollowerCount,
       followingCount: currentFollowingCount,
+      milestones: currentMilestones,
       fetchFollowersList,
       fetchFollowingList,
       activities: currentActivities,
@@ -51,7 +54,7 @@ export function ProfileView() {
 
    const isOwner = !userId || userId === currentUser?.id;
 
-   const [targetData, setTargetData] = useState<{ profile: User, teams: Team[], activities: Activity[] } | null>(null);
+   const [targetData, setTargetData] = useState<{ profile: User, teams: Team[], activities: Activity[], milestones: any[] } | null>(null);
    const [loading, setLoading] = useState(!isOwner);
    const [showShareModal, setShowShareModal] = useState(false);
 
@@ -87,8 +90,24 @@ export function ProfileView() {
             )
             .subscribe();
 
+         const milestoneChannel = supabase.channel(`profile_milestones_${userId}`)
+            .on('postgres_changes',
+               { event: 'INSERT', schema: 'public', table: 'user_milestones', filter: `user_id=eq.${userId}` },
+               (payload: any) => {
+                  setTargetData(prev => {
+                     if (!prev) return prev;
+                     return {
+                        ...prev,
+                        milestones: [payload.new, ...prev.milestones]
+                     };
+                  });
+               }
+            )
+            .subscribe();
+
          return () => {
             supabase.removeChannel(channel);
+            supabase.removeChannel(milestoneChannel);
          };
       }
    }, [userId, isOwner, supabase]); // Add supabase to dependency array
@@ -97,6 +116,7 @@ export function ProfileView() {
    const user = isOwner ? currentUser : targetData?.profile;
    const teams = isOwner ? currentTeams : (targetData?.teams || []);
    const activities = isOwner ? currentActivities : (targetData?.activities || []);
+   const milestones = isOwner ? currentMilestones : (targetData?.milestones || []);
    const followerCount = isOwner ? currentFollowerCount : (user?.follower_count || 0);
    const followingCount = isOwner ? currentFollowingCount : (user?.following_count || 0);
 
@@ -132,21 +152,27 @@ export function ProfileView() {
    };
 
    // Calculated Stats
-   const teamsLed = teams.filter(t => t.role === "Leader").length;
+   const teamsLed = teams.filter(t => (t.role || "").toLowerCase().includes("lead")).length;
    const projectsJoined = teams.length;
-   const totalWins = 0;
+   const totalWins = milestones.filter((m: any) => (m.title || "").toLowerCase().includes("win") || (m.title || "").toLowerCase().includes("champion")).length;
    const reputation = user?.reputation || 0;
+
+   const ALL_BADGES = [
+      { id: 'early_adopter', name: "Early Adopter", icon: Zap, color: "text-hack-blue", bg: "bg-hack-blue/10", check: () => true },
+      { id: 'squad_leader_1', name: "Squad Leader", icon: Users, color: "text-hack-purple", bg: "bg-hack-purple/10", check: () => teamsLed >= 1, hint: "Lead 1 team" },
+      { id: 'battalion_commander', name: "Battalion Commander", icon: ShieldCheck, color: "text-hack-neon", bg: "bg-hack-neon/10", check: () => teamsLed >= 5, hint: "Lead 5 teams" },
+      { id: 'veteran_status', name: "Veteran Researcher", icon: Star, color: "text-yellow-500", bg: "bg-yellow-500/10", check: () => projectsJoined >= 10, hint: "Join 10 projects" },
+      { id: 'productivity_titan', name: "Productivity Titan", icon: Gauge, color: "text-orange-500", bg: "bg-orange-500/10", check: () => activities.length >= 50, hint: "50 pulses recorded" },
+   ];
+
+   const badges = ALL_BADGES.map(b => ({
+      ...b,
+      isUnlocked: b.check()
+   }));
 
    const skills = user?.skills && user.skills.length > 0
       ? user.skills
       : ["No skills listed"];
-
-   const badges = [
-      { name: "Early Adopter", icon: Zap, color: "text-hack-blue", bg: "bg-hack-blue/10" },
-      ...(teamsLed > 0 ? [{ name: "Team Leader", icon: Users, color: "text-hack-purple", bg: "bg-hack-purple/10" }] : []),
-      ...(projectsJoined > 5 ? [{ name: "Veteran", icon: Star, color: "text-yellow-500", bg: "bg-yellow-500/10" }] : []),
-      ...(activities.length > 0 ? [{ name: "Active Coder", icon: GitCommit, color: "text-hack-neon", bg: "bg-hack-neon/10" }] : []),
-   ];
 
    // Generate Activity Heatmap Data
    const heatmapWeeks = useMemo(() => {
@@ -179,6 +205,26 @@ export function ProfileView() {
       return weeks;
    }, [activities]);
 
+   const groupedActivities = useMemo(() => {
+      const groups: { title: string, items: Activity[] }[] = [
+         { title: 'Today', items: [] },
+         { title: 'Yesterday', items: [] },
+         { title: 'Earlier Recorded pulses', items: [] }
+      ];
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      activities.forEach(act => {
+         const d = new Date(act.created_at);
+         if (d >= today) groups[0].items.push(act);
+         else if (d >= yesterday) groups[1].items.push(act);
+         else groups[2].items.push(act);
+      });
+      return groups.filter(g => g.items.length > 0);
+   }, [activities]);
+
    const getLevelClass = (count: number) => {
       if (count === 0) return "bg-secondary hover:bg-secondary/80";
       if (count <= 1) return "bg-hack-neon/30 hover:bg-hack-neon/50";
@@ -206,9 +252,14 @@ export function ProfileView() {
                   <div className="flex-1 text-center md:text-left">
                      <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
                         <h1 className="text-3xl font-black tracking-tight text-white">{user?.name || "Operative"}</h1>
-                        <Badge variant="outline" className="border-hack-blue/50 text-hack-blue bg-hack-blue/5 px-2 py-0 text-[10px] uppercase font-black tracking-widest">
-                           {user?.rank || "Operative"}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                           <Badge variant="outline" className="border-hack-blue/50 text-hack-blue bg-hack-blue/5 px-2 py-0 text-[10px] uppercase font-black tracking-widest">
+                              {user?.rank || "Operative"}
+                           </Badge>
+                           <div className="bg-hack-neon/10 border border-hack-neon/20 px-2 py-0.5 rounded text-[10px] font-black text-hack-neon uppercase">
+                              Lvl {user?.level || 1}
+                           </div>
+                        </div>
                      </div>
                      <p className="text-muted-foreground font-medium flex items-center justify-center md:justify-start gap-2">
                         {user?.role} <span className="w-1 h-1 rounded-full bg-slate-600" /> {user?.email}
@@ -272,6 +323,13 @@ export function ProfileView() {
                   ))}
                </div>
             </CardContent>
+            {/* XP PROGRESS BAR */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-secondary/50">
+               <div
+                  className="h-full bg-gradient-to-r from-hack-blue to-hack-neon transition-all duration-1000"
+                  style={{ width: `${Math.min(100, (reputation % 1000) / 10)}%` }}
+               />
+            </div>
          </Card>
 
          <div className="grid lg:grid-cols-3 gap-8">
@@ -302,16 +360,44 @@ export function ProfileView() {
                   </CardContent>
                </Card>
 
-               <Card>
-                  <CardHeader><CardTitle className="text-sm uppercase tracking-wider">Badges</CardTitle></CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-4">
+               <Card className="border-border/50 bg-secondary/5 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-hack-blue/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+                  <CardHeader><CardTitle className="text-sm uppercase tracking-widest flex items-center justify-between">
+                     <span>Neural Badges</span>
+                     <Badge variant="secondary" className="text-[9px] font-black bg-hack-blue/10 text-hack-blue border-hack-blue/20">
+                        {badges.filter(b => b.isUnlocked).length}/{badges.length}
+                     </Badge>
+                  </CardTitle></CardHeader>
+                  <CardContent className="grid grid-cols-2 gap-3">
                      {badges.map(badge => (
-                        <div key={badge.name} className={cn("p-3 rounded-xl flex flex-col items-center gap-2 text-center border border-border/50", badge.bg)}>
-                           <badge.icon className={cn("w-6 h-6", badge.color)} />
-                           <span className="text-[10px] font-bold leading-tight">{badge.name}</span>
+                        <div
+                           key={badge.id}
+                           className={cn(
+                              "p-3 rounded-xl flex flex-col items-center gap-2 text-center border transition-all duration-300 relative group/badge",
+                              badge.isUnlocked
+                                 ? cn("border-border/50", badge.bg)
+                                 : "border-white/5 bg-secondary/20 opacity-40 grayscale"
+                           )}
+                        >
+                           {!badge.isUnlocked && (
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/badge:opacity-100 transition-opacity bg-black/40 rounded-xl backdrop-blur-[2px] z-10">
+                                 <span className="text-[8px] font-black text-white px-2 text-center leading-tight">
+                                    LOCKED<br />{badge.hint}
+                                 </span>
+                              </div>
+                           )}
+                           <badge.icon className={cn("w-6 h-6", badge.isUnlocked ? badge.color : "text-muted-foreground")} />
+                           <span className="text-[9px] font-black leading-tight uppercase tracking-tighter">
+                              {badge.name}
+                           </span>
                         </div>
                      ))}
                   </CardContent>
+                  <div className="px-6 pb-4">
+                     <Button variant="ghost" className="w-full text-[10px] uppercase font-black tracking-widest text-muted-foreground hover:text-hack-blue hover:bg-hack-blue/5" onClick={() => navigate('/achievements')}>
+                        Advanced Credentials
+                     </Button>
+                  </div>
                </Card>
             </div>
 
@@ -400,61 +486,78 @@ export function ProfileView() {
                      </Card>
                   )}
 
-                  {/* Live Activity Feed */}
-                  <Card className={cn("flex flex-col h-full border-border/50", !isOwner && "md:col-span-2")}>
-                     <CardHeader className="pb-4">
-                        <CardTitle className="text-sm uppercase tracking-wider flex items-center gap-2">
-                           <ActivityIcon className="w-4 h-4 text-hack-blue" /> Recent Activity Feed
+                  <Card className={cn("flex flex-col h-full border-border/50 bg-secondary/5", !isOwner && "md:col-span-2")}>
+                     <CardHeader className="pb-2">
+                        <CardTitle className="text-sm uppercase tracking-widest flex items-center gap-2">
+                           <ActivityIcon className="w-4 h-4 text-hack-blue animate-pulse" /> Mission Logs
                         </CardTitle>
                      </CardHeader>
-                     <CardContent className="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar space-y-4 pr-2">
+                     <CardContent className="flex-1 overflow-y-auto max-h-[500px] custom-scrollbar space-y-6 pr-2">
                         {activities.length === 0 ? (
                            <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No recorded activity pulses in the cloud.</p>
                         ) : (
-                           activities.slice(0, 15).map((act, i) => (
-                              <div key={act.id} className="group relative pl-8 pb-4 transition-all hover:translate-x-1">
-                                 {/* Timeline Line */}
-                                 {i !== Math.min(activities.length - 1, 14) && (
-                                    <div className="absolute left-[11px] top-6 bottom-0 w-[1px] bg-border/40 group-hover:bg-hack-blue/30" />
-                                 )}
-
-                                 {/* Activity Icon Node */}
-                                 <div className="absolute left-0 top-1.5 w-6 h-6 rounded-lg bg-secondary border border-border flex items-center justify-center z-10 group-hover:border-hack-blue/50 group-hover:bg-hack-blue/5 transition-all">
-                                    {act.action_type.includes('commit') || act.action_type.includes('code') ? <GitCommit className="w-3 h-3 text-hack-blue" /> :
-                                       act.action_type.includes('join') || act.action_type.includes('team') ? <Users className="w-3 h-3 text-hack-purple" /> :
-                                          act.action_type.includes('like') || act.action_type.includes('engagement') ? <Heart className="w-3 h-3 text-red-500" /> :
-                                             <Zap className="w-3 h-3 text-hack-neon" />}
-                                 </div>
-
-                                 <div className="bg-secondary/10 rounded-xl p-4 border border-transparent hover:border-white/5 hover:bg-white/[0.02] transition-all">
-                                    <div className="flex justify-between items-start gap-4 mb-1">
-                                       <p className="text-sm font-bold text-slate-100 leading-snug">{act.description}</p>
-                                       <Badge variant="outline" className="text-[8px] uppercase font-black text-slate-500 border-white/5">
-                                          {act.action_type.replace(/_/g, ' ')}
-                                       </Badge>
+                           <>
+                              {groupedActivities.map((group) => (
+                                 <div key={group.title} className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                       <span className="text-[10px] font-black uppercase text-hack-blue tracking-widest bg-hack-blue/10 px-2 py-0.5 rounded border border-hack-blue/20">
+                                          {group.title}
+                                       </span>
+                                       <div className="h-[1px] flex-1 bg-gradient-to-r from-hack-blue/20 to-transparent" />
                                     </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                                       <Calendar className="w-3 h-3" />
-                                       {(() => {
-                                          const d = new Date(act.created_at);
-                                          const diff = Date.now() - d.getTime();
-                                          if (diff < 60000) return 'Just now';
-                                          if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-                                          if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-                                          return d.toLocaleDateString();
-                                       })()}
-                                       {act.metadata?.reputation_gain > 0 && (
-                                          <span className="text-hack-neon font-black ml-2">+{act.metadata.reputation_gain} XP</span>
-                                       )}
+
+                                    <div className="space-y-3">
+                                       {group.items.map((act) => (
+                                          <div key={act.id} className="group relative pl-6 pb-2 last:pb-0 transition-all hover:translate-x-1">
+                                             {/* Tactical Timeline Design */}
+                                             <div className="absolute left-[7px] top-6 bottom-0 w-[2px] bg-gradient-to-b from-border/60 to-transparent group-hover:from-hack-blue/40" />
+                                             <div className="absolute left-0 top-1.5 w-[16px] h-[16px] rounded bg-secondary border border-border group-hover:border-hack-blue/50 flex items-center justify-center z-10 transition-colors">
+                                                {act.action_type.includes('commit') || act.action_type.includes('code') ? <GitCommit className="w-2.5 h-2.5 text-hack-blue" /> :
+                                                   act.action_type.includes('join') || act.action_type.includes('team') ? <Users className="w-2.5 h-2.5 text-hack-purple" /> :
+                                                      act.action_type.includes('like') || act.action_type.includes('engagement') ? <Heart className="w-2.5 h-2.5 text-red-500" /> :
+                                                         <Zap className="w-2.5 h-2.5 text-hack-neon" />}
+                                             </div>
+
+                                             <div className="bg-background/40 backdrop-blur-sm rounded-xl p-3 border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-gradient-to-r from-hack-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <div className="flex justify-between items-start gap-3 relative z-10">
+                                                   <div className="flex-1 space-y-1">
+                                                      <p className="text-[13px] font-bold text-slate-100 leading-tight group-hover:text-white transition-colors">
+                                                         {act.description}
+                                                      </p>
+                                                      <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-black uppercase tracking-tighter">
+                                                         <span className="text-hack-blue/80 font-mono">
+                                                            {new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                                         </span>
+                                                         {act.metadata?.reputation_gain > 0 && (
+                                                            <span className="text-hack-neon bg-hack-neon/5 px-1 rounded shadow-[0_0_10px_rgba(0,255,255,0.1)] border border-hack-neon/10">
+                                                               +{act.metadata.reputation_gain} XP
+                                                            </span>
+                                                         )}
+                                                      </div>
+                                                   </div>
+                                                   <Badge variant="outline" className="text-[7px] px-1.5 py-0 rounded bg-black/20 border-white/5 opacity-50 group-hover:opacity-100 transition-opacity uppercase font-black">
+                                                      {act.action_type.replace(/_/g, ' ')}
+                                                   </Badge>
+                                                </div>
+                                             </div>
+                                          </div>
+                                       ))}
                                     </div>
                                  </div>
-                              </div>
-                           ))
+                              ))}
+                              {activities.length > 15 && (
+                                 <div className="pt-4 border-t border-white/5">
+                                    <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-hack-blue transition-all">
+                                       Link to Full Neural Feed
+                                    </Button>
+                                 </div>
+                              )}
+                           </>
                         )}
                      </CardContent>
                   </Card>
                </div>
-
             </div>
          </div>
          <AnimatePresence>

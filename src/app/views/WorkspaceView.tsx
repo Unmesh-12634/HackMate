@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -11,16 +11,27 @@ import {
     Shield,
     Activity,
     Zap,
+    Plus,
+    Send,
+    Target,
+    Image as ImageIcon,
+    File as FileIcon,
+    Download,
+    Eye,
+    ExternalLink,
+    FileCode,
     Lock,
     ChevronLeft,
     X,
     Users,
-    Plus,
-    Send
+    Trash2,
+    AlertTriangle
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { useAppContext } from "../context/AppContext";
+import { cn } from "../components/ui/utils";
+import { toast } from "sonner";
 
 // Placeholder components for the various workspace modules
 // These will be fully implemented in follow-up tasks
@@ -274,7 +285,7 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
     );
 };
 const CommsLink: React.FC<{ team: any }> = ({ team }) => {
-    const { user, teamMessages, fetchTeamMessages, sendTeamMessage } = useAppContext();
+    const { user, teamMessages, fetchTeamMessages, sendTeamMessage, getStandup } = useAppContext();
     const [message, setMessage] = useState("");
     const scrollRef = React.useRef<HTMLDivElement>(null);
 
@@ -293,9 +304,20 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
         }
     }, [teamMessages]);
 
-    const handleSend = (e: React.FormEvent) => {
+    const handleSend = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!message.trim()) return;
+
+        if (message.startsWith("/standup")) {
+            const cmd = message.trim();
+            setMessage("");
+            const summary = await getStandup(team.id);
+            if (summary) {
+                sendTeamMessage(team.id, `Tactical Stand-up Summary:\n\n${summary.summary_text}\n\n🏆 Key Achievements:\n- ${summary.key_achievements.join('\n- ')}\n\n⚠️ Blockers:\n- ${summary.blockers.join('\n- ')}\n\n🔜 Next Steps:\n- ${summary.next_steps.join('\n- ')}`);
+            }
+            return;
+        }
+
         sendTeamMessage(team.id, message.trim());
         setMessage("");
     };
@@ -383,13 +405,22 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
     );
 };
 const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
-    const { documents, addDocument, updateDocument } = useAppContext();
+    const { documents, addDocument, updateDocument, user } = useAppContext();
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
     const [isCreating, setIsCreating] = useState(false);
     const [newDocTitle, setNewDocTitle] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const selectedDoc = documents.find(d => d.id === selectedDocId);
+
+    const getDocIcon = (doc: any) => {
+        if (doc.type === 'markdown') return <FileText className="w-5 h-5" />;
+        if (doc.type === 'image') return <ImageIcon className="w-5 h-5" />;
+        if (doc.type === 'pdf') return <FileIcon className="w-5 h-5" />;
+        if (doc.type === 'code') return <FileCode className="w-5 h-5" />;
+        return <FileIcon className="w-5 h-5" />;
+    };
 
     const handleCreate = () => {
         if (!newDocTitle.trim()) return;
@@ -402,43 +433,31 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Supported: PDF, JPG, PNG, PPTX, DOCX
-        const allowedTypes = [
-            'application/pdf',
-            'image/jpeg',
-            'image/png',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        ];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        let type = 'file';
 
-        if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pptx|docx)$/i)) {
-            // Basic fallback for types that might not have standard mime types in all browsers
-            const ext = file.name.split('.').pop()?.toLowerCase();
-            if (!['pdf', 'jpg', 'jpeg', 'png', 'pptx', 'docx'].includes(ext || '')) {
-                alert("ERR: PROTOCOL MISMATCH. ONLY PDF, JPG, PNG, PPTX, DOCX ALLOWED.");
-                return;
-            }
-        }
+        if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext || '')) type = 'image';
+        else if (ext === 'pdf') type = 'pdf';
+        else if (['ts', 'tsx', 'js', 'jsx', 'py', 'json'].includes(ext || '')) type = 'code';
+
+        toast.info(`Initiating upload protocol for ${file.name}...`);
 
         addDocument({
             title: file.name,
-            content: `Uploaded file: ${file.name}`,
-            type: "file"
+            content: `Archive entry for ${file.name}. Raw data protocol: ${file.type}`,
+            type: type
         }, file);
     };
 
     return (
         <div className="h-full flex bg-[#020617]">
-            {/* Hidden File Input */}
             <input
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
                 onChange={handleFileUpload}
-                accept=".pdf,.jpg,.jpeg,.png,.pptx,.docx"
             />
 
-            {/* Doc List Sidebar */}
             <aside className="w-80 border-r border-white/5 flex flex-col bg-slate-900/20">
                 <header className="p-6 border-b border-white/5">
                     <div className="flex items-center justify-between mb-4">
@@ -447,14 +466,12 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                             <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="p-1.5 rounded-lg bg-emerald-600/10 text-emerald-400 hover:bg-emerald-600/20 transition-all"
-                                title="Upload Asset"
                             >
                                 <Plus className="w-3 h-3" />
                             </button>
                             <button
                                 onClick={() => setIsCreating(true)}
                                 className="p-1.5 rounded-lg bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 transition-all"
-                                title="New Document"
                             >
                                 <FileText className="w-3 h-3" />
                             </button>
@@ -462,112 +479,165 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                     </div>
 
                     {isCreating && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-2 mb-4"
-                        >
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2 mb-4">
                             <input
                                 autoFocus
                                 value={newDocTitle}
                                 onChange={(e) => setNewDocTitle(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                                placeholder="Doc Title..."
-                                className="w-full bg-slate-950 border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder="Core Matrix Title..."
+                                className="w-full bg-slate-950 border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
                             />
                             <div className="flex gap-2">
-                                <Button onClick={handleCreate} size="sm" className="flex-1 h-8 rounded-lg text-[10px] font-bold uppercase">Confirm</Button>
-                                <Button onClick={() => setIsCreating(false)} size="sm" variant="ghost" className="flex-1 h-8 rounded-lg text-[10px] font-bold uppercase">Cancel</Button>
+                                <Button onClick={handleCreate} size="sm" className="flex-1 text-[10px] uppercase">Confirm</Button>
+                                <Button onClick={() => setIsCreating(false)} size="sm" variant="ghost" className="flex-1 text-[10px] uppercase">Cancel</Button>
                             </div>
                         </motion.div>
                     )}
 
-                    <div className="relative">
+                    <div className="relative mt-2">
                         <input
                             placeholder="Search intel..."
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-xs text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-bold"
                         />
                     </div>
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
-                    {documents.map((doc) => (
+                    {documents.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase())).map((doc) => (
                         <button
                             key={doc.id}
                             onClick={() => setSelectedDocId(doc.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group ${selectedDocId === doc.id
-                                ? "bg-blue-600/10 border border-blue-500/20"
+                                ? "bg-blue-600/15 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
                                 : "border border-transparent hover:bg-white/5"
                                 }`}
                         >
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 ${selectedDocId === doc.id ? "bg-blue-500/20 text-blue-400" : "bg-slate-900 text-slate-500 group-hover:text-slate-300"
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 ${selectedDocId === doc.id ? "bg-blue-500/20 text-blue-400" : "bg-slate-900 text-slate-500"
                                 }`}>
-                                <FileText className="w-5 h-5" />
+                                {getDocIcon(doc)}
                             </div>
                             <div className="text-left overflow-hidden">
                                 <div className={`text-sm font-bold truncate ${selectedDocId === doc.id ? "text-blue-400" : "text-slate-200"}`}>
                                     {doc.title}
                                 </div>
-                                <div className="text-[10px] text-slate-500 uppercase font-black">
-                                    Updated {new Date(doc.updatedAt).toLocaleDateString()}
+                                <div className="text-[9px] text-slate-500 uppercase font-black">
+                                    {doc.type} • {new Date(doc.updatedAt).toLocaleDateString()}
                                 </div>
                             </div>
-                            {doc.url && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />}
                         </button>
                     ))}
-
-                    {documents.length === 0 && (
-                        <div className="h-64 flex flex-col items-center justify-center text-slate-600 space-y-4 px-8 text-center">
-                            <div className="w-12 h-12 rounded-full border border-dashed border-white/10 flex items-center justify-center">
-                                <FileText className="w-6 h-6 opacity-20" />
-                            </div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Archive data currently unavailable.</p>
-                        </div>
-                    )}
                 </div>
             </aside>
 
-            {/* Main Content / Editor */}
-            <main className="flex-1 flex flex-col min-w-0 bg-[#020617]">
+            <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+
                 {selectedDoc ? (
                     <>
-                        <header className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/20">
+                        <header className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/20 backdrop-blur-sm relative z-10">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
-                                    <FileText className="w-6 h-6" />
+                                    {getDocIcon(selectedDoc)}
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black text-white uppercase tracking-tighter">{selectedDoc.title}</h2>
                                     <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                        <span>Markdown Asset</span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-700" />
-                                        <span>Last Edit: {new Date(selectedDoc.updatedAt).toLocaleTimeString()}</span>
+                                        <Badge variant="outline" className="text-[8px] border-white/10">{selectedDoc.type}</Badge>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                                        <span>Vault Entry: {new Date(selectedDoc.updatedAt).toLocaleTimeString()}</span>
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                                 {selectedDoc.url && (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="rounded-xl border-white/10 hover:bg-white/5 h-9 font-bold uppercase text-[10px] tracking-widest"
+                                            onClick={() => window.open(selectedDoc.url, '_blank')}
+                                        >
+                                            <ExternalLink className="w-3.5 h-3.5 mr-2" />
+                                            Live View
+                                        </Button>
+                                        <a href={selectedDoc.url} download={selectedDoc.title} className="contents">
+                                            <Button variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5 h-9 px-3">
+                                                <Download className="w-3.5 h-3.5 text-slate-400" />
+                                            </Button>
+                                        </a>
+                                    </>
+                                )}
+                                {selectedDoc.type === 'markdown' && (
                                     <Button
-                                        variant="outline"
                                         size="sm"
-                                        className="rounded-xl border-white/10 hover:bg-white/5 h-9"
-                                        onClick={() => window.open(selectedDoc.url, '_blank')}
+                                        className="rounded-xl bg-blue-600 hover:bg-blue-500 h-9 px-6 font-bold uppercase tracking-widest text-[10px] shadow-lg shadow-blue-600/20"
+                                        onClick={() => updateDocument(selectedDoc.id, selectedDoc.content)}
                                     >
-                                        View Asset
+                                        Sync Changes
                                     </Button>
                                 )}
-                                <Button size="sm" className="rounded-xl bg-blue-600 hover:bg-blue-500 h-9 px-6 font-bold uppercase tracking-widest text-[10px]">
-                                    Sync Changes
-                                </Button>
                             </div>
                         </header>
-                        <div className="flex-1 p-8">
-                            <textarea
-                                value={selectedDoc.content}
-                                onChange={(e) => updateDocument(selectedDoc.id, e.target.value)}
-                                className="w-full h-full bg-transparent text-slate-300 font-mono text-sm leading-relaxed resize-none focus:outline-none placeholder:text-slate-800"
-                                placeholder="# Start documenting mission intel..."
-                            />
+
+                        <div className="flex-1 overflow-y-auto p-8 relative z-10">
+                            {selectedDoc.type === 'markdown' ? (
+                                <textarea
+                                    value={selectedDoc.content}
+                                    onChange={(e) => updateDocument(selectedDoc.id, e.target.value)}
+                                    className="w-full h-full bg-transparent text-slate-300 font-mono text-sm leading-relaxed resize-none focus:outline-none placeholder:text-slate-800"
+                                    placeholder="# System protocols pending..."
+                                />
+                            ) : selectedDoc.type === 'image' ? (
+                                <div className="h-full flex flex-col items-center justify-center space-y-6">
+                                    <motion.div
+                                        initial={{ scale: 0.9, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        className="relative group max-w-2xl"
+                                    >
+                                        <div className="absolute -inset-4 bg-blue-500/10 blur-2xl rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <img
+                                            src={selectedDoc.url}
+                                            alt={selectedDoc.title}
+                                            className="relative max-w-full max-h-[60vh] rounded-3xl border border-white/10 shadow-2xl object-contain bg-slate-900/50 p-2"
+                                        />
+                                    </motion.div>
+                                    <div className="flex gap-4">
+                                        <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            Asset Format: {selectedDoc.title.split('.').pop()?.toUpperCase()}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : selectedDoc.type === 'pdf' ? (
+                                <div className="h-full flex flex-col items-center justify-center">
+                                    <div className="w-24 h-24 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
+                                        <FileIcon className="w-10 h-10 text-red-400" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Portable Intel Packet</h3>
+                                    <p className="text-sm text-slate-400 mb-8 max-w-xs text-center font-medium">PDF assets require external visor for full decryption.</p>
+                                    <Button
+                                        onClick={() => window.open(selectedDoc.url, '_blank')}
+                                        className="bg-red-600 hover:bg-red-500 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest"
+                                    >
+                                        Open in Secondary Visor
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center">
+                                    <div className="w-24 h-24 rounded-3xl bg-slate-800/50 border border-white/5 flex items-center justify-center mb-6">
+                                        <FileIcon className="w-10 h-10 text-slate-500" />
+                                    </div>
+                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Foreign Intel Structure</h3>
+                                    <p className="text-sm text-slate-400 mb-8 font-medium">Unknown data protocol. Recommendation: Manual download.</p>
+                                    <a href={selectedDoc.url} download={selectedDoc.title}>
+                                        <Button className="bg-slate-800 hover:bg-slate-700 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest">
+                                            <Download className="w-4 h-4 mr-2" /> Extract Data
+                                        </Button>
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </>
                 ) : (
@@ -993,6 +1063,126 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
         </div>
     );
 };
+const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
+    const { bounties, user } = useAppContext();
+    const teamBounties = bounties.filter(b => b.claimed_by === user?.id || b.claimed_by === team.id);
+
+    // Dynamic Reputation Logic
+    const completedMissions = teamBounties.filter(b => b.status === 'completed').length;
+    const completedTasks = team.tasks?.filter((t: any) => t.status === 'done').length || 0;
+    const totalXP = (completedMissions * 500) + (completedTasks * 100);
+    const level = Math.floor(totalXP / 1000) + 1;
+    const nextLevelXP = level * 1000;
+    const currentLevelXP = (level - 1) * 1000;
+    const progress = Math.min(((totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100, 100);
+
+    return (
+        <div className="h-full flex flex-col bg-[#020617] p-8 overflow-hidden relative">
+            {/* Holographic Scanline Gradient */}
+            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] z-10 opacity-30" style={{ backgroundSize: '100% 4px' }} />
+
+            <header className="mb-8 relative z-20">
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 mb-1"
+                >
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] animate-pulse" />
+                    <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em]">Tactical Mission Sync</span>
+                </motion.div>
+                <motion.h2
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-3xl font-black text-white tracking-tighter uppercase"
+                >
+                    Mission Logs
+                </motion.h2>
+            </header>
+
+            <div className="flex-1 overflow-y-auto pr-4 space-y-4 scrollbar-hide relative z-20">
+                <AnimatePresence mode="popLayout">
+                    {teamBounties.length === 0 ? (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="flex flex-col items-center justify-center py-40 opacity-20"
+                        >
+                            <Target className="w-16 h-16 mb-4 text-slate-600" />
+                            <span className="text-xs font-black uppercase tracking-widest text-slate-600">No_Active_Missions</span>
+                        </motion.div>
+                    ) : (
+                        teamBounties.map((bounty, i) => (
+                            <motion.div
+                                key={bounty.id}
+                                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                whileHover={{ scale: 1.01, borderColor: 'rgba(99, 102, 241, 0.3)' }}
+                                className="p-6 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm group transition-all flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-6">
+                                    <div className={cn(
+                                        "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500",
+                                        bounty.status === 'completed' ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
+                                    )}>
+                                        <Shield className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h3 className="text-lg font-black text-white uppercase tracking-tighter">{bounty.title}</h3>
+                                            <Badge variant="outline" className="text-[8px] uppercase border-white/10 text-slate-500 pointer-events-none">{bounty.difficulty}</Badge>
+                                        </div>
+                                        <p className="text-xs text-slate-500 font-medium max-w-sm">{bounty.description}</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status</div>
+                                    <div className={cn(
+                                        "text-xs font-black uppercase tracking-widest",
+                                        bounty.status === 'completed' ? "text-green-500" : "text-indigo-400 animate-pulse"
+                                    )}>
+                                        {bounty.status === 'in_progress' ? 'Running_Op' : bounty.status.toUpperCase()}
+                                    </div>
+                                    <div className="text-[10px] font-black text-slate-700 mt-2">+{bounty.reward_xp} XP</div>
+                                </div>
+                            </motion.div>
+                        ))
+                    )}
+                </AnimatePresence>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8 p-6 rounded-3xl bg-indigo-600/5 border border-indigo-500/10 flex items-center justify-between shadow-2xl shadow-indigo-500/5 relative z-20"
+            >
+                <div>
+                    <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Squad Reputation</div>
+                    <div className="text-2xl font-black text-white">LEVEL_{level.toString().padStart(2, '0')}</div>
+                </div>
+                <div className="h-12 w-[1px] bg-indigo-500/20 mx-6" />
+                <div className="flex-1">
+                    <div className="flex justify-between text-[10px] font-black text-slate-600 uppercase mb-2">
+                        <span>XP Progress</span>
+                        <span>{totalXP} / {nextLevelXP}</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 1, delay: 0.8 }}
+                            className="h-full bg-indigo-500 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.5)]"
+                        />
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
 const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
     const [history, setHistory] = useState<string[]>([
         "HACKMATE CORE KERNEL v4.2.0-STABLE",
@@ -1009,6 +1199,30 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [history]);
+
+    React.useEffect(() => {
+        const intelFeed = [
+            "[INTEL] SQUADRON SYNC DETECTED IN SECTOR 7",
+            "[SYSTEM] MEMORY OPTIMIZATION COMPLETE",
+            "[SCAN] NEW REPO COMMITS DETECTED IN PRODUCTION",
+            "[INTEL] GLOBAL BOUNTY MATRIX UPDATED",
+            "[ALERT] UNAUTHORIZED PING FROM EXTERNAL NODE",
+            "[SYSTEM] NEURAL KERNEL AT 94% EFFICIENCY",
+            "[INTEL] TEAM REPUTATION INCREASED",
+            "[SCAN] KEYWORD DETECTED IN GLOBAL RELAY: 'DECRYPTION'"
+        ];
+
+        const interval = setInterval(() => {
+            const randomMsg = intelFeed[Math.floor(Math.random() * intelFeed.length)];
+            setHistory(prev => {
+                const newHist = [...prev, `[${new Date().toLocaleTimeString()}] ${randomMsg}`];
+                if (newHist.length > 50) return newHist.slice(newHist.length - 50);
+                return newHist;
+            });
+        }, 15000 + Math.random() * 30000); // Random interval between 15-45 seconds
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handleCommand = (e: React.FormEvent) => {
         e.preventDefault();
@@ -1029,7 +1243,8 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
                     "  INTEL     - Display archive metadata",
                     "  CLEAR     - Wipe terminal buffer",
                     "  SYSTEM    - Display OS environment data",
-                    "  OBJECTIVE - Print current mission objective"
+                    "  OBJECTIVE - Print current mission objective",
+                    "  SCAN      - Perform sector security scan"
                 );
                 break;
             case 'status':
@@ -1065,11 +1280,27 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
                 break;
             case 'squad':
                 team.currentMembers.forEach((m: any) => {
-                    newHistory.push(`  [${m.online ? 'ONLINE' : 'OFFLINE'}] ${m.name.toUpperCase()} - ${m.role.toUpperCase()}`);
+                    newHistory.push(`  [${m.online ? 'ONLINE' : 'OFFLINE'}] ${m.name.toUpperCase()} - ${m.member_role?.toUpperCase() || m.role?.toUpperCase()}`);
                 });
                 break;
             case 'objective':
                 newHistory.push(`CURRENT OBJECTIVE: ${team.mission_objective || 'NONE SET'}`);
+                break;
+            case 'scan':
+                newHistory.push(
+                    "SCANNING SECTOR INTERRUPTS...",
+                    "...",
+                    "NO INTRUSIONS DETECTED. ALL SYSTEMS SECURE.",
+                    `ACTIVE NODES: ${team.currentMembers.filter((m: any) => m.online).length}`
+                );
+                break;
+            case 'intel':
+                newHistory.push(
+                    "INTEL ARCHIVE METADATA:",
+                    `  TOTAL ASSETS: ${team.documents?.length || 0}`,
+                    "  ENCRYPTION: ACTIVE",
+                    "  VAULT STATUS: SECURED"
+                );
                 break;
             case 'clear':
                 setHistory(["BUFFER CLEARED.", ""]);
@@ -1088,7 +1319,9 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
         }
 
         newHistory.push("");
-        setHistory(newHistory);
+        // Limit history size
+        const finalHistory = newHistory.length > 50 ? newHistory.slice(newHistory.length - 50) : newHistory;
+        setHistory(finalHistory);
         setInput("");
     };
 
@@ -1148,6 +1381,261 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
     );
 };
 
+const MissionClock: React.FC<{ team: any }> = ({ team }) => {
+    const { updateTeamDeadline, deleteTeam, user } = useAppContext();
+    const navigate = useNavigate();
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [showDeadlineModal, setShowDeadlineModal] = useState(false);
+    const [showAbortModal, setShowAbortModal] = useState(false);
+    const [deadlineInput, setDeadlineInput] = useState("");
+
+    useEffect(() => {
+        if (team.deadline) {
+            // Format for datetime-local: YYYY-MM-DDThh:mm
+            const date = new Date(team.deadline);
+            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            setDeadlineInput(localDate.toISOString().slice(0, 16));
+        }
+    }, [team.deadline, showDeadlineModal]);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Robust leader check: check if user is in memberships and has 'Leader' role
+    const isLeader = team.currentMembers.some((m: any) => m.id === user?.id && m.role === 'Leader');
+    const deadlineDate = team.deadline ? new Date(team.deadline) : null;
+    const isOvertime = deadlineDate ? currentTime > deadlineDate : false;
+
+    const getTimeRemaining = () => {
+        if (!deadlineDate) return null;
+        const diff = Math.abs(deadlineDate.getTime() - currentTime.getTime());
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        return { days, hours, mins, secs };
+    };
+
+    const remaining = getTimeRemaining();
+
+    const handleSetDeadline = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!deadlineInput) return;
+        // Convert local datetime-local value to ISO string for storage
+        const selectedDate = new Date(deadlineInput);
+        updateTeamDeadline(team.id, selectedDate.toISOString());
+        setShowDeadlineModal(false);
+    };
+
+    const handleReset = () => {
+        if (window.confirm("ARE YOU SURE YOU WANT TO ABORT THE MISSION TIMELINE?")) {
+            updateTeamDeadline(team.id, null);
+        }
+    };
+
+    return (
+        <div className="flex items-center gap-6 px-6 py-3 bg-slate-950/40 border-b border-white/5 backdrop-blur-xl relative z-30 min-h-[64px]">
+            {/* Real-time Clock */}
+            <div className="flex flex-col border-r border-white/10 pr-6">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">System Time</span>
+                <span className="text-sm font-mono font-bold text-emerald-400 tabular-nums">
+                    {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                </span>
+            </div>
+
+            {/* Mission Countdown */}
+            <div className="flex-1 flex items-center gap-8">
+                {deadlineDate ? (
+                    <div className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <span className={cn(
+                                "w-1.5 h-1.5 rounded-full shadow-[0_0_8px]",
+                                isOvertime ? "bg-rose-500 shadow-rose-500/50 animate-pulse" : "bg-blue-500 shadow-blue-500/50"
+                            )} />
+                            <span className={cn(
+                                "text-[10px] font-black uppercase tracking-[0.2em]",
+                                isOvertime ? "text-rose-500 animate-pulse" : "text-blue-500"
+                            )}>
+                                {isOvertime ? "Mission_Overtime" : "Time_Remaining"}
+                            </span>
+                        </div>
+                        <div className="flex items-baseline gap-3">
+                            <span className={cn(
+                                "text-2xl font-black font-mono tracking-tighter tabular-nums",
+                                isOvertime ? "text-rose-400" : "text-white"
+                            )}>
+                                {isOvertime && "-"}
+                                {remaining && (
+                                    <>
+                                        {remaining.days > 0 && <span>{remaining.days}d </span>}
+                                        {remaining.hours.toString().padStart(2, '0')}:
+                                        {remaining.mins.toString().padStart(2, '0')}:
+                                        {remaining.secs.toString().padStart(2, '0')}
+                                    </>
+                                )}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                                Deadline: {deadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5">Status</span>
+                        <div className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                            <Shield className="w-3 h-3 opacity-30" />
+                            Mission_Timeline_Not_Synchronized
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Leader Controls */}
+            {isLeader && (
+                <div className="flex gap-2">
+                    <Button
+                        onClick={() => setShowDeadlineModal(true)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 text-slate-300 transition-all rounded-xl"
+                    >
+                        {deadlineDate ? "Adjust Timeline" : "Set Deadline"}
+                    </Button>
+                    {deadlineDate && (
+                        <Button
+                            onClick={handleReset}
+                            size="sm"
+                            variant="ghost"
+                            className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-rose-500/20 hover:bg-rose-500/10 text-rose-500/60 rounded-xl"
+                        >
+                            Reset
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => setShowAbortModal(true)}
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-rose-500 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all rounded-xl"
+                    >
+                        <Trash2 className="w-3 h-3 mr-2" />
+                        Abort Mission
+                    </Button>
+                </div>
+            )}
+
+            {/* Abort Mission Modal */}
+            <AnimatePresence>
+                {showAbortModal && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowAbortModal(false)}
+                            className="absolute inset-0 bg-rose-950/20 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-slate-900 border border-rose-500/50 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(244,63,94,0.3)] relative z-10"
+                        >
+                            <div className="flex flex-col items-center text-center space-y-6">
+                                <div className="w-20 h-20 rounded-full bg-rose-500/20 flex items-center justify-center border-2 border-rose-500 animate-pulse">
+                                    <AlertTriangle className="w-10 h-10 text-rose-500" />
+                                </div>
+                                <div>
+                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">Critical Alpha Alert</h2>
+                                    <p className="text-sm text-rose-400 font-bold uppercase tracking-widest animate-pulse">Confirm Mission Abortion</p>
+                                </div>
+                                <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl text-xs text-slate-400 font-mono leading-relaxed">
+                                    WARNING: This action will permanently purge squadron <span className="text-rose-400 font-bold">"{team.name}"</span> and all associated tactical data (tasks, communications, archives). This cannot be reversed.
+                                </div>
+                                <div className="flex gap-4 w-full">
+                                    <Button
+                                        onClick={() => setShowAbortModal(false)}
+                                        className="flex-1 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase tracking-widest text-[10px]"
+                                    >
+                                        Cancel Protocol
+                                    </Button>
+                                    <Button
+                                        onClick={async () => {
+                                            const success = await deleteTeam(team.id);
+                                            if (success) {
+                                                setShowAbortModal(false);
+                                                navigate('/dashboard');
+                                            }
+                                        }}
+                                        className="flex-1 h-14 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(244,63,94,0.4)]"
+                                    >
+                                        Execute Purge
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Deadline Modal */}
+            <AnimatePresence>
+                {showDeadlineModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowDeadlineModal(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-full max-w-md bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative z-10"
+                        >
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Mission Timeline</h2>
+                                    <p className="text-xs text-slate-500 font-medium">Define the operational window for this sector.</p>
+                                </div>
+                                <Button variant="ghost" size="icon" onClick={() => setShowDeadlineModal(false)} className="rounded-2xl bg-white/5 hover:bg-white/10">
+                                    <X className="w-5 h-5 text-slate-500" />
+                                </Button>
+                            </div>
+
+                            <form onSubmit={handleSetDeadline} className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                        <Zap className="w-3 h-3 text-blue-500" />
+                                        Target Timestamp (UTC)
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        required
+                                        value={deadlineInput}
+                                        onChange={(e) => setDeadlineInput(e.target.value)}
+                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-5 text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-center shadow-inner"
+                                    />
+                                    <p className="text-[10px] text-slate-600 text-center font-bold uppercase tracking-widest mt-2 px-4">
+                                        All squadron members will be synchronized to this timeline.
+                                    </p>
+                                </div>
+                                <Button className="w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 text-sm active:scale-[0.98] transition-all">
+                                    Synchronize Strategy
+                                </Button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
+
+
 export const WorkspaceView: React.FC = () => {
     const { teamId } = useParams();
     const navigate = useNavigate();
@@ -1185,6 +1673,7 @@ export const WorkspaceView: React.FC = () => {
     const tabs = [
         { id: "kanban", name: "Tactical Board", icon: Columns, color: "text-blue-400" },
         { id: "chat", name: "Comms Link", icon: MessageSquare, color: "text-emerald-400" },
+        { id: "bounties", name: "Mission Logs", icon: Target, color: "text-indigo-400" },
         { id: "docs", name: "Intel Archives", icon: FileText, color: "text-amber-400" },
         { id: "codebase", name: "Codebase", icon: Terminal, color: "text-emerald-500" }, // NEW Codebase Tab
         { id: "intel", name: "Squad Intel", icon: BarChart2, color: "text-purple-400" },
@@ -1263,25 +1752,29 @@ export const WorkspaceView: React.FC = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-hidden relative">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="h-full"
-                    >
-                        {activeTab === "kanban" && <TacticalBoard team={team} />}
-                        {activeTab === "chat" && <CommsLink team={team} />}
-                        {activeTab === "docs" && <IntelArchives team={team} />}
-                        {activeTab === "codebase" && <CodebaseCenter team={team} />}
-                        {activeTab === "intel" && <SquadIntel team={team} />}
-                        {activeTab === "management" && <CommandCenter team={team} onNavigateToCodebase={() => setActiveTab("codebase")} />}
-                        {activeTab === "console" && <TerminalConsole team={team} />}
-                    </motion.div>
-                </AnimatePresence>
+            <main className="flex-1 overflow-hidden relative flex flex-col">
+                <MissionClock team={team} />
+                <div className="flex-1 relative overflow-hidden">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="h-full"
+                        >
+                            {activeTab === "kanban" && <TacticalBoard team={team} />}
+                            {activeTab === "chat" && <CommsLink team={team} />}
+                            {activeTab === "bounties" && <MissionLogs team={team} />}
+                            {activeTab === "docs" && <IntelArchives team={team} />}
+                            {activeTab === "codebase" && <CodebaseCenter team={team} />}
+                            {activeTab === "intel" && <SquadIntel team={team} />}
+                            {activeTab === "management" && <CommandCenter team={team} onNavigateToCodebase={() => setActiveTab("codebase")} />}
+                            {activeTab === "console" && <TerminalConsole team={team} />}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
             </main>
         </div>
     );

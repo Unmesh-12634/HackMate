@@ -9,6 +9,7 @@ import { CommunityView } from "./views/CommunityView";
 import { ProfileView } from "./views/ProfileView";
 import { SettingsView } from "./views/SettingsView";
 import { ProductivityView } from "./views/ProductivityView";
+import AchievementsView from "./views/AchievementsView";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { Toaster } from "sonner";
 
@@ -85,6 +86,12 @@ function AppContent() {
           <Route path="/productivity" element={
             <DashboardLayout>
               <ProductivityView />
+            </DashboardLayout>
+          } />
+
+          <Route path="/achievements" element={
+            <DashboardLayout>
+              <AchievementsView />
             </DashboardLayout>
           } />
         </Route>

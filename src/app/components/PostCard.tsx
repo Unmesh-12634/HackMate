@@ -26,7 +26,7 @@ interface PostCardProps {
     onDirectMessage: (userId: string) => void;
 }
 
-export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirectMessage }) => {
+export const PostCard = React.forwardRef<HTMLDivElement, PostCardProps>(({ post, onViewDetail, onDirectMessage }, ref) => {
     const { likePost, deletePost, user, followingIds, followUser, unfollowUser } = useAppContext();
     const navigate = useNavigate();
 
@@ -37,6 +37,7 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirect
 
     return (
         <motion.div
+            ref={ref}
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -200,8 +201,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirect
                                         </div>
                                     </div>
                                     <div className="flex flex-wrap justify-end gap-1.5">
-                                        {post.projectDetails.techStack?.slice(0, 3).map((tech: string) => (
-                                            <span key={tech} className="px-2 py-0.5 bg-slate-950 border border-white/5 rounded-md text-[8px] font-black text-slate-400 uppercase tracking-tighter">
+                                        {post.projectDetails.techStack?.slice(0, 3).map((tech: string, idx: number) => (
+                                            <span key={`${tech}-${idx}`} className="px-2 py-0.5 bg-slate-950 border border-white/5 rounded-md text-[8px] font-black text-slate-400 uppercase tracking-tighter">
                                                 {tech}
                                             </span>
                                         ))}
@@ -218,8 +219,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirect
                                             OPEN_ROLES
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            {post.projectDetails.openRoles?.map((role: string) => (
-                                                <div key={role} className="flex items-center gap-2 p-2 bg-slate-950/50 border border-white/[0.03] rounded-xl text-[10px] font-bold text-slate-300">
+                                            {post.projectDetails.openRoles?.map((role: string, idx: number) => (
+                                                <div key={`${role}-${idx}`} className="flex items-center gap-2 p-2 bg-slate-950/50 border border-white/[0.03] rounded-xl text-[10px] font-bold text-slate-300">
                                                     <div className="w-1 h-1 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
                                                     {role}
                                                 </div>
@@ -240,8 +241,8 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirect
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 rounded-lg bg-slate-950 border border-white/[0.03] text-[9px] font-black text-blue-500 uppercase tracking-widest">
+                    {post.tags.map((tag, idx) => (
+                        <span key={`${tag}-${idx}`} className="px-2 py-1 rounded-lg bg-slate-950 border border-white/[0.03] text-[9px] font-black text-blue-500 uppercase tracking-widest">
                             #{tag.toUpperCase()}
                         </span>
                     ))}
@@ -294,4 +295,4 @@ export const PostCard: React.FC<PostCardProps> = ({ post, onViewDetail, onDirect
             </div>
         </motion.div>
     );
-};
+});

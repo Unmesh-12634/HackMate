@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useAppContext, TeamMember } from "../context/AppContext";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -21,9 +22,10 @@ interface AddTaskFormProps {
 }
 
 export function AddTaskForm({ teamId, onClose, initialStatus }: AddTaskFormProps) {
-    const { addTask, teams } = useAppContext();
+    const { addTask, teams, getTaskSuggestions } = useAppContext();
     const team = teams.find(t => t.id === teamId);
     const [isLoading, setIsLoading] = useState(false);
+    const [suggestions, setSuggestions] = useState<string[]>([]);
 
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -77,9 +79,46 @@ export function AddTaskForm({ teamId, onClose, initialStatus }: AddTaskFormProps
                     <Input
                         placeholder="E.G. NEURAL NETWORK UPGRADE"
                         value={title}
-                        onChange={(e) => setTitle(e.target.value)}
+                        onChange={async (e) => {
+                            const val = e.target.value;
+                            setTitle(val);
+                            if (val.length > 2) {
+                                const sug = await getTaskSuggestions(val);
+                                setSuggestions(sug);
+                            } else {
+                                setSuggestions([]);
+                            }
+                        }}
                         className="bg-secondary/20 border-white/5 font-bold uppercase tracking-wide placeholder:normal-case"
                     />
+                    <AnimatePresence>
+                        {suggestions.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="absolute z-50 w-full mt-1 bg-slate-900/90 border border-indigo-500/20 rounded-xl shadow-2xl shadow-indigo-500/10 overflow-hidden backdrop-blur-xl"
+                            >
+                                {suggestions.map((sug, i) => (
+                                    <motion.button
+                                        key={i}
+                                        type="button"
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        onClick={() => {
+                                            setTitle(sug);
+                                            setSuggestions([]);
+                                        }}
+                                        className="w-full px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-indigo-600 hover:text-white transition-all border-b border-white/5 last:border-0 flex items-center gap-2 group"
+                                    >
+                                        <span className="w-1 h-1 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        {sug}
+                                    </motion.button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 <div className="space-y-2">

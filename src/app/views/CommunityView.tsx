@@ -24,10 +24,13 @@ import {
    Globe,
    Users,
    Trophy,
-   MoreHorizontal
+   MoreHorizontal,
+   Mail,
+   Clock,
+   ShieldCheck
 } from "lucide-react";
 import { cn } from "../components/ui/utils";
-import { useAppContext, Post, ChatMessage, Team, DirectMessage, PostComment, User } from "../context/AppContext";
+import { useAppContext, Post, ChatMessage, Team, DirectMessage, PostComment, User, Bounty } from "../context/AppContext";
 import { PostCard } from "../components/PostCard";
 import { PostDetailModal } from "../components/PostDetailModal";
 import { SocialListModal } from "../components/SocialListModal";
@@ -152,6 +155,253 @@ const GlobalRelay: React.FC<{
    );
 };
 
+// --- Bounty Matrix Grid ---
+
+const BountyMatrixGrid: React.FC = () => {
+   const { bounties, claimBounty, user } = useAppContext();
+   const [filter, setFilter] = useState<'all' | 'open' | 'claimed'>('all');
+   const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null);
+
+   const filtered = bounties.filter(b => {
+      if (filter === 'open') return b.status === 'open';
+      if (filter === 'claimed') return b.claimed_by === user?.id;
+      return true;
+   });
+
+   return (
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+         {/* Holographic Scanline Overlay */}
+         <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%)] z-10 opacity-20" style={{ backgroundSize: '100% 3px' }} />
+
+         <div className="p-4 flex items-center justify-between border-b border-white/[0.03] bg-slate-950/20 relative z-20">
+            <div className="flex items-center gap-2">
+               <div className="w-1 h-3 bg-indigo-500 rounded-full animate-pulse" />
+               <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Active_Matrix</div>
+            </div>
+            <div className="flex gap-1 bg-slate-900/50 p-1 rounded-lg border border-white/5">
+               {(['all', 'open', 'claimed'] as const).map((f) => (
+                  <button
+                     key={f}
+                     onClick={() => setFilter(f)}
+                     className={cn(
+                        "px-3 py-1 rounded-md text-[8px] font-black uppercase transition-all",
+                        filter === f
+                           ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                           : "text-slate-600 hover:text-slate-400"
+                     )}
+                  >
+                     {f === 'claimed' ? 'My_Ops' : f}
+                  </button>
+               ))}
+            </div>
+         </div>
+
+         <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide relative z-20">
+            <AnimatePresence mode="popLayout">
+               {filtered.length === 0 ? (
+                  <motion.div
+                     initial={{ opacity: 0 }}
+                     animate={{ opacity: 1 }}
+                     exit={{ opacity: 0 }}
+                     className="flex flex-col items-center justify-center py-24 opacity-20"
+                  >
+                     <Target className="w-12 h-12 mb-4 text-slate-600" />
+                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">No_Missions_Detected</span>
+                  </motion.div>
+               ) : (
+                  filtered.map((bounty, i) => (
+                     <motion.div
+                        key={bounty.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        whileHover={{ scale: 1.02 }}
+                        onClick={() => setSelectedBounty(bounty)}
+                        className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all group cursor-pointer relative overflow-hidden"
+                     >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/[0.03] blur-3xl group-hover:bg-indigo-500/[0.08] transition-all" />
+
+                        <div className="flex justify-between items-start mb-3 relative z-10">
+                           <div className="flex items-center gap-2">
+                              <Badge variant="outline" className={cn(
+                                 "text-[8px] font-black uppercase px-2 py-0.5 rounded-sm border-white/10",
+                                 bounty.difficulty === 'legendary' ? "text-orange-400 bg-orange-400/10" :
+                                    bounty.difficulty === 'hard' ? "text-red-400 bg-red-400/10" :
+                                       "text-indigo-400 bg-indigo-400/10"
+                              )}>
+                                 {bounty.difficulty}
+                              </Badge>
+                              <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">{bounty.type}</span>
+                           </div>
+                           <div className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black text-indigo-400">
+                              +{bounty.reward_xp} XP
+                           </div>
+                        </div>
+
+                        <h4 className="text-xs font-black text-white uppercase tracking-tight mb-1 group-hover:text-indigo-400 transition-colors">
+                           {bounty.title}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 leading-relaxed line-clamp-2 mb-4">
+                           {bounty.description}
+                        </p>
+
+                        <div className="flex items-center justify-between relative z-10">
+                           <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1.5">
+                                 <Clock className="w-3 h-3 text-slate-700" />
+                                 <span className="text-[8px] font-bold text-slate-600 uppercase">
+                                    {bounty.deadline ? new Date(bounty.deadline).toLocaleDateString() : "INF_EXP"}
+                                 </span>
+                              </div>
+                           </div>
+
+                           <div className={cn(
+                              "text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded bg-white/5 flex items-center gap-2",
+                              bounty.status === 'completed' ? "text-green-500" :
+                                 (bounty.status === 'claimed' || bounty.status === 'in_progress')
+                                    ? (bounty.claimed_by === user?.id ? "text-orange-400 animate-pulse" : "text-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.2)]")
+                                    : "text-slate-500 group-hover:text-indigo-400"
+                           )}>
+                              {(bounty.status === 'claimed' || bounty.status === 'in_progress') ? (
+                                 bounty.claimed_by === user?.id ? (
+                                    <>
+                                       <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-ping" />
+                                       TARGET_LOCKED
+                                    </>
+                                 ) : 'OP_ACTIVE'
+                              ) : bounty.status.toUpperCase()}
+                           </div>
+                        </div>
+                     </motion.div>
+                  ))
+               )}
+            </AnimatePresence>
+         </div>
+
+         {/* Bounty Detail Modal */}
+         <AnimatePresence>
+            {selectedBounty && (
+               <BountyDetailModal
+                  bounty={selectedBounty}
+                  onClose={() => setSelectedBounty(null)}
+                  onClaim={() => {
+                     claimBounty(selectedBounty.id);
+                     setSelectedBounty(null);
+                  }}
+               />
+            )}
+         </AnimatePresence>
+      </div>
+   );
+};
+
+// --- Bounty Detail Modal ---
+
+const BountyDetailModal: React.FC<{
+   bounty: Bounty;
+   onClose: () => void;
+   onClaim: () => void;
+}> = ({ bounty, onClose, onClaim }) => {
+   return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+         <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+         />
+         <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            className="w-full max-w-lg bg-[#0F172A] border border-white/[0.08] rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+         >
+            {/* Holographic Header */}
+            <div className="p-8 border-b border-white/[0.05] relative overflow-hidden bg-indigo-500/[0.02]">
+               <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] z-10 opacity-30" style={{ backgroundSize: '100% 4px' }} />
+               <div className="flex items-center justify-between mb-6 relative z-20">
+                  <div className="flex items-center gap-3">
+                     <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                        <Target className="w-6 h-6" />
+                     </div>
+                     <div>
+                        <div className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">Mission_Details</div>
+                        <h3 className="text-xl font-black text-white uppercase tracking-tight">{bounty.title}</h3>
+                     </div>
+                  </div>
+                  <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-slate-500 transition-colors">
+                     <X className="w-5 h-5" />
+                  </button>
+               </div>
+
+               <div className="flex gap-4 relative z-20">
+                  <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/5 text-indigo-400 uppercase text-[9px] font-black px-3 py-1">
+                     {bounty.difficulty}
+                  </Badge>
+                  <Badge variant="outline" className="border-white/10 bg-white/5 text-slate-400 uppercase text-[9px] font-black px-3 py-1">
+                     {bounty.type}
+                  </Badge>
+                  <div className="ml-auto flex items-center gap-2 text-[11px] font-black text-indigo-400">
+                     <Activity className="w-4 h-4" />
+                     {bounty.reward_xp} XP REWARD
+                  </div>
+               </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-8 space-y-8">
+               <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                     <ShieldCheck className="w-3.5 h-3.5" /> Objective_Intelligence
+                  </label>
+                  <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                     {bounty.description}
+                  </p>
+               </div>
+
+               <div className="grid grid-cols-2 gap-6">
+                  <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5">
+                     <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Priority_Rank</div>
+                     <div className="text-lg font-black text-indigo-400">{bounty.reward_xp >= 1000 ? 'S-TIER' : bounty.reward_xp >= 500 ? 'A-TIER' : 'B-TIER'}</div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-slate-900/50 border border-white/5">
+                     <div className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1">Time_Window</div>
+                     <div className="text-lg font-black text-slate-300">
+                        {bounty.deadline ? `${Math.ceil((new Date(bounty.deadline).getTime() - Date.now()) / (1000 * 3600 * 24))} Days` : 'PERMANENT'}
+                     </div>
+                  </div>
+               </div>
+
+               {/* Action */}
+               <div className="pt-4">
+                  {bounty.status === 'open' ? (
+                     <Button
+                        onClick={onClaim}
+                        className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] group"
+                     >
+                        <span className="flex items-center gap-2">
+                           Accept_Mission <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </span>
+                     </Button>
+                  ) : (
+                     <div className="w-full py-6 bg-slate-800/50 border border-white/5 text-slate-500 text-center font-black uppercase tracking-[0.2em] rounded-2xl">
+                        Mission_In_Progress
+                     </div>
+                  )}
+               </div>
+            </div>
+
+            {/* Footer Intel */}
+            <div className="p-4 bg-slate-950/50 border-t border-white/[0.03] text-center">
+               <span className="text-[8px] font-bold text-slate-700 uppercase tracking-[0.5em]">System_Verified_Objective // HM_GRID_SYNC_v4.5</span>
+            </div>
+         </motion.div>
+      </div>
+   );
+};
+
+
 // --- Unified Communication Matrix (Chat Switcher) ---
 
 const CommunicationMatrix: React.FC<{
@@ -162,10 +412,12 @@ const CommunicationMatrix: React.FC<{
    currentUser: User;
    allProfiles: User[];
    searchUsers: (query: string) => Promise<User[]>;
-   initialMode?: "global" | "intel" | "operatives";
+   initialMode?: "global" | "intel" | "operatives" | "bounties";
    initialTargetUserId?: string | null;
-}> = ({ globalMessages, directMessages, onSendGlobal, onSendDirect, currentUser, allProfiles, searchUsers, initialMode = "global", initialTargetUserId = null }) => {
-   const [mode, setMode] = useState<"global" | "intel" | "operatives">(initialMode);
+   onMarkAllRead?: () => Promise<void>;
+}> = ({ globalMessages, directMessages, onSendGlobal, onSendDirect, currentUser, allProfiles, searchUsers, initialMode = "global", initialTargetUserId = null, onMarkAllRead }) => {
+   const navigate = useNavigate();
+   const [mode, setMode] = useState<"global" | "intel" | "operatives" | "bounties">(initialMode);
    const [selectedThread, setSelectedThread] = useState<string | null>(initialTargetUserId);
    const [searchQuery, setSearchQuery] = useState("");
    const [searchResults, setSearchResults] = useState<User[]>([]);
@@ -221,18 +473,20 @@ const CommunicationMatrix: React.FC<{
                <Shield className="w-3 h-3" /> Intel
             </button>
             <button
-               onClick={() => setMode("operatives")}
+               onClick={() => setMode("bounties")}
                className={cn(
                   "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "operatives" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
+                  mode === "bounties" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
                )}
             >
-               <Users className="w-3 h-3" /> Operatives
+               <Target className="w-3 h-3" /> Bounty
             </button>
          </div>
 
          {mode === "global" ? (
             <GlobalRelay messages={globalMessages} onSend={onSendGlobal} user={currentUser} />
+         ) : mode === "bounties" ? (
+            <BountyMatrixGrid />
          ) : mode === "operatives" ? (
             <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
                <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] mb-4 text-center">Network_Operatives</div>
@@ -582,7 +836,8 @@ export function CommunityView() {
       followerCount,
       followingCount,
       fetchFollowersList,
-      fetchFollowingList
+      fetchFollowingList,
+      markAllDMsAsRead
    } = useAppContext();
    const navigate = useNavigate();
    const location = useLocation();
@@ -1173,6 +1428,7 @@ export function CommunityView() {
                               currentUser={user!}
                               allProfiles={allProfiles}
                               searchUsers={searchUsers}
+                              onMarkAllRead={markAllDMsAsRead}
                               initialMode={chatMatrixMode}
                               initialTargetUserId={chatTargetUserId}
                            />

@@ -6,3 +6,4 @@ dist/
 tsc_output.txt
 errors.txt
 ts_errors.txt
+.vercel

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from "../components/ui/card";
@@ -35,6 +35,40 @@ import {
   Bot
 } from "lucide-react";
 
+const MiniCountdown: React.FC<{ deadline: string | null; currentTime: Date }> = ({ deadline, currentTime }) => {
+  if (!deadline) {
+    return null;
+  }
+
+  const deadlineDate = new Date(deadline);
+  const isOvertime = deadlineDate < currentTime;
+  const diff = Math.abs(deadlineDate.getTime() - currentTime.getTime());
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+  const timeString = `${isOvertime ? "-" : ""}${days > 0 ? `${days}d ` : ""}${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+  return (
+    <div className="text-right">
+      <span className={cn(
+        "text-[9px] font-black uppercase tracking-[0.2em] block mb-1",
+        isOvertime ? "text-rose-500 animate-pulse" : "text-muted-foreground"
+      )}>
+        {isOvertime ? "Overtime" : "Remaining"}
+      </span>
+      <span className={cn(
+        "text-sm font-black font-mono",
+        isOvertime ? "text-rose-400" : "text-foreground"
+      )}>
+        {timeString}
+      </span>
+    </div>
+  );
+};
+
 export function DashboardView() {
   const { teams, addTeam, setActiveTeamId, user, joinTeam } = useAppContext();
   const navigate = useNavigate();
@@ -45,6 +79,12 @@ export function DashboardView() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const [formData, setFormData] = useState<Partial<Team>>({
     name: "",
@@ -240,7 +280,7 @@ export function DashboardView() {
                       <CardContent className="p-6 pt-0 flex-1 flex flex-col justify-end relative z-10">
                         <div className="flex items-center justify-between mb-8">
                           <div className="flex -space-x-3">
-                            {team.currentMembers.map((m, i) => (
+                            {team.currentMembers.map((m: any, i: number) => (
                               <Avatar key={i} className="w-10 h-10 border-4 border-card ring-1 ring-border/10 shadow-lg">
                                 <AvatarImage src={m.avatar} />
                                 <AvatarFallback className="text-[9px] font-black bg-hack-blue text-white uppercase">{m.name[0]}</AvatarFallback>
@@ -252,10 +292,14 @@ export function DashboardView() {
                               </div>
                             )}
                           </div>
-                          <div className="text-right">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground block mb-1">Velocity</span>
-                            <span className="text-xl font-black text-foreground">{team.progress}%</span>
-                          </div>
+                          {team.deadline ? (
+                            <MiniCountdown deadline={team.deadline} currentTime={currentTime} />
+                          ) : (
+                            <div className="text-right">
+                              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground block mb-1">Velocity</span>
+                              <span className="text-xl font-black text-foreground">{team.progress}%</span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="space-y-4">
@@ -471,7 +515,7 @@ export function DashboardView() {
                       <label className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground ml-1">Mission Deadline</label>
                       <div className="relative group">
                         <Clock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input type="date" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} className="h-16 pl-14 rounded-2xl bg-secondary/30 border-border/10 font-black px-8 uppercase text-xs text-foreground focus:ring-hack-blue/20" />
+                        <Input type="datetime-local" value={formData.deadline} onChange={(e) => setFormData({ ...formData, deadline: e.target.value })} className="h-16 pl-14 rounded-2xl bg-secondary/30 border-border/10 font-black px-8 uppercase text-xs text-foreground focus:ring-hack-blue/20" />
                       </div>
                     </div>
                   </div>
@@ -535,6 +579,6 @@ export function DashboardView() {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 }

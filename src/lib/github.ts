@@ -64,22 +64,39 @@ export interface GitHubCommit {
 }
 
 /**
+ * Helper to perform GitHub API requests with automatic retry on 401 (Unauthorized)
+ * by stripping the token. This handles cases where a non-GitHub token is sent.
+ */
+async function safeFetch(url: string, token?: string): Promise<Response> {
+    const headers: HeadersInit = {
+        'Accept': 'application/vnd.github.v3+json'
+    };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    let response = await fetch(url, { headers });
+
+    // If 401 and we used a token, retry once without it for public data
+    if (response.status === 401 && token) {
+        console.warn(`GitHub API 401: Invalid token at ${url}. Retrying unauthenticated...`);
+        const publicHeaders: HeadersInit = { 'Accept': 'application/vnd.github.v3+json' };
+        response = await fetch(url, { headers: publicHeaders });
+    }
+
+    return response;
+}
+
+/**
  * Fetches basic profile information for a given GitHub username.
  */
 export async function getGitHubProfile(username: string, token?: string): Promise<GitHubProfile | null> {
     try {
-        const headers: HeadersInit = {};
-        if (token) headers['Authorization'] = `token ${token}`;
-
-        const response = await fetch(`https://api.github.com/users/${username}`, { headers });
+        const response = await safeFetch(`https://api.github.com/users/${username}`, token);
         if (!response.ok) {
             if (response.status === 404) {
                 console.warn(`GitHub user ${username} not found.`);
                 return null;
             }
             if (response.status === 403) {
-                toast.warning("GitHub API rate limit reached. Using offline simulation data.");
-                console.warn(`GitHub API Rate limit exceeded. Using fallback.`);
                 return {
                     login: username, id: 99999, avatar_url: `https://github.com/${username}.png`, html_url: `https://github.com/${username}`,
                     name: username, company: "HackMate Network", blog: "", location: "Cybergrid", bio: "Simulated operative profile (API Limit Reached)",
@@ -100,13 +117,10 @@ export async function getGitHubProfile(username: string, token?: string): Promis
  */
 export async function getGitHubRepos(username: string, limit: number = 6, token?: string): Promise<GitHubRepo[]> {
     try {
-        const headers: HeadersInit = {};
-        if (token) headers['Authorization'] = `token ${token}`;
-
-        const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`, { headers });
+        const response = await safeFetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`, token);
         if (!response.ok) {
             if (response.status === 403) {
-                console.warn(`GitHub API Rate limit exceeded. Using fallback repos.`);
+                // Rate limit handled gracefully with simulation data
                 const mockRepo = (id: number, name: string, lang: string) => ({
                     id, name, full_name: `${username}/${name}`, html_url: "#",
                     description: "Automated simulation repository due to API limits.", fork: false,
@@ -158,10 +172,7 @@ export async function getGitHubLanguages(username: string, token?: string): Prom
  */
 export async function getRepoDetails(fullRepoName: string, token?: string): Promise<GitHubRepo | null> {
     try {
-        const headers: HeadersInit = {};
-        if (token) headers['Authorization'] = `token ${token}`;
-
-        const response = await fetch(`https://api.github.com/repos/${fullRepoName}`, { headers });
+        const response = await safeFetch(`https://api.github.com/repos/${fullRepoName}`, token);
         if (!response.ok) {
             if (response.status === 403) {
                 console.warn(`GitHub API Rate limit exceeded. Using fallback repo details.`);
@@ -189,10 +200,7 @@ export async function getRepoDetails(fullRepoName: string, token?: string): Prom
  */
 export async function getRepoReadme(fullRepoName: string, token?: string): Promise<string | null> {
     try {
-        const headers: HeadersInit = {};
-        if (token) headers['Authorization'] = `token ${token}`;
-
-        const response = await fetch(`https://api.github.com/repos/${fullRepoName}/readme`, { headers });
+        const response = await safeFetch(`https://api.github.com/repos/${fullRepoName}/readme`, token);
         if (!response.ok) {
             if (response.status === 404) return "No README.md found in this repository.";
             if (response.status === 403) return "# Simulated README\n\nGitHub API rate limit reached. This is a fallback mock README to keep the UI functional.";
@@ -212,10 +220,7 @@ export async function getRepoReadme(fullRepoName: string, token?: string): Promi
  */
 export async function getRepoCommits(fullRepoName: string, limit: number = 10, token?: string): Promise<GitHubCommit[]> {
     try {
-        const headers: HeadersInit = {};
-        if (token) headers['Authorization'] = `token ${token}`;
-
-        const response = await fetch(`https://api.github.com/repos/${fullRepoName}/commits?per_page=${limit}`, { headers });
+        const response = await safeFetch(`https://api.github.com/repos/${fullRepoName}/commits?per_page=${limit}`, token);
         if (!response.ok) {
             if (response.status === 403) {
                 console.warn(`GitHub API Rate limit exceeded. Using fallback commits.`);

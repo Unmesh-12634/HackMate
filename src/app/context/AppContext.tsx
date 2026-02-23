@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "../../lib/supabase";
+import { aiSquadService } from "../../lib/ai_squad";
 
 export type Theme = "light" | "dark";
 
@@ -38,6 +39,7 @@ export interface User {
   following_count?: number;
   preferences?: any;
   auth_methods?: string[];
+  level: number;
 }
 
 export interface Task {
@@ -129,6 +131,31 @@ export interface Activity {
   metadata: any;
   created_at: string;
 }
+
+export interface Bounty {
+  id: string;
+  created_at: string;
+  created_by: string;
+  title: string;
+  description: string;
+  type: 'hack' | 'design' | 'research' | 'bug' | 'mission';
+  difficulty: 'easy' | 'medium' | 'hard' | 'legendary';
+  reward_xp: number;
+  status: 'open' | 'claimed' | 'in_progress' | 'completed' | 'failed';
+  claimed_by?: string;
+  team_id?: string;
+  github_issue_url?: string;
+  deadline?: string;
+  metadata?: any;
+}
+
+export interface UserBadge {
+  id: string;
+  user_id: string;
+  badge_id: string;
+  awarded_at: string;
+}
+
 
 export interface Notification {
   id: string;
@@ -262,6 +289,7 @@ interface AppContextType {
   activeTeamId: string | null;
   setActiveTeamId: (id: string | null) => void;
   updateTeamSettings: (teamId: string, settings: any) => Promise<void>;
+  updateTeamDeadline: (teamId: string, deadline: string | null) => Promise<void>;
   joinTeam: (code: string) => Promise<boolean>;
   removeMember: (teamId: string, userId: string) => Promise<void>;
   updateTaskStatus: (taskId: string, status: Task["status"]) => void;
@@ -291,16 +319,18 @@ interface AppContextType {
   sendDirectMessage: (receiverId: string, content: string) => Promise<void>;
   fetchDirectMessages: () => void;
   markDMAsRead: (messageId: string) => Promise<void>;
+  markAllDMsAsRead: () => Promise<void>;
 
   // Notifications
   notifications: Notification[];
-  markAsRead: (id: string) => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
   addNotification: (notif: Omit<Notification, "id" | "read" | "time">) => void;
 
   // User Discovery & Networking
   searchUsers: (query: string) => Promise<User[]>;
   fetchPublicProfiles: () => Promise<User[]>;
-  fetchTargetUserMetadata: (userId: string) => Promise<{ profile: User, teams: Team[], activities: Activity[] } | null>;
+  fetchTargetUserMetadata: (userId: string) => Promise<{ profile: User, teams: Team[], activities: Activity[], milestones: any[] } | null>;
   allProfiles: User[];
 
   // User Performance & History
@@ -367,7 +397,24 @@ interface AppContextType {
       merit: { val: number }[];
     };
   };
+
+  // Bounty Matrix
+  bounties: Bounty[];
+  fetchBounties: () => Promise<void>;
+  createBounty: (bounty: Omit<Bounty, "id" | "created_at" | "created_by" | "status">) => Promise<void>;
+  claimBounty: (bountyId: string) => Promise<void>;
+  completeBounty: (bountyId: string) => Promise<void>;
+
+  // Badges & Achievements
+  userBadges: UserBadge[];
+  fetchUserBadges: () => Promise<void>;
+  awardBadge: (badgeId: string) => Promise<void>;
+
+  getStandup: (teamId: string) => Promise<any>;
+  getTaskSuggestions: (query: string) => Promise<string[]>;
+  deleteTeam: (teamId: string) => Promise<boolean>;
 }
+
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -490,6 +537,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [teamMessages, setTeamMessages] = useState<ChatMessage[]>([]);
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
+  const [bounties, setBounties] = useState<Bounty[]>([]);
 
   // Personal Productivity State
   const [personalNotes, setPersonalNotes] = useState<PersonalNote[]>([]);
@@ -499,6 +547,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
+
 
   // User Management & Reputation
   const addUserHistory = async (action: string, type: string, teamId?: string, details?: string) => {
@@ -569,6 +619,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchNotifications();
     fetchSocialStats();
     fetchActivities();
+    fetchBounties();
 
     // Set up Realtime Subscriptions for Community Grid
     const socialChannel = supabase
@@ -580,11 +631,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activities', filter: `user_id=eq.${user?.id}` }, (payload) => {
         setActivities((prev: Activity[]) => [(payload.new as Activity), ...prev]);
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bounties' }, () => fetchBounties())
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user?.id}` }, (payload) => {
         if (payload.new) {
           setFollowerCount(payload.new.follower_count || 0);
           setFollowingCount(payload.new.following_count || 0);
-          setUser((prev: User | null) => prev ? { ...prev, reputation: payload.new.reputation_points, rank: payload.new.prestige_rank } : null);
+          setUser((prev: User | null) => prev ? {
+            ...prev,
+            reputation: payload.new.reputation_points,
+            rank: payload.new.prestige_rank,
+            level: payload.new.level
+          } : null);
         }
       })
       .subscribe();
@@ -630,7 +687,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       role: d.profiles.primary_role,
       reputation: d.profiles.reputation_points || 0,
       rank: d.profiles.prestige_rank || 'Operative',
-      velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0]
+      velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
+      level: d.profiles.level || 1
     }));
   };
 
@@ -653,7 +711,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       role: d.profiles.primary_role,
       reputation: d.profiles.reputation_points || 0,
       rank: d.profiles.prestige_rank || 'Operative',
-      velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0]
+      velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
+      level: d.profiles.level || 1
     }));
   };
 
@@ -803,9 +862,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        setGithubToken(session.provider_token || null);
+        // Only set GitHub token if the current session provider is actually GitHub
+        const provider = session.user.app_metadata.provider;
+        const isGithub = provider === 'github';
+        const token = isGithub ? (session.provider_token || null) : null;
+
+        setGithubToken(token);
         try {
-          await fetchProfile(session.user, session.provider_token);
+          await fetchProfile(session.user, token);
         } catch (e) {
           console.error("Profile fetch failed", e);
           setUser(null);
@@ -818,8 +882,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setGithubToken(session.provider_token || null);
-        fetchProfile(session.user, session.provider_token);
+        const provider = session.user.app_metadata.provider;
+        const isGithub = provider === 'github';
+        const token = isGithub ? (session.provider_token || null) : null;
+
+        setGithubToken(token);
+        fetchProfile(session.user, token);
       }
       else {
         setUser(null);
@@ -892,7 +960,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         follower_count: data.follower_count || 0,
         following_count: data.following_count || 0,
         preferences: data.preferences || {},
-        auth_methods: authMethods
+        auth_methods: authMethods,
+        level: data.level || 1
       };
       setUser(formattedUser);
       // Pass the user object directly to avoid state race condition
@@ -1280,6 +1349,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             socials: newData.social_links || prev.socials,
             reputation: newData.reputation_points,
             rank: newData.prestige_rank,
+            level: newData.level,
             preferences: newData.preferences || prev.preferences
           } : null);
         }
@@ -1468,7 +1538,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       description: teamData.description,
       owner_id: user.id,
       status: 'Building',
-      invite_code: inviteCode
+      invite_code: inviteCode,
+      deadline: teamData.deadline
     }).select().single();
 
     if (team) {
@@ -1607,6 +1678,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const updateTeamDeadline = async (teamId: string, deadline: string | null) => {
+    if (!user) return;
+
+    // Optimistic update for immediate feedback
+    setTeams(prev => prev.map(t => t.id === teamId ? { ...t, deadline: deadline || undefined } : t));
+
+    const { error } = await supabase
+      .from('teams')
+      .update({ deadline })
+      .eq('id', teamId);
+
+    if (error) {
+      console.error("Failed to update deadline:", error);
+      toast.error("Signal failed. Deadline synchronization incomplete.");
+      fetchTeams(user); // Revert to server state
+    } else {
+      toast.success(deadline ? "MISSION TIMELINE SYNCHRONIZED" : "MISSION TIMELINE RESET");
+      fetchTeams(user);
+    }
+  };
+
 
   const updateTeam = (teamId: string, updates: Partial<Team>) => {
     setTeams(prev => prev.map(t => t.id === teamId ? { ...t, ...updates } : t));
@@ -1629,6 +1721,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const removeMember = async (teamId: string, userId: string) => {
     if (!confirm("Are you sure you want to remove this operative?")) return;
 
+    // Fetch member name for notification before removal
+    const team = teams.find(t => t.id === teamId);
+    const member = team?.currentMembers.find(m => m.id === userId);
+
     // Optimistic Update
     setTeams(prev => prev.map(t => {
       if (t.id === teamId) {
@@ -1647,8 +1743,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fetchTeams();
     } else {
       toast.success("Operative Removed");
-      recordActivity("team_member_removal", `Removed operative ${userId} from team`, -10, "team", teamId);
+
+      // Notify the removed member
+      sendNotification(userId, "Neural Link Terminated", `You have been removed from squadron: ${team?.name || 'Unknown'}`, "warning");
+
+      recordActivity("team_member_removal", `Removed operative ${member?.name || userId} from team`, -10, "team", teamId);
     }
+  };
+
+  const deleteTeam = async (teamId: string) => {
+    if (!user) return false;
+
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return false;
+
+    // 1. Gather all member IDs to notify before deletion
+    const memberIds = team.currentMembers.filter(m => m.id !== user.id).map(m => m.id);
+
+    // 2. Perform deletion (cascading deletes handled by DB)
+    const { error } = await supabase.from('teams').delete().eq('id', teamId);
+
+    if (error) {
+      console.error("Team deletion failed:", error);
+      toast.error("Failed to abort mission. System override active.");
+      return false;
+    }
+
+    // 3. Send notifications to all former members
+    for (const memberId of memberIds) {
+      sendNotification(memberId, "Mission Aborted", `Squadron "${team.name}" has been disbanded by the leader.`, "error");
+    }
+
+    toast.success(`MISSION ABORTED: ${team.name} has been purged.`);
+    recordActivity("team_deletion", `Aborted mission and purged squad: ${team.name}`, -50, "team", teamId);
+
+    // 4. Update local state
+    setTeams(prev => prev.filter(t => t.id !== teamId));
+    setActiveTeamId(null);
+    return true;
   };
 
   const setMissionObjective = async (teamId: string, objective: string) => {
@@ -1726,17 +1858,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!error && status === 'done' && taskToUpdate && taskToUpdate.status !== 'done') {
       // Award reputation if the current user is the assignee
       if (user && taskToUpdate.assignee_id === user.id) {
-        let points = 20; // Base points
-        if (taskToUpdate.priority === 'urgent') points = 100;
-        else if (taskToUpdate.priority === 'high') points = 50;
+        let xpReward = 25; // Base points
+        if (taskToUpdate.priority === 'urgent') xpReward = 100;
+        else if (taskToUpdate.priority === 'high') xpReward = 50;
+        else if (taskToUpdate.priority === 'low') xpReward = 10;
 
-        await recordActivity("task_completion", `Completed Task: ${taskToUpdate.title}`, points, "task", taskId);
+        // Deadline Check
+        const isOverdue = taskToUpdate.deadline && new Date().getTime() > new Date(taskToUpdate.deadline).getTime();
+        if (isOverdue) {
+          xpReward = Math.floor(xpReward * 0.5); // 50% penalty for late completion
+          toast.warning(`OPERATIONAL DELAY: Mission deadline exceeded. XP reward halved.`, {
+            style: { background: '#7f1d1d', color: '#fca5a5', border: '1px solid #991b1b' }
+          });
+        }
+
+        await recordActivity(
+          "task_reward",
+          `Completed ${taskToUpdate.priority} priority protocol: ${taskToUpdate.title}${isOverdue ? ' (DELAYED)' : ''}`,
+          xpReward,
+          "task",
+          taskId
+        );
       }
     } else if (!error && status !== 'done' && taskToUpdate && taskToUpdate.status === 'done') {
-      // If task was done and now changed to not done, potentially deduct points
+      // If task was done and now changed to not done, deduct points
       if (user && taskToUpdate.assignee_id === user.id) {
-        let points = -10; // Base deduction
-        await recordActivity("task_reopened", `Reopened Task: ${taskToUpdate.title}`, points, "task", taskId);
+        let penalty = -15; // Standard penalty for task reopening
+        await recordActivity("task_reopened", `Reopened Protocol: ${taskToUpdate.title}`, penalty, "task", taskId);
       }
     }
   };
@@ -2000,7 +2148,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const markDMAsRead = async (messageId: string) => {
     await supabase.from('direct_messages').update({ is_read: true }).eq('id', messageId);
     fetchDirectMessages();
-    recordActivity("dm_read", `Marked direct message ${messageId} as read`, 0, "message", messageId);
+    recordActivity("dm_read", `Marked direct message as read`, 0, "message", messageId);
+  };
+
+  const markAllDMsAsRead = async () => {
+    if (!user) return;
+    const { error } = await supabase.from('direct_messages').update({ is_read: true }).eq('receiver_id', user.id).eq('is_read', false);
+    if (error) {
+      console.error("Failed to mark all DMs as read:", error);
+      return;
+    }
+    fetchDirectMessages();
+    toast.success("Intelligence inbox cleared.");
   };
 
   const sendGlobalMessage = async (content: string) => {
@@ -2046,12 +2205,61 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
       .subscribe();
 
+    // Badges Real-time
+    const badgeChannel = supabase.channel(`badges_${user?.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_badges', filter: `user_id=eq.${user?.id}` }, () => {
+        fetchUserBadges();
+      })
+      .subscribe();
+
+    // Profile Real-time: Rank, Level, Reputation
+    const profileChannel = supabase.channel(`profile_${user?.id}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user?.id}` }, (payload) => {
+        setUser(prev => prev ? {
+          ...prev,
+          reputation: payload.new.reputation_points,
+          rank: payload.new.prestige_rank,
+          level: payload.new.level
+        } : null);
+      })
+      .subscribe();
+
     fetchPosts();
+    fetchUserBadges();
+    fetchBounties();
     return () => {
+
       supabase.removeChannel(socialChannel);
       supabase.removeChannel(dmChannel);
+      supabase.removeChannel(badgeChannel);
+      supabase.removeChannel(profileChannel);
     };
   }, [user]);
+
+
+  useEffect(() => {
+    // Bounty Matrix Real-time
+    const bountyChannel = supabase.channel('bounty_matrix')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bounties' }, (payload) => {
+        console.log("Bounty update detected:", payload);
+        fetchBounties();
+
+        // Notification for new or completed missions
+        if (payload.eventType === 'INSERT') {
+          addNotification({
+            title: "New Mission Detected",
+            message: `A new ${payload.new.type} objective has been posted to the matrix.`,
+            type: "info"
+          });
+        }
+      })
+      .subscribe();
+
+    fetchBounties();
+    return () => {
+      supabase.removeChannel(bountyChannel);
+    };
+  }, []);
 
   const fetchGlobalMessages = async () => {
     const { data } = await supabase.from('messages')
@@ -2161,7 +2369,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         socials: d.social_links || {},
         reputation: d.reputation_points || 0,
         rank: d.prestige_rank || 'Operative',
-        velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0]
+        velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
+        level: d.level || 1
       }));
       setAllProfiles(formatted);
       return formatted;
@@ -2187,13 +2396,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         socials: d.social_links || {},
         reputation: d.reputation_points || 0,
         rank: d.prestige_rank || 'Operative',
-        velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0]
+        velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
+        level: d.level || 1
       }));
     }
     return [];
   };
 
-  const fetchTargetUserMetadata = async (userId: string): Promise<{ profile: User, teams: Team[], activities: Activity[] } | null> => {
+  const fetchTargetUserMetadata = async (userId: string): Promise<{ profile: User, teams: Team[], activities: Activity[], milestones: any[] } | null> => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -2218,8 +2428,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         follower_count: profileData.follower_count || 0,
         following_count: profileData.following_count || 0,
         preferences: profileData.preferences || {},
-        auth_methods: []
+        auth_methods: [],
+        level: profileData.level || 1
       };
+
+      const { data: milestonesData } = await supabase.from('user_milestones').select('*').eq('user_id', userId);
 
       const { data: memberships } = await supabase.from('memberships').select('team_id, role, joined_at').eq('user_id', userId);
       let teamsList: Team[] = [];
@@ -2256,7 +2469,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return {
         profile: formattedProfile,
         teams: teamsList,
-        activities: (activitiesData || []) as any[]
+        activities: (activitiesData || []) as any[],
+        milestones: (milestonesData || []) as any[]
       };
     } catch (e) {
       console.error("Fetch target user failed", e);
@@ -2278,16 +2492,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_reminders', filter: `user_id=eq.${user.id}` }, () => fetchPersonalData(user.id))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_milestones', filter: `user_id=eq.${user.id}` }, () => fetchPersonalData(user.id))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_history', filter: `user_id=eq.${user.id}` }, () => fetchPersonalData(user.id))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bounties' }, () => fetchBounties())
       .subscribe();
+
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   // --- End Personal Productivity Hub Logic ---
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    // 1. Update Supabase
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
+    if (error) {
+      console.error("Failed to mark notification as read:", error);
+      return;
+    }
+
+    // 2. Optimistic local update
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    recordActivity("notification_read", `Notification ${id} marked as read`, 0, "notification", id);
+    recordActivity("notification_read", `Notification marked as read`, 0, "notification", id);
+  };
+
+  const markAllNotificationsAsRead = async () => {
+    if (!user) return;
+
+    // 1. Update Supabase
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
+    if (error) {
+      console.error("Failed to mark all notifications as read:", error);
+      toast.error("Failed to clear signal indicators.");
+      return;
+    }
+
+    // 2. Local update
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    toast.success("All tactical signals cleared.");
   };
 
   const addNotification = (notif: Omit<Notification, "id" | "read" | "time">) => {
@@ -2298,6 +2538,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       time: "Just now"
     };
     setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const sendNotification = async (userId: string, title: string, message: string, type: "info" | "success" | "warning" | "error" = "info") => {
+    const { error } = await supabase.from('notifications').insert({
+      user_id: userId,
+      title,
+      message,
+      type,
+      is_read: false
+    });
+
+    if (error) {
+      console.error("Failed to send notification:", error);
+    }
   };
 
 
@@ -2332,7 +2586,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         await uploadFile(file, filePath);
         fileUrl = getPublicUrl(filePath);
       } catch (e) {
-        // toast.error("File upload failed");
+        toast.error("File upload failed");
         return;
       }
     }
@@ -2356,6 +2610,119 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updated_at: new Date().toISOString()
     }).eq('id', id);
     if (activeTeamId) fetchDocuments(activeTeamId);
+  };
+
+  const fetchBounties = async () => {
+    const { data, error } = await supabase
+      .from('bounties')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) console.error("Bounty fetch failed:", error);
+    else setBounties(data || []);
+  };
+
+  const createBounty = async (bounty: Omit<Bounty, "id" | "created_at" | "created_by" | "status">) => {
+    if (!user) return;
+    const { error } = await supabase.from('bounties').insert({
+      ...bounty,
+      created_by: user.id,
+      status: 'open'
+    });
+    if (error) toast.error("Failed to post bounty.");
+    else {
+      toast.success("Bounty issued to the Matrix.");
+      fetchBounties();
+    }
+  };
+
+  const claimBounty = async (bountyId: string) => {
+    if (!user) return;
+
+    // Optimistic Update
+    const originalBounties = [...bounties];
+    setBounties(prev => prev.map(b =>
+      b.id === bountyId ? { ...b, status: 'claimed', claimed_by: user.id } : b
+    ));
+
+    const { error } = await supabase
+      .from('bounties')
+      .update({ status: 'claimed', claimed_by: user.id })
+      .eq('id', bountyId)
+      .eq('status', 'open');
+
+    if (error) {
+      toast.error("Mission claim failed. Objective may already be targeted.");
+      setBounties(originalBounties); // Revert
+    } else {
+      toast.success("MISSION ACCEPTED: Objective locked in.");
+      // recordActivity is handled in completeBounty or separately if needed. 
+      // For now, just track the claim.
+      recordActivity("bounty_claimed", `Claimed mission: ${bounties.find(b => b.id === bountyId)?.title}`, 5, "bounty", bountyId);
+    }
+  };
+
+  const completeBounty = async (bountyId: string) => {
+    if (!user) return;
+    const bounty = bounties.find(b => b.id === bountyId);
+    if (!bounty) return;
+
+    const { error } = await supabase
+      .from('bounties')
+      .update({ status: 'completed' })
+      .eq('id', bountyId);
+
+    if (error) toast.error("Completion report failed.");
+    else {
+      toast.success(`MISSION ACCOMPLISHED: +${bounty.reward_xp} XP`);
+      if (bounty.claimed_by === user.id) {
+        recordActivity("bounty_completed", `Completed mission: ${bounty.title}`, bounty.reward_xp, "bounty", bounty.id);
+      }
+      fetchBounties();
+    }
+  };
+
+  const fetchUserBadges = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('user_badges')
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) console.error("Badge fetch failed:", error);
+    else setUserBadges(data || []);
+  };
+
+  const awardBadge = async (badgeId: string) => {
+    if (!user) return;
+
+    // Check if already earned locally first
+    if (userBadges.some(b => b.badge_id === badgeId)) return;
+
+    const { error } = await supabase
+      .from('user_badges')
+      .insert({ user_id: user.id, badge_id: badgeId });
+
+    if (error) {
+      if (error.code !== '23505') { // Ignore unique constraint violation
+        console.error("Badge award failed:", error);
+      }
+    } else {
+      toast.success(`NEW ACHIEVEMENT UNLOCKED: ${badgeId.replace(/_/g, ' ').toUpperCase()}`, {
+        icon: '🏆',
+        style: { background: '#1e293b', color: '#fbbf24', border: '1px solid #fbbf24' }
+      });
+      fetchUserBadges();
+      recordActivity("badge_earned", `Earned badge: ${badgeId}`, 100, "badge", badgeId);
+    }
+  };
+
+  const getStandup = async (teamId: string) => {
+    return await aiSquadService.generateStandup(teamId);
+  };
+
+  const getTaskSuggestions = async (query: string) => {
+    return await aiSquadService.getTaskSuggestions(query);
   };
 
   const analytics = React.useMemo(() => {
@@ -2433,7 +2800,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     theme, toggleTheme, user, updateProfile, login, logout,
-    teams, addTeam, updateTeam, activeTeamId, setActiveTeamId, updateTaskStatus, addTask, deleteTask, joinTeam, updateTeamSettings, removeMember,
+    teams, addTeam, updateTeam, activeTeamId, setActiveTeamId, updateTaskStatus, addTask, deleteTask, joinTeam, updateTeamSettings, updateTeamDeadline, removeMember,
     setMissionObjective, assignMemberRole, toggleCritical, syncGitHubRepo, disconnectGitHubRepo,
     posts,
     addPost,
@@ -2450,8 +2817,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     sendDirectMessage,
     fetchDirectMessages,
     markDMAsRead,
+    markAllDMsAsRead,
     notifications,
-    markAsRead, addNotification, userHistory, userPerformance,
+    markAsRead,
+    markAllNotificationsAsRead,
+    addNotification,
+    userHistory,
+    userPerformance,
     documents, addDocument, updateDocument,
     teamMessages, fetchTeamMessages, sendTeamMessage,
     personalNotes, personalReminders, milestones, professionalHistory,
@@ -2471,7 +2843,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     analytics,
     loading,
 
-    githubData, githubToken, connectGitHub, connectGitHubManual, disconnectGitHub
+    githubData, githubToken, connectGitHub, connectGitHubManual, disconnectGitHub,
+
+    bounties, fetchBounties, createBounty, claimBounty, completeBounty,
+    userBadges, fetchUserBadges, awardBadge,
+    getStandup, getTaskSuggestions, deleteTeam
+
   };
 
   return (

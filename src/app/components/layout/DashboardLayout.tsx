@@ -23,13 +23,14 @@ import {
   Info,
   AlertTriangle,
   Flame,
-  Clock
+  Clock,
+  Trophy
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button, cn } from "../ui/button";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme, user, logout, setActiveTeamId, notifications, markAsRead } = useAppContext();
+  const { theme, toggleTheme, user, logout, setActiveTeamId, notifications, markAsRead, markAllNotificationsAsRead } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -41,6 +42,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { id: "workspace", label: "Global Workspace", icon: LayoutDashboard, path: "/workspace" },
     { id: "productivity", label: "Productivity", icon: Target, path: "/productivity" },
     { id: "community", label: "Explore", icon: GlobeIcon, path: "/community" },
+    { id: "achievements", label: "Achievements", icon: Trophy, path: "/achievements" },
     { id: "profile", label: "Profile", icon: UserIcon, path: "/profile" },
     { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
   ];
@@ -196,7 +198,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                           <h3 className="text-xs font-black uppercase tracking-[0.2em]">Intel Center</h3>
                           <Badge className="bg-hack-blue/10 text-hack-blue border-none text-[8px] px-2">{unreadCount} New</Badge>
                         </div>
-                        <button className="text-[10px] font-black text-hack-blue uppercase hover:underline">Mark all read</button>
+                        <button
+                          onClick={markAllNotificationsAsRead}
+                          className="text-[10px] font-black text-hack-blue uppercase hover:underline"
+                        >
+                          Mark all read
+                        </button>
                       </div>
 
                       <div className="max-h-[450px] overflow-y-auto custom-scrollbar p-2">
@@ -249,7 +256,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-4">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-black tracking-tight leading-none uppercase">{user?.name || "Alex Hacker"}</p>
-                <p className="text-[9px] text-hack-blue font-black uppercase tracking-[0.2em] mt-1 opacity-70">Lvl 42 Architect</p>
+                <p className="text-[9px] text-hack-blue font-black uppercase tracking-[0.2em] mt-1 opacity-70">
+                  Lvl {user?.level || 1} {user?.rank || "Operative"}
+                </p>
               </div>
               <Avatar
                 className="h-11 w-11 rounded-2xl border-2 border-background shadow-xl ring-2 ring-hack-blue/20 ring-offset-2 ring-offset-background transition-all hover:scale-105 cursor-pointer"
