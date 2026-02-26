@@ -336,7 +336,7 @@ export function DashboardView() {
               <div className="w-8 h-8 rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center"><TrophyIcon className="w-4 h-4 text-orange-500" /></div>
               Personnel Meta-Data
             </h2>
-            <Card className="bg-gradient-to-br from-card via-background to-secondary/30 text-foreground border-border/50 rounded-[56px] shadow-2xl shadow-hack-blue/5 overflow-hidden relative group">
+            <Card className="bg-gradient-to-br from-card via-background to-indigo-950/20 text-foreground border-border/50 rounded-[56px] shadow-2xl shadow-hack-blue/5 overflow-hidden relative group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-hack-blue/10 rounded-full blur-[120px] -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-1000" />
               <CardHeader className="p-12 relative z-10">
                 <div className="flex justify-between items-center mb-10">
@@ -412,7 +412,7 @@ export function DashboardView() {
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowCreateModal(false)}
-              className="absolute inset-0 bg-background/60 backdrop-blur-md"
+              className="absolute inset-0 bg-background/80 backdrop-blur-xl"
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 40 }}

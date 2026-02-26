@@ -27,13 +27,6 @@ import { cn } from "../components/ui/button";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import {
-   Select,
-   SelectContent,
-   SelectItem,
-   SelectTrigger,
-   SelectValue,
-} from "../components/ui/select";
 
 type Tab = "Account" | "Security" | "Notifications" | "Appearance" | "Billing" | "Developer";
 
@@ -109,7 +102,7 @@ export function SettingsView() {
 function AccountTab() {
    const { user, updateProfile, connectGitHub, connectGitHubManual, disconnectGitHub, githubData } = useAppContext();
    const [formData, setFormData] = useState({
-      name: "", email: "", bio: "", twitter: "", website: "", role: ""
+      name: "", email: "", bio: "", twitter: "", website: ""
    });
    const [skillsInput, setSkillsInput] = useState("");
    const [githubInput, setGithubInput] = useState("");
@@ -124,8 +117,7 @@ function AccountTab() {
             email: user.email || "",
             bio: user.bio || "",
             twitter: user.socials?.twitter || "",
-            website: user.socials?.website || "",
-            role: user.role || ""
+            website: user.socials?.website || ""
          });
          setSkillsInput(user.skills?.join(", ") || "");
       }
@@ -138,8 +130,7 @@ function AccountTab() {
             name: formData.name,
             bio: formData.bio,
             skills: skillsInput.split(",").map(s => s.trim()).filter(Boolean),
-            socials: { ...user?.socials, twitter: formData.twitter, website: formData.website },
-            role: formData.role
+            socials: { ...user?.socials, twitter: formData.twitter, website: formData.website }
          });
          toast.success("Profile saved instantly!");
       } catch (error) {
@@ -183,29 +174,6 @@ function AccountTab() {
                      <label className="text-xs font-bold uppercase text-muted-foreground">Email Address</label>
                      <Input value={formData.email} disabled className="opacity-50 cursor-not-allowed bg-secondary/30" />
                   </div>
-               </div>
-
-               <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase text-muted-foreground">Professional Role</label>
-                  <Select
-                     value={formData.role}
-                     onValueChange={(value) => setFormData({ ...formData, role: value })}
-                  >
-                     <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select your role" />
-                     </SelectTrigger>
-                     <SelectContent>
-                        <SelectItem value="Full Stack Developer">Full Stack Developer</SelectItem>
-                        <SelectItem value="Frontend Developer">Frontend Developer</SelectItem>
-                        <SelectItem value="Backend Developer">Backend Developer</SelectItem>
-                        <SelectItem value="AI/ML Engineer">AI/ML Engineer</SelectItem>
-                        <SelectItem value="UI/UX Designer">UI/UX Designer</SelectItem>
-                        <SelectItem value="Mobile Developer">Mobile Developer</SelectItem>
-                        <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
-                        <SelectItem value="Product Manager">Product Manager</SelectItem>
-                        <SelectItem value="Data Scientist">Data Scientist</SelectItem>
-                     </SelectContent>
-                  </Select>
                </div>
 
                <div className="space-y-2">
