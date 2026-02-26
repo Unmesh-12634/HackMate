@@ -781,47 +781,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const fetchPosts = async () => {
     try {
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id, content, type, code_snippet, code_language, project_details, tags, 
-          likes_count, comments_count, created_at, author_id, image_url,
-          profiles:author_id(*)
-        `)
-        .order('created_at', { ascending: false });
+      // Logic moved to Server-Side API to bypass ISP blocks and handle professional auth logic
+      const url = `/api/posts${user ? `?userId=${user.id}` : ''}`;
+      const response = await fetch(url);
 
-      if (postsError) {
-        handleSupabaseError(postsError, "fetchPosts");
-        const { data: fallbackData } = await supabase
-          .from('posts')
-          .select('id, content, author_id, tags, created_at, profiles:author_id(*)')
-          .order('created_at', { ascending: false });
-
-        if (fallbackData) {
-          setPosts(fallbackData.map((p: any) => ({
-            id: p.id,
-            type: "text",
-            user: p.profiles?.full_name || "Anon",
-            user_id: p.author_id,
-            handle: "@" + (p.profiles?.full_name?.toLowerCase().replace(/\s/g, "_") || "anon"),
-            content: p.content,
-            tags: p.tags || [],
-            likes: 0,
-            comments: 0,
-            time: new Date(p.created_at).toLocaleDateString(),
-            avatar: p.profiles?.avatar_url
-          })));
-        }
-        return;
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.statusText}`);
       }
 
-      let likedPostIds: Set<string> = new Set();
-      if (user) {
-        const { data: likesData } = await supabase.from('post_likes').select('post_id').eq('user_id', user.id);
-        if (likesData) {
-          likedPostIds = new Set(likesData.map((l: any) => l.post_id));
-        }
-      }
+      const { posts: postsData, likedPostIds } = await response.json();
+      const likedSet = new Set(likedPostIds || []);
 
       if (postsData && postsData.length > 0) {
         setPosts(postsData.map((p: any) => ({
@@ -839,21 +808,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           comments: p.comments_count || 0,
           time: new Date(p.created_at).toLocaleDateString(),
           avatar: p.profiles?.avatar_url,
-          isLiked: likedPostIds.has(p.id),
+          isLiked: likedSet.has(p.id),
           imageUrl: p.image_url
         })));
       } else {
         setPosts([]);
       }
-    } catch (err) {
-      console.error("Critical error in fetchPosts:", err);
+    } catch (err: any) {
+      handleSupabaseError(err, "fetchPosts_API");
     }
   };
 
   const fetchNotifications = async () => {
     if (!user) return;
-    const { data } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
-    if (data) {
+    try {
+      const response = await fetch(`/api/notifications?userId=${user.id}`);
+      if (!response.ok) throw new Error("API [notifications] failed");
+      const data = await response.json();
+
       setNotifications(data.map((n: any) => ({
         id: n.id,
         title: n.title,
@@ -862,6 +834,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         read: n.is_read,
         time: new Date(n.created_at).toLocaleTimeString()
       })));
+    } catch (err) {
+      handleSupabaseError(err, "fetchNotifications_API");
+    }
+  };
+
+  const fetchBounties = async () => {
+    try {
+      const response = await fetch('/api/bounties');
+      if (!response.ok) throw new Error("API [bounties] failed");
+      const data = await response.json();
+      setBounties(data);
+    } catch (err) {
+      handleSupabaseError(err, "fetchBounties_API");
     }
   };
 
@@ -1022,14 +1007,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetUser = forcedUser || user;
     if (!targetUser) return;
 
-    const { data, error } = await supabase
-      .from('user_sessions')
-      .select('*')
-      .eq('user_id', targetUser.id)
-      .order('last_active', { ascending: false });
-
-    if (data) {
+    try {
+      const response = await fetch(`/api/sessions?userId=${targetUser.id}`);
+      if (!response.ok) throw new Error("API [sessions] failed");
+      const data = await response.json();
       setSessions(data);
+    } catch (err) {
+      handleSupabaseError(err, "fetchSessions_API");
     }
   };
 
@@ -1193,158 +1177,132 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetUser = currentUser || user;
     if (!targetUser) return;
 
-    // 2-Step Fetch for Robustness
-    // Step 1: Get IDs of teams I belong to
-    const { data: myMemberships, error: memError } = await supabase
-      .from('memberships')
-      .select('*') // Select all to be safe, or just team_id. If joined_at missing, it won't crash here.
-      .eq('user_id', targetUser.id);
+    try {
+      const response = await fetch(`/api/teams?userId=${targetUser.id}`);
+      if (!response.ok) throw new Error("API [teams] failed");
 
-    if (memError) {
-      handleSupabaseError(memError, "fetchTeams_memberships");
-      return;
-    }
+      const { teams: teamsData, memberships: myMemberships, auditLogs: auditLogsData } = await response.json();
 
-    if (!myMemberships || myMemberships.length === 0) {
-      setTeams([]);
-      setLoading(false);
-      return;
-    }
+      if (!myMemberships || myMemberships.length === 0) {
+        setTeams([]);
+        setLoading(false);
+        return;
+      }
 
-    const teamIds = myMemberships.map((m: any) => m.team_id);
-    const joinedAtMap = new Map(myMemberships.map((m: any) => [m.team_id, m.joined_at]));
+      const joinedAtMap = new Map(myMemberships.map((m: any) => [m.team_id, m.joined_at]));
 
-    // Step 2: Fetch full team details for these IDs
-    const { data: teamsData, error } = await supabase
-      .from('teams')
-      .select(`
-        *,
-        memberships(*, profiles(*)),
-        tasks(*, profiles:assignee_id(*))
-      `)
-      .in('id', teamIds);
 
-    if (error) {
-      handleSupabaseError(error, "fetchTeams_details");
-      return;
-    }
 
-    // Step 3: Fetch Audit Logs for these teams (Last 50 events total, or per team?)
-    // Fetching plenty to ensure each team has some.
-    const { data: auditLogsData } = await supabase
-      .from('audit_logs')
-      .select(`*, profiles(full_name)`)
-      .in('team_id', teamIds)
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    const logsByTeam = new Map();
-    if (auditLogsData) {
-      auditLogsData.forEach((log: any) => {
-        if (!logsByTeam.has(log.team_id)) logsByTeam.set(log.team_id, []);
-        logsByTeam.get(log.team_id).push({
-          id: log.id,
-          action: log.action,
-          details: log.details,
-          type: log.type === 'task' ? 'task' : log.type === 'security' ? 'security' : 'system' as any,
-          time: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          user: log.profiles?.full_name || 'System', // Use profile name or System
-          timestamp: log.created_at,
-          date: new Date(log.created_at).toLocaleDateString()
+      const logsByTeam = new Map();
+      if (auditLogsData) {
+        auditLogsData.forEach((log: any) => {
+          if (!logsByTeam.has(log.team_id)) logsByTeam.set(log.team_id, []);
+          logsByTeam.get(log.team_id).push({
+            id: log.id,
+            action: log.action,
+            details: log.details,
+            type: log.type === 'task' ? 'task' : log.type === 'security' ? 'security' : 'system' as any,
+            time: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            user: log.profiles?.full_name || 'System', // Use profile name or System
+            timestamp: log.created_at,
+            date: new Date(log.created_at).toLocaleDateString()
+          });
         });
-      });
-    }
+      }
 
-    // Manual Sort by joined_at if available in the data structure
-    if (teamsData) {
-      teamsData.sort((a: any, b: any) => {
-        const dateA = new Date(joinedAtMap.get(a.id) || a.created_at).getTime();
-        const dateB = new Date(joinedAtMap.get(b.id) || b.created_at).getTime();
-        return dateB - dateA;
-      });
+      // Manual Sort by joined_at if available in the data structure
+      if (teamsData) {
+        teamsData.sort((a: any, b: any) => {
+          const dateA = new Date(joinedAtMap.get(a.id) || a.created_at).getTime();
+          const dateB = new Date(joinedAtMap.get(b.id) || b.created_at).getTime();
+          return dateB - dateA;
+        });
 
-      const formattedTeams: Team[] = teamsData.map((t: any) => {
-        // Calculate Performance (Velocity: Tasks Done per Day over last 7 days)
-        const last7Days = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          return d.toISOString().split('T')[0];
-        }).reverse();
+        const formattedTeams: Team[] = teamsData.map((t: any) => {
+          // Calculate Performance (Velocity: Tasks Done per Day over last 7 days)
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            return d.toISOString().split('T')[0];
+          }).reverse();
 
-        const tasks = t.tasks || [];
-        const performance: PerformanceMetric[] = last7Days.map(date => {
-          // Count tasks completed on this date (approximate using updated_at for done tasks)
-          // or created_at for activity? Let's use 'done' tasks status update if possible.
-          // Since we don't have task history here, we'll map 'created_at' as activity volume for now
-          // OR check if status is done and updated_at is this date.
-          const activityCount = tasks.filter((task: any) => {
-            const dateToUse = task.updated_at || task.created_at;
-            if (!dateToUse) return false;
-            const taskDate = dateToUse.split('T')[0];
-            return taskDate === date && (task.status === 'done' || task.status === 'in_progress');
-          }).length;
+          const tasks = t.tasks || [];
+          const performance: PerformanceMetric[] = last7Days.map(date => {
+            // Count tasks completed on this date (approximate using updated_at for done tasks)
+            // or created_at for activity? Let's use 'done' tasks status update if possible.
+            // Since we don't have task history here, we'll map 'created_at' as activity volume for now
+            // OR check if status is done and updated_at is this date.
+            const activityCount = tasks.filter((task: any) => {
+              const dateToUse = task.updated_at || task.created_at;
+              if (!dateToUse) return false;
+              const taskDate = dateToUse.split('T')[0];
+              return taskDate === date && (task.status === 'done' || task.status === 'in_progress');
+            }).length;
 
-          // Scale it 0-100 based on some target (e.g. 5 tasks = 100%)
+            // Scale it 0-100 based on some target (e.g. 5 tasks = 100%)
+            return {
+              date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
+              value: Math.min(activityCount * 20, 100),
+              label: "Efficiency"
+            };
+          });
+
           return {
-            date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
-            value: Math.min(activityCount * 20, 100),
-            label: "Efficiency"
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            event: "Hackathon 2026",
+            type: "Project",
+            visibility: "Public",
+            status: t.status,
+            maxMembers: 5,
+            currentMembers: t.memberships.map((m: any) => ({
+              id: m.profiles.id,
+              name: m.profiles.full_name,
+              role: m.role,
+              member_role: m.member_role || m.role,
+              avatar: m.profiles.avatar_url,
+              online: true,
+              tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length
+            })),
+            tasksCount: t.tasks.length,
+            progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
+            color: "bg-hack-blue",
+            role: t.owner_id === targetUser.id ? "Leader" : (myMemberships.find((m: any) => m.team_id === t.id)?.role === 'Leader' ? "Leader" : "Member"),
+
+            tasks: tasks.map((task: any) => ({
+              id: task.id,
+              title: task.title,
+              priority: task.priority,
+              status: task.status,
+              labels: task.tags || [],
+              members: [task.assignee_id].filter(Boolean),
+              assignee_id: task.assignee_id,
+              assignee: task.profiles ? {
+                id: task.profiles.id,
+                name: task.profiles.full_name,
+                avatar: task.profiles.avatar_url
+              } : undefined,
+              deadline: task.deadline,
+              description: task.description,
+              is_critical: task.is_critical || false,
+              updated_at: task.updated_at,
+              createdAt: task.created_at
+            })),
+            mission_objective: t.mission_objective || "",
+            deadline: t.deadline || undefined,
+            invite_code: t.invite_code || undefined,
+            github_repo: t.github_repo || undefined,
+            github_repos: t.github_repos || [],
+            settings: t.settings || { allow_task_creation: true, allow_invites: true },
+            history: logsByTeam.get(t.id) || [],
+            performance: performance
           };
         });
-
-        return {
-          id: t.id,
-          name: t.name,
-          description: t.description,
-          event: "Hackathon 2026",
-          type: "Project",
-          visibility: "Public",
-          status: t.status,
-          maxMembers: 5,
-          currentMembers: t.memberships.map((m: any) => ({
-            id: m.profiles.id,
-            name: m.profiles.full_name,
-            role: m.role,
-            member_role: m.member_role || m.role,
-            avatar: m.profiles.avatar_url,
-            online: true,
-            tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length
-          })),
-          tasksCount: t.tasks.length,
-          progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
-          color: "bg-hack-blue",
-          role: t.owner_id === targetUser.id ? "Leader" : (myMemberships.find((m: any) => m.team_id === t.id)?.role === 'Leader' ? "Leader" : "Member"),
-
-          tasks: tasks.map((task: any) => ({
-            id: task.id,
-            title: task.title,
-            priority: task.priority,
-            status: task.status,
-            labels: task.tags || [],
-            members: [task.assignee_id].filter(Boolean),
-            assignee_id: task.assignee_id,
-            assignee: task.profiles ? {
-              id: task.profiles.id,
-              name: task.profiles.full_name,
-              avatar: task.profiles.avatar_url
-            } : undefined,
-            deadline: task.deadline,
-            description: task.description,
-            is_critical: task.is_critical || false,
-            updated_at: task.updated_at,
-            createdAt: task.created_at
-          })),
-          mission_objective: t.mission_objective || "",
-          deadline: t.deadline || undefined,
-          invite_code: t.invite_code || undefined,
-          github_repo: t.github_repo || undefined,
-          github_repos: t.github_repos || [],
-          settings: t.settings || { allow_task_creation: true, allow_invites: true },
-          history: logsByTeam.get(t.id) || [],
-          performance: performance
-        };
-      });
-      setTeams(formattedTeams);
+        setTeams(formattedTeams);
+      }
+    } catch (err: any) {
+      handleSupabaseError(err, "fetchTeams_API");
     }
   };
 
@@ -2877,12 +2835,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     userBadges, fetchUserBadges, awardBadge,
     getStandup, getTaskSuggestions, deleteTeam
 
+
+
   };
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider value={value} >
       {children}
-    </AppContext.Provider>
+    </AppContext.Provider >
   );
 }
 
