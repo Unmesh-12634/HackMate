@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { Button, cn } from "../components/ui/button";
-import { useAppContext } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
 import {
   Zap,
   Target,
@@ -25,284 +25,281 @@ import {
   Terminal,
   Cpu,
   Workflow,
-  Code2
+  Code2,
+  ChevronRight
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 
 export function LandingView() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30 overflow-x-hidden font-sans scroll-smooth">
-      {/* Dynamic Background Overlay */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] opacity-40 animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[120px] opacity-40 animate-pulse" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] brightness-125" />
+      {/* Background Layer: Tactical Grid & Depth */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-125" />
+        <div className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[150px] opacity-20" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px] opacity-20" />
+        {/* Subtle HUD Grid */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       </div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-20 border-b border-white/[0.03] bg-[#020617]/40 backdrop-blur-2xl px-6 md:px-12 flex items-center justify-between">
-        <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
-            <Zap className="text-white w-5 h-5 fill-white" />
+      {/* Floating Navigation */}
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-16 border border-white/[0.05] bg-[#020617]/40 backdrop-blur-2xl px-6 rounded-2xl flex items-center justify-between shadow-2xl">
+        <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+            <Zap className="text-white w-4 h-4 fill-white" />
           </div>
-          <span className="text-lg font-black tracking-tight uppercase leading-none text-white">HackMate</span>
+          <span className="text-sm font-black tracking-tighter uppercase text-white">HackMate</span>
         </div>
 
-        <div className="hidden lg:flex items-center gap-10">
-          {["Features", "Ecosystem", "Community", "Intelligence"].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-500 transition-colors">
+        <div className="hidden md:flex items-center gap-8">
+          {["Arsenal", "Network", "Intel", "Docs"].map((item) => (
+            <a key={item} href={`#${item.toLowerCase()}`} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-blue-400 transition-colors">
               {item}
             </a>
           ))}
         </div>
 
-        <div className="flex items-center gap-6">
-          <button onClick={() => navigate("/login")} className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Sign In</button>
-          <Button onClick={() => navigate("/signup")} className="rounded-full h-11 px-8 font-black uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-xl shadow-blue-600/20 group">
-            Get Started <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Sign In</button>
+          <Button onClick={() => navigate("/signup")} className="h-9 px-6 rounded-lg font-bold uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/20 group transition-all duration-300">
+            Initialize <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative z-10 pt-44 pb-32 px-6 md:px-12 max-w-[1400px] mx-auto text-center">
+      {/* Hero Section: Typrographic Focus */}
+      <section className="relative z-10 pt-48 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-10"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center space-y-8"
         >
-          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400">The Modern OS for Hackathons</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-md">
+            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-blue-400">Tactical OS v2.0 Live</span>
           </div>
 
-          <h1 className="text-5xl md:text-8xl font-black tracking-tight uppercase leading-[0.9] text-white max-w-5xl mx-auto">
-            Build Teams. Ship <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Products.</span> Dominate.
+          <h1 className="text-6xl md:text-[7rem] font-black tracking-tight uppercase leading-[0.85] text-white">
+            Command Your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-blue-600">Innovation.</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-400 font-medium uppercase tracking-wide max-w-3xl mx-auto leading-relaxed">
-            HackMate provides the ultimate command center for elite development squads. Real-time collaboration, AI assistance, and mission-critical tools in one unified interface.
+          <p className="max-w-xl mx-auto text-sm md:text-base text-slate-400 font-medium leading-relaxed uppercase tracking-wider">
+            The high-precision workspace for elite development squads.
+            Built to scale, engineered for speed, designed for impact.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-            <Button onClick={() => navigate("/signup")} className="h-16 px-12 rounded-full text-xs font-black uppercase tracking-[0.3em] bg-blue-600 hover:bg-blue-500 shadow-2xl shadow-blue-600/30 hover:scale-105 transition-all">
-              Initialize Command
+          <div className="pt-4 flex flex-wrap justify-center gap-4">
+            <Button onClick={() => navigate("/signup")} className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all duration-300">
+              Launch Mission
             </Button>
-            <Button variant="outline" className="h-16 px-12 rounded-full text-xs font-black uppercase tracking-[0.3em] border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all">
-              View Briefing
+            <Button variant="outline" className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all">
+              Read Briefing
             </Button>
           </div>
         </motion.div>
 
-        {/* Dashboard Preview */}
+        {/* 3D Hero Visual Plate */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="mt-24 relative max-w-6xl mx-auto group"
+          initial={{ opacity: 0, scale: 0.95, y: 40 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-20 relative w-full aspect-[21/9] rounded-[2rem] overflow-hidden group shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/5"
         >
-          <div className="absolute inset-0 bg-blue-600/20 blur-[120px] rounded-full opacity-30 group-hover:opacity-50 transition-opacity" />
-          <div className="relative rounded-[40px] border border-white/10 bg-[#0f172a]/60 backdrop-blur-3xl p-3 shadow-2xl overflow-hidden aspect-[16/9]">
-            <ImageWithFallback
-              src="https://images.unsplash.com/photo-1575388902449-6bca946ad549?w=1600&h=900&fit=crop"
-              alt="HackMate Dashboard"
-              className="w-full h-full object-cover rounded-[32px] opacity-80"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent z-10" />
+          <img
+            src="/assets/hero_3d.png"
+            alt="HackMate Tactical Console"
+            className="w-full h-full object-cover transform scale-100 group-hover:scale-[1.02] transition-transform duration-[3s] ease-out"
+          />
+
+          {/* Internal HUD Elements overlay */}
+          <div className="absolute top-10 right-10 z-20 hidden md:block">
+            <div className="p-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                <span className="text-[8px] font-bold uppercase tracking-widest text-slate-300">System Nominal</span>
+              </div>
+              <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "85%" }}
+                  transition={{ duration: 2, delay: 1 }}
+                  className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                />
+              </div>
+            </div>
           </div>
         </motion.div>
       </section>
 
-      {/* Social Proof */}
-      <section className="relative z-10 py-20 border-y border-white/[0.03] bg-white/[0.01]">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-12 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500">Trusted by 50,000+ Operatives:</span>
-          <div className="flex flex-wrap justify-center gap-12 md:gap-20">
-            {["GITHUB", "VERCEL", "STRIPE", "AWS", "DISCORD"].map(brand => (
-              <span key={brand} className="text-lg font-black tracking-widest text-white">{brand}</span>
-            ))}
+      {/* Feature Command Center */}
+      <section id="features" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
+          <div className="space-y-4">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Weaponry</h2>
+            <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white">Full Spectrum <br /> Capabilities.</h3>
           </div>
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section id="features" className="relative z-10 py-48 px-6 md:px-12 max-w-[1400px] mx-auto">
-        <div className="text-center mb-24 space-y-4">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500">The Arsenal</h2>
-          <h3 className="text-4xl md:text-6xl font-black uppercase tracking-tight text-white">Built for <span className="text-blue-500">Performance.</span></h3>
+          <p className="max-w-xs text-[10px] font-bold uppercase tracking-widest text-slate-500 leading-relaxed">
+            Every module is engineered for low-latency collaboration and high-authority mission management.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.05] border border-white/[0.05] rounded-[2rem] overflow-hidden">
           {[
-            {
-              title: "Mission Board",
-              desc: "High-velocity Kanban boards optimized for sub-hour task cycles and squad dependencies.",
-              icon: LayoutGrid,
-              color: "blue"
-            },
-            {
-              title: "Neural Sync Chat",
-              desc: "Real-time communication with integrated code snippet support and AI logic refactoring.",
-              icon: MessageSquare,
-              color: "indigo"
-            },
-            {
-              title: "Secure Vault",
-              desc: "Encrypted storage for team assets, API keys, and tactical documentation.",
-              icon: Shield,
-              color: "purple"
-            },
-            {
-              title: "Squad Intel",
-              desc: "Deep analytics into team velocity, individual focus scores, and project health metrics.",
-              icon: Activity,
-              color: "emerald"
-            },
-            {
-              title: "Strategy Builder",
-              desc: "Interactive roadmap tools that automatically adapt based on squad progress and deadlines.",
-              icon: Target,
-              color: "orange"
-            },
-            {
-              title: "Global Link",
-              desc: "Seamlessly find and recruit high-authority personnel from the global hacker network.",
-              icon: Globe,
-              color: "cyan"
-            }
+            { title: "Mission Board", icon: LayoutGrid, desc: "Ultra-precise task tracking with dependency mapping." },
+            { title: "Neural Chat", icon: MessageSquare, desc: "Real-time communication with context-aware AI relay." },
+            { title: "Secure Vault", icon: Shield, desc: "Military-grade encryption for all project credentials." },
+            { title: "Squad Intel", icon: Activity, desc: "Deep performance analytics and velocity tracking." },
+            { title: "Global Link", icon: Globe, desc: "Find elite personnel across the secure network." },
+            { title: "AI Architect", icon: Bot, desc: "Autonomous project optimization and code auditing." }
           ].map((feature, i) => (
             <motion.div
               key={i}
-              whileHover={{ y: -8 }}
-              className="group p-10 rounded-[40px] bg-[#0f172a]/40 border border-white/[0.05] hover:border-blue-500/30 transition-all duration-500 relative overflow-hidden"
+              whileHover={{ backgroundColor: "rgba(255,255,255,0.02)" }}
+              className="group p-12 bg-[#020617] transition-all duration-300 cursor-default"
             >
-              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-10 group-hover:scale-110 transition-transform">
-                <feature.icon className="w-8 h-8 text-blue-500" />
-              </div>
-              <h4 className="text-2xl font-black uppercase tracking-tight text-white mb-6">{feature.title}</h4>
-              <p className="text-sm font-medium text-slate-500 leading-relaxed uppercase tracking-wider">{feature.desc}</p>
+              <feature.icon className="w-6 h-6 text-blue-500 mb-8 group-hover:scale-110 transition-transform" />
+              <h4 className="text-lg font-black uppercase tracking-tight text-white mb-4">{feature.title}</h4>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-loose">{feature.desc}</p>
 
-              <div className="mt-10 flex items-center gap-3 text-blue-500 group-hover:translate-x-2 transition-transform cursor-pointer">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Read Intel</span>
-                <ArrowUpRight className="w-4 h-4" />
+              <div className="mt-8 flex items-center gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                <span className="text-[8px] font-black uppercase tracking-widest text-blue-500">View Intel</span>
+                <ArrowRight className="w-3 h-3 text-blue-500" />
               </div>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Product Showcase - Mid Page */}
-      <section className="relative z-10 py-48 px-6 md:px-12 bg-white/[0.01] border-y border-white/[0.03]">
-        <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-24 items-center">
-          <div className="space-y-12">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500">Neural Integration</h2>
-            <h3 className="text-5xl md:text-7xl font-black uppercase tracking-tight text-white leading-[1.1]">
-              Meet your <span className="text-blue-500">AI Architect.</span>
-            </h3>
-            <p className="text-lg text-slate-400 font-medium leading-relaxed uppercase tracking-wider">
-              Every squad is assigned a dedicated Architect AI. It analyzes your code, suggests optimizations, and manages tactical deployments so you can focus on the core mission.
-            </p>
-
-            <ul className="space-y-6 pt-6">
-              {[
-                "Real-time Logic Auditing",
-                "Automated Resource Allocation",
-                "Predictive Deadline Analysis",
-                "Integrated Neural Chat"
-              ].map((item, i) => (
-                <li key={i} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-slate-300">
-                  <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <Button className="h-16 px-12 rounded-full text-xs font-black uppercase tracking-[0.3em] bg-blue-600 hover:bg-blue-500 transition-all">
-              Initialize Neural Link
-            </Button>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-600/10 blur-[100px] rounded-full" />
-            <div className="relative rounded-[48px] border border-white/10 bg-[#0f172a]/80 backdrop-blur-3xl p-4 overflow-hidden shadow-2xl">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1762280040702-dbe2f4869712?w=1000&h=1200&fit=crop"
-                alt="AI Interface"
-                className="w-full h-full object-cover rounded-[32px] opacity-60"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 bg-blue-600 rounded-[32px] flex items-center justify-center shadow-2xl animate-pulse">
-                  <Bot className="w-10 h-10 text-white" />
+      {/* AI Product Showcase */}
+      <section className="relative z-10 py-32 px-6 bg-blue-600/[0.02] border-y border-white/[0.03]">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
+          <div className="order-2 lg:order-1 relative h-[600px] rounded-[3rem] overflow-hidden border border-white/10 group bg-[#020617]">
+            <div className="absolute inset-0 bg-blue-600/5 animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 blur-3xl bg-blue-500/20 animate-pulse scale-150" />
+                <div className="w-48 h-48 rounded-[2rem] bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center relative z-10 shadow-[0_0_50px_rgba(59,130,246,0.5)]">
+                  <Bot className="w-20 h-20 text-white animate-bounce" />
                 </div>
               </div>
             </div>
+            {/* Dynamic scan line effect */}
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-blue-500/50 blur-[2px] animate-[scan_4s_linear_infinite]" />
+
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                @keyframes scan {
+                  0% { top: 0% }
+                  100% { top: 100% }
+                }
+             `}} />
+          </div>
+
+          <div className="order-1 lg:order-2 space-y-10">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Autonomous Intel</h2>
+            <h3 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white leading-[0.9]">
+              The <span className="text-blue-500">Architect</span> <br /> Always Watches.
+            </h3>
+            <p className="text-base text-slate-400 font-medium uppercase tracking-widest leading-relaxed">
+              Experience the first AI-driven project refinery. It doesn't just suggest—it predicts bottlenecks before they compromise your mission.
+            </p>
+
+            <div className="grid grid-cols-2 gap-8 py-4">
+              {[
+                { label: "Predictive", val: "94%" },
+                { label: "Efficiency", val: "2.4x" },
+              ].map(stat => (
+                <div key={stat.label} className="space-y-1">
+                  <div className="text-3xl font-black text-white">{stat.val}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <Button className="h-16 px-12 rounded-xl text-[11px] font-black uppercase tracking-[0.4em] bg-white text-[#020617] hover:bg-slate-200 transition-all">
+              Initialize Neural Relay
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* CTA Footer Section */}
-      <section className="relative z-10 py-48 px-6 md:px-12 text-center">
-        <div className="max-w-4xl mx-auto space-y-12">
-          <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tight text-white leading-none">
-            Establish Your <br /> <span className="text-blue-500">Dominance.</span>
-          </h2>
-          <p className="text-lg text-slate-400 font-medium uppercase tracking-[0.2em] leading-relaxed">
-            Join the elite network of developers building the future. Your mission begins now.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-8">
-            <Button onClick={() => navigate("/signup")} className="h-24 px-16 rounded-full text-sm font-black uppercase tracking-[0.5em] bg-white text-blue-600 hover:bg-slate-100 shadow-2xl transition-all hover:scale-105 active:scale-95">
-              Initialize Link
-            </Button>
-            <button className="text-[10px] font-black uppercase tracking-[0.6em] text-slate-500 hover:text-white transition-colors px-10">
-              Contact High Command
-            </button>
+      {/* Social Proof */}
+      <section className="py-24 border-b border-white/[0.03]">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-12">
+          <span className="text-[9px] font-bold uppercase tracking-[0.5em] text-slate-500">Verified and Utilized By Elite Teams At:</span>
+          <div className="flex flex-wrap justify-center gap-12 md:gap-24 opacity-30 invert brightness-200 hover:opacity-100 transition-opacity duration-700">
+            {["GH", "VM", "ST", "AW", "DC"].map(logo => (
+              <span key={logo} className="text-3xl font-black tracking-tighter text-white">{logo}</span>
+            ))}
           </div>
         </div>
+      </section>
+
+      {/* High Command CTA */}
+      <section className="relative py-48 px-6 text-center overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px]" />
+
+        <motion.div
+          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          className="relative z-10 max-w-4xl mx-auto space-y-12"
+        >
+          <h2 className="text-6xl md:text-[8rem] font-black uppercase tracking-tight text-white leading-[0.8]">
+            Claim Your <br /> <span className="text-blue-500 shadow-blue-500/50">Station.</span>
+          </h2>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
+            <Button onClick={() => navigate("/signup")} className="h-20 px-16 rounded-2xl text-[12px] font-black uppercase tracking-[0.5em] bg-blue-600 hover:bg-blue-500 shadow-2xl shadow-blue-600/30 transition-all hover:scale-[1.05] active:scale-95">
+              Initialize Command
+            </Button>
+            <button className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-400 hover:text-white transition-colors h-20 px-10">
+              Request Intel
+            </button>
+          </div>
+        </motion.div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 py-24 px-6 md:px-12 border-t border-white/[0.03] bg-[#010409]">
-        <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 md:gap-8 mb-24">
-          <div className="col-span-1 md:col-span-1 space-y-8">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/30">
-                <Zap className="text-white w-5 h-5 fill-white" />
+      <footer className="relative z-10 py-32 px-6 border-t border-white/[0.03] bg-[#010409]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20 md:gap-12">
+          <div className="space-y-8">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center shadow-lg shadow-blue-600/30">
+                <Zap className="text-white w-4 h-4 fill-white" />
               </div>
-              <span className="text-xl font-black tracking-tight uppercase text-white">HackMate</span>
+              <span className="text-lg font-black tracking-tighter uppercase text-white">HackMate</span>
             </div>
-            <p className="text-[11px] font-medium text-slate-500 uppercase tracking-widest leading-relaxed">
-              The ultimate operating system for high-performance hackathon squads. Built for speed, precision, and global collaboration.
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+              The high-authority OS for elite development squads. 2026 Transmission Secured.
             </p>
           </div>
 
           {[
-            { title: "Network", links: ["Intelligence Hub", "Global Squads", "Leaderboard", "Events"] },
-            { title: "Arsenal", links: ["Mission Board", "Neural Sync", "Secure Vault", "Squad Intel"] },
-            { title: "Company", links: ["About", "Careers", "Legal", "Privacy"] }
+            { title: "Arsenal", links: ["Mission Board", "Neural Sync", "Vault", "Intel"] },
+            { title: "Ecosystem", links: ["API Docs", "Changelog", "Network", "Status"] },
+            { title: "Legal", links: ["Terms", "Privacy", "Security", "Cookie Policy"] }
           ].map((group, i) => (
             <div key={i} className="space-y-8">
-              <h5 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">{group.title}</h5>
+              <h5 className="text-[9px] font-black uppercase tracking-[0.4em] text-white underline decoration-blue-500/50 underline-offset-8 decoration-2">{group.title}</h5>
               <ul className="space-y-4">
                 {group.links.map(link => (
-                  <li key={link}><a href="#" className="text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-blue-500 transition-colors">{link}</a></li>
+                  <li key={link}><a href="#" className="text-[9px] font-bold text-slate-500 uppercase tracking-widest hover:text-blue-500 transition-colors">{link}</a></li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
 
-        <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-white/[0.03]">
-          <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">
-            © 2026 HackMate Systems Inc. // Transmission Secure
-          </div>
+        <div className="max-w-7xl mx-auto pt-24 flex flex-col md:flex-row justify-between items-center gap-8 text-[9px] font-bold text-slate-700 uppercase tracking-[0.3em]">
+          <span>© 2026 HackMate Systems // All Rights Reserved</span>
           <div className="flex gap-10">
-            {["Terms", "Privacy", "Security", "Status"].map(link => (
-              <a key={link} href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 hover:text-white transition-colors">{link}</a>
+            {["SYSTEM_OK", "TRANS_ENCRYPTED", "LATENCY_2MS"].map(tag => (
+              <span key={tag} className="flex items-center gap-2">
+                <div className="w-1 h-1 bg-emerald-500/50 rounded-full" /> {tag}
+              </span>
             ))}
           </div>
         </div>

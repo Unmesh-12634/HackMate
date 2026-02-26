@@ -532,6 +532,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   const [loading, setLoading] = useState(true);
 
+  // Centralized Supabase Error Handler
+  const handleSupabaseError = (error: any, context: string) => {
+    console.error(`Supabase Error [${context}]:`, error);
+
+    const errorMsg = error.message || "";
+    const isNetworkError = errorMsg.includes('fetch') ||
+      errorMsg.includes('network') ||
+      errorMsg.includes('AbortError') ||
+      error.status === 0;
+
+    if (isNetworkError) {
+      toast.error("CONNECTION BLOCKED", {
+        description: "Your ISP might be blocking the connection. If the issue persists, try changing your DNS to 8.8.8.8 or 1.1.1.1.",
+        duration: 10000,
+        id: "connection-blocked-toast" // Use fixed ID to prevent spamming
+      });
+    } else {
+      toast.error(`SYSTEM ERROR: ${context}`, {
+        description: errorMsg,
+        id: `error-${context}`
+      });
+    }
+  };
+
 
   const [posts, setPosts] = useState<Post[]>(defaultPosts);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -767,7 +791,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         .order('created_at', { ascending: false });
 
       if (postsError) {
-        console.error("Supabase Error [fetchPosts]:", postsError);
+        handleSupabaseError(postsError, "fetchPosts");
         const { data: fallbackData } = await supabase
           .from('posts')
           .select('id, content, author_id, tags, created_at, profiles:author_id(*)')
@@ -923,7 +947,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (createError) {
-        console.error("Failed to create profile:", createError);
+        handleSupabaseError(createError, "fetchProfile_create");
         return;
       }
       data = createdProfile;
@@ -1177,7 +1201,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .eq('user_id', targetUser.id);
 
     if (memError) {
-      console.error("Error fetching memberships:", memError);
+      handleSupabaseError(memError, "fetchTeams_memberships");
       return;
     }
 
@@ -1201,7 +1225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .in('id', teamIds);
 
     if (error) {
-      console.error("Error fetching teams:", error);
+      handleSupabaseError(error, "fetchTeams_details");
       return;
     }
 
@@ -1514,11 +1538,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    });
-    if (error) console.error("Login error:", error);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+      });
+      if (error) handleSupabaseError(error, "login");
+    } catch (err) {
+      handleSupabaseError(err, "login_critical");
+    }
   };
 
   const logout = async () => {

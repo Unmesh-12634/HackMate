@@ -90,7 +90,7 @@ export function AuthView() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: window.location.origin + "/workspace"
+        redirectTo: `${window.location.origin}/workspace`
       }
     });
     if (error) {

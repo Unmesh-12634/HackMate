@@ -24,7 +24,7 @@
   --input: #e2e8f0;
   --ring: #3b82f6;
   --radius: 12px;
-  
+
   --hack-blue: #3b82f6;
   --hack-purple: #7c3aed;
   --hack-neon: #60a5fa;
@@ -72,7 +72,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --color-hack-blue: var(--hack-blue);
   --color-hack-purple: var(--hack-purple);
   --color-hack-neon: var(--hack-neon);
@@ -87,6 +87,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
@@ -96,15 +97,19 @@
   .glass {
     @apply bg-white/10 backdrop-blur-md border border-white/20;
   }
+
   .dark .glass {
     @apply bg-black/20 backdrop-blur-md border border-white/10;
   }
+
   .glass-card {
     @apply bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl;
   }
+
   .gradient-text {
     @apply bg-gradient-to-r from-hack-blue to-hack-purple bg-clip-text text-transparent;
   }
+
   .gradient-bg {
     @apply bg-gradient-to-br from-hack-blue/10 via-hack-purple/10 to-hack-neon/10;
   }
