@@ -644,7 +644,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`API Error [posts]: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`API Error: ${response.statusText || 'Internal Server Error'}`);
       }
 
       const { posts: postsData, likedPostIds } = await response.json();
@@ -681,7 +683,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     try {
       const response = await fetch(`/api/notifications?userId=${user.id}`);
-      if (!response.ok) throw new Error("API [notifications] failed");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error [notifications]: ${response.status} ${response.statusText}`, errorText);
+        throw new Error("API [notifications] failed");
+      }
       const data = await response.json();
 
       setNotifications(data.map((n: any) => ({
@@ -700,7 +706,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const fetchBounties = async () => {
     try {
       const response = await fetch('/api/bounties');
-      if (!response.ok) throw new Error("API [bounties] failed");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error [bounties]: ${response.status} ${response.statusText}`, errorText);
+        throw new Error("API [bounties] failed");
+      }
       const data = await response.json();
       setBounties(data);
     } catch (err) {
@@ -1179,7 +1189,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const response = await fetch(`/api/teams?userId=${targetUser.id}`);
-      if (!response.ok) throw new Error("API [teams] failed");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error [teams]: ${response.status} ${response.statusText}`, errorText);
+        throw new Error("API [teams] failed");
+      }
 
       const { teams: teamsData, memberships: myMemberships, auditLogs: auditLogsData } = await response.json();
 

@@ -40,6 +40,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
     } catch (error: any) {
         console.error('API [posts] error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message || 'Unknown Server Error',
+            context: 'api/posts',
+            envExists: !!(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
+        });
     }
 }

@@ -17,6 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json(data || []);
     } catch (error: any) {
         console.error('API [bounties] error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message || 'Unknown Server Error',
+            context: 'api/bounties',
+            envExists: !!(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL)
+        });
     }
 }
