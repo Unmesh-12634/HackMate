@@ -781,12 +781,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const fetchPosts = async () => {
     try {
-      // Logic moved to Server-Side API to bypass ISP blocks and handle professional auth logic
+      // Logic moved to Server-Side API to bypass ISP blocks
       const url = `/api/posts${user ? `?userId=${user.id}` : ''}`;
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        throw new Error(`API Error: ${response.status}`);
       }
 
       const { posts: postsData, likedPostIds } = await response.json();
@@ -798,7 +798,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           type: p.type || "text",
           user: p.profiles?.full_name || "Anon",
           user_id: p.author_id,
-          handle: "@" + (p.profiles?.full_name?.toLowerCase().replace(/\s/g, "_") || "anon"),
+          handle: p.profiles?.email?.split('@')[0] || "anon",
           content: p.content,
           codeSnippet: p.code_snippet,
           codeLanguage: p.code_language,
@@ -806,7 +806,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           tags: p.tags || [],
           likes: p.likes_count || 0,
           comments: p.comments_count || 0,
-          time: new Date(p.created_at).toLocaleDateString(),
+          time: new Date(p.created_at).toLocaleTimeString(),
           avatar: p.profiles?.avatar_url,
           isLiked: likedSet.has(p.id),
           imageUrl: p.image_url
@@ -814,15 +814,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       } else {
         setPosts([]);
       }
-    } catch (err: any) {
-      handleSupabaseError(err, "fetchPosts_API");
+    } catch (err) {
+      console.warn("API [posts] fallback triggered:", err);
+      // FALLBACK TO DIRECT SUPABASE
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`*, profiles:author_id(*)`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        handleSupabaseError(error, "fetchPosts_Fallback");
+      } else if (data) {
+        setPosts(data.map((p: any) => ({
+          id: p.id,
+          type: p.type || "text",
+          user: p.profiles?.full_name || "Anon",
+          user_id: p.author_id,
+          handle: p.profiles?.email?.split('@')[0] || "anon",
+          content: p.content,
+          codeSnippet: p.code_snippet,
+          codeLanguage: p.code_language,
+          projectDetails: p.project_details,
+          tags: p.tags || [],
+          likes: p.likes_count || 0,
+          comments: p.comments_count || 0,
+          time: new Date(p.created_at).toLocaleTimeString(),
+          avatar: p.profiles?.avatar_url,
+          imageUrl: p.image_url
+        })));
+      }
     }
   };
 
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      const response = await fetch(`/api/notifications?userId=${user.id}`);
+      const response = await fetch('/api/notifications');
       if (!response.ok) throw new Error("API [notifications] failed");
       const data = await response.json();
 
@@ -835,7 +862,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         time: new Date(n.created_at).toLocaleTimeString()
       })));
     } catch (err) {
-      handleSupabaseError(err, "fetchNotifications_API");
+      console.warn("API [notifications] fallback triggered");
+      const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
+      if (error) handleSupabaseError(error, "fetchNotifications_Fallback");
+      else if (data) {
+        setNotifications(data.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          read: n.is_read,
+          time: new Date(n.created_at).toLocaleTimeString()
+        })));
+      }
     }
   };
 
@@ -846,7 +885,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       setBounties(data);
     } catch (err) {
-      handleSupabaseError(err, "fetchBounties_API");
+      console.warn("API [bounties] fallback triggered");
+      const { data, error } = await supabase.from('bounties').select('*').order('created_at', { ascending: false });
+      if (error) handleSupabaseError(error, "fetchBounties_Fallback");
+      else setBounties(data || []);
     }
   };
 
@@ -1013,7 +1055,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
       setSessions(data);
     } catch (err) {
-      handleSupabaseError(err, "fetchSessions_API");
+      console.warn("API [sessions] fallback triggered");
+      const { data, error } = await supabase.from('user_sessions').select('*').eq('user_id', targetUser.id).order('last_active', { ascending: false });
+      if (error) handleSupabaseError(error, "fetchSessions_Fallback");
+      else setSessions(data || []);
     }
   };
 
@@ -1190,9 +1235,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       const joinedAtMap = new Map(myMemberships.map((m: any) => [m.team_id, m.joined_at]));
-
-
-
       const logsByTeam = new Map();
       if (auditLogsData) {
         auditLogsData.forEach((log: any) => {
@@ -1203,14 +1245,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             details: log.details,
             type: log.type === 'task' ? 'task' : log.type === 'security' ? 'security' : 'system' as any,
             time: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            user: log.profiles?.full_name || 'System', // Use profile name or System
+            user: log.profiles?.full_name || 'System',
             timestamp: log.created_at,
             date: new Date(log.created_at).toLocaleDateString()
           });
         });
       }
 
-      // Manual Sort by joined_at if available in the data structure
       if (teamsData) {
         teamsData.sort((a: any, b: any) => {
           const dateA = new Date(joinedAtMap.get(a.id) || a.created_at).getTime();
@@ -1219,7 +1260,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         });
 
         const formattedTeams: Team[] = teamsData.map((t: any) => {
-          // Calculate Performance (Velocity: Tasks Done per Day over last 7 days)
           const last7Days = Array.from({ length: 7 }, (_, i) => {
             const d = new Date();
             d.setDate(d.getDate() - i);
@@ -1228,10 +1268,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
           const tasks = t.tasks || [];
           const performance: PerformanceMetric[] = last7Days.map(date => {
-            // Count tasks completed on this date (approximate using updated_at for done tasks)
-            // or created_at for activity? Let's use 'done' tasks status update if possible.
-            // Since we don't have task history here, we'll map 'created_at' as activity volume for now
-            // OR check if status is done and updated_at is this date.
             const activityCount = tasks.filter((task: any) => {
               const dateToUse = task.updated_at || task.created_at;
               if (!dateToUse) return false;
@@ -1239,7 +1275,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               return taskDate === date && (task.status === 'done' || task.status === 'in_progress');
             }).length;
 
-            // Scale it 0-100 based on some target (e.g. 5 tasks = 100%)
             return {
               date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
               value: Math.min(activityCount * 20, 100),
@@ -1269,7 +1304,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
             color: "bg-hack-blue",
             role: t.owner_id === targetUser.id ? "Leader" : (myMemberships.find((m: any) => m.team_id === t.id)?.role === 'Leader' ? "Leader" : "Member"),
-
             tasks: tasks.map((task: any) => ({
               id: task.id,
               title: task.title,
@@ -1302,7 +1336,53 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setTeams(formattedTeams);
       }
     } catch (err: any) {
-      handleSupabaseError(err, "fetchTeams_API");
+      console.warn("API [teams] fallback triggered:", err);
+      // Fallback to direct client
+      const { data: myMemberships } = await supabase.from('memberships').select('*, teams(*, tasks(*, profiles(*)), memberships(*, profiles(*)))').eq('user_id', targetUser.id);
+      if (myMemberships) {
+        // Simple fallback formatting (matching the complex one above partially)
+        const simplifiedTeams: Team[] = myMemberships.map((m: any) => {
+          const t = m.teams;
+          const tasks = t.tasks || [];
+          return {
+            id: t.id,
+            name: t.name,
+            description: t.description,
+            event: "Hackathon 2026",
+            type: "Project",
+            visibility: "Public",
+            status: t.status,
+            maxMembers: 5,
+            currentMembers: t.memberships.map((mem: any) => ({
+              id: mem.profiles?.id,
+              name: mem.profiles?.full_name,
+              role: mem.role,
+              avatar: mem.profiles?.avatar_url,
+              online: true,
+              tasksDone: 0
+            })),
+            tasksCount: tasks.length,
+            progress: 0,
+            color: "bg-hack-blue",
+            role: m.role as any,
+            tasks: tasks.map((task: any) => ({
+              id: task.id,
+              title: task.title,
+              priority: task.priority,
+              status: task.status,
+              labels: task.tags || [],
+              members: [task.assignee_id].filter(Boolean),
+              assignee_id: task.assignee_id,
+              createdAt: task.created_at
+            })),
+            history: [],
+            performance: []
+          };
+        });
+        setTeams(simplifiedTeams);
+      } else {
+        handleSupabaseError(err, "fetchTeams_Fallback");
+      }
     }
   };
 
