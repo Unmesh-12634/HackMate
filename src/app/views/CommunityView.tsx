@@ -118,13 +118,13 @@ const GlobalRelay: React.FC<{
                   <div className={cn(
                      "max-w-[85%] rounded-[1.25rem] px-5 py-3.5 transition-all text-xs font-medium leading-relaxed group/msg position-relative",
                      msg.type === 'system'
-                        ? 'bg-slate-950/50 border border-white/[0.03] text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] rounded-full px-8'
-                        : 'bg-slate-900/10 border border-white/[0.03] text-slate-300 hover:border-indigo-500/20 shadow-2xl'
+                        ? 'bg-secondary/50 border border-white/[0.03] text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] rounded-full px-8'
+                        : 'bg-secondary/10 border border-white/[0.03] text-slate-300 hover:border-indigo-500/20 shadow-2xl'
                   )}>
                      {msg.type !== 'system' && (
                         <div className="flex items-center gap-3 mb-1.5">
                            <span
-                              className="text-[11px] font-black text-white uppercase tracking-tight cursor-pointer hover:text-blue-400 transition-colors"
+                              className="text-[11px] font-black text-foreground uppercase tracking-tight cursor-pointer hover:text-blue-400 transition-colors"
                               onClick={() => navigate(`/u/${msg.user_id}`)}
                            >
                               {msg.user}
@@ -141,12 +141,12 @@ const GlobalRelay: React.FC<{
          <form onSubmit={handleSubmit} className="p-6 bg-card/20 border-t border-border/40">
             <div className="relative group/input">
                <input
-                  className="w-full bg-slate-900/30 border border-white/5 rounded-[1.5rem] py-4 pl-6 pr-14 text-xs font-medium text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-800 shadow-inner"
+                  className="w-full bg-secondary/30 border border-white/5 rounded-[1.5rem] py-4 pl-6 pr-14 text-xs font-medium text-foreground outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-800 shadow-inner"
                   placeholder="TRANSMIT_DATA..."
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                />
-               <button className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-indigo-600 text-white rounded-[1rem] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 group-hover/input:scale-105">
+               <button className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-indigo-600 text-foreground rounded-[1rem] hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 group-hover/input:scale-105">
                   <Send className="w-4 h-4" />
                </button>
             </div>
@@ -186,7 +186,7 @@ const BountyMatrixGrid: React.FC = () => {
                      className={cn(
                         "px-3 py-1 rounded-md text-[8px] font-black uppercase transition-all",
                         filter === f
-                           ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20"
+                           ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20"
                            : "text-slate-600 hover:text-slate-400"
                      )}
                   >
@@ -217,14 +217,14 @@ const BountyMatrixGrid: React.FC = () => {
                         transition={{ delay: i * 0.05 }}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => setSelectedBounty(bounty)}
-                        className="p-4 rounded-2xl bg-slate-900/40 border border-white/5 hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all group cursor-pointer relative overflow-hidden"
+                        className="p-4 rounded-2xl bg-card/40 border border-border/50 hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all group cursor-pointer relative overflow-hidden"
                      >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/[0.03] blur-3xl group-hover:bg-indigo-500/[0.08] transition-all" />
 
                         <div className="flex justify-between items-start mb-3 relative z-10">
                            <div className="flex items-center gap-2">
                               <Badge variant="outline" className={cn(
-                                 "text-[8px] font-black uppercase px-2 py-0.5 rounded-sm border-white/10",
+                                 "text-[8px] font-black uppercase px-2 py-0.5 rounded-sm border-border/50",
                                  bounty.difficulty === 'legendary' ? "text-orange-400 bg-orange-400/10" :
                                     bounty.difficulty === 'hard' ? "text-red-400 bg-red-400/10" :
                                        "text-indigo-400 bg-indigo-400/10"
@@ -238,7 +238,7 @@ const BountyMatrixGrid: React.FC = () => {
                            </div>
                         </div>
 
-                        <h4 className="text-xs font-black text-white uppercase tracking-tight mb-1 group-hover:text-indigo-400 transition-colors">
+                        <h4 className="text-xs font-black text-foreground uppercase tracking-tight mb-1 group-hover:text-indigo-400 transition-colors">
                            {bounty.title}
                         </h4>
                         <p className="text-[10px] text-slate-500 leading-relaxed line-clamp-2 mb-4">
@@ -309,7 +309,7 @@ const BountyDetailModal: React.FC<{
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+            className="absolute inset-0 bg-popover/90 backdrop-blur-md"
          />
          <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -327,7 +327,7 @@ const BountyDetailModal: React.FC<{
                      </div>
                      <div>
                         <div className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1">Mission_Details</div>
-                        <h3 className="text-xl font-black text-white uppercase tracking-tight">{bounty.title}</h3>
+                        <h3 className="text-xl font-black text-foreground uppercase tracking-tight">{bounty.title}</h3>
                      </div>
                   </div>
                   <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-slate-500 transition-colors">
@@ -339,7 +339,7 @@ const BountyDetailModal: React.FC<{
                   <Badge variant="outline" className="border-indigo-500/30 bg-indigo-500/5 text-indigo-400 uppercase text-[9px] font-black px-3 py-1">
                      {bounty.difficulty}
                   </Badge>
-                  <Badge variant="outline" className="border-white/10 bg-white/5 text-slate-400 uppercase text-[9px] font-black px-3 py-1">
+                  <Badge variant="outline" className="border-border/50 bg-white/5 text-slate-400 uppercase text-[9px] font-black px-3 py-1">
                      {bounty.type}
                   </Badge>
                   <div className="ml-auto flex items-center gap-2 text-[11px] font-black text-indigo-400">
@@ -378,7 +378,7 @@ const BountyDetailModal: React.FC<{
                   {bounty.status === 'open' ? (
                      <Button
                         onClick={onClaim}
-                        className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] group"
+                        className="w-full py-6 bg-indigo-600 hover:bg-indigo-500 text-foreground font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-[0.98] group"
                      >
                         <span className="flex items-center gap-2">
                            Accept_Mission <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -393,7 +393,7 @@ const BountyDetailModal: React.FC<{
             </div>
 
             {/* Footer Intel */}
-            <div className="p-4 bg-slate-950/50 border-t border-white/[0.03] text-center">
+            <div className="p-4 bg-secondary/50 border-t border-white/[0.03] text-center">
                <span className="text-[8px] font-bold text-slate-700 uppercase tracking-[0.5em]">System_Verified_Objective // HM_GRID_SYNC_v4.5</span>
             </div>
          </motion.div>
@@ -453,12 +453,12 @@ const CommunicationMatrix: React.FC<{
    return (
       <div className="flex flex-col h-full bg-slate-900/5 border border-white/[0.03] rounded-[2.5rem] overflow-hidden shadow-2xl">
          {/* Switcher Header */}
-         <div className="p-3 bg-slate-950/40 border-b border-white/[0.03] flex items-center gap-1.5">
+         <div className="p-3 bg-secondary/40 border-b border-white/[0.03] flex items-center gap-1.5">
             <button
                onClick={() => setMode("global")}
                className={cn(
                   "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "global" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
+                  mode === "global" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
                )}
             >
                <Globe className="w-3 h-3" /> Global
@@ -467,7 +467,7 @@ const CommunicationMatrix: React.FC<{
                onClick={() => setMode("intel")}
                className={cn(
                   "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "intel" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
+                  mode === "intel" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
                )}
             >
                <Shield className="w-3 h-3" /> Intel
@@ -476,7 +476,7 @@ const CommunicationMatrix: React.FC<{
                onClick={() => setMode("bounties")}
                className={cn(
                   "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "bounties" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
+                  mode === "bounties" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-slate-600 hover:text-slate-300"
                )}
             >
                <Target className="w-3 h-3" /> Bounty
@@ -503,7 +503,7 @@ const CommunicationMatrix: React.FC<{
                         <AvatarFallback>{u.name[0]}</AvatarFallback>
                      </Avatar>
                      <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
-                        <div className="text-[10px] font-black text-white truncate">{u.name}</div>
+                        <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
                         <div className="text-[8px] font-bold text-slate-600 uppercase mt-0.5">{u.role}</div>
                      </div>
                      <button
@@ -524,7 +524,7 @@ const CommunicationMatrix: React.FC<{
                      <div className="relative mb-4">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-700" />
                         <input
-                           className="w-full h-8 bg-slate-950/50 border border-white/5 rounded-lg pl-8 pr-4 text-[9px] font-bold text-white uppercase outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-800"
+                           className="w-full h-8 bg-secondary/50 border border-white/5 rounded-lg pl-8 pr-4 text-[9px] font-bold text-foreground uppercase outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-800"
                            placeholder="FIND_OPERATIVE..."
                            value={searchQuery}
                            onChange={e => setSearchQuery(e.target.value)}
@@ -546,7 +546,7 @@ const CommunicationMatrix: React.FC<{
                                     <AvatarFallback>{u.name[0]}</AvatarFallback>
                                  </Avatar>
                                  <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
-                                    <div className="text-[10px] font-black text-white truncate">{u.name}</div>
+                                    <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
                                     <div className="text-[8px] font-bold text-indigo-500/60 uppercase">{u.rank}</div>
                                  </div>
                                  <button
@@ -575,7 +575,7 @@ const CommunicationMatrix: React.FC<{
                                  </Avatar>
                                  <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between mb-0.5">
-                                       <span className="text-[10px] font-black text-white truncate">{partnerName}</span>
+                                       <span className="text-[10px] font-black text-foreground truncate">{partnerName}</span>
                                        <span className="text-[7px] font-bold text-slate-700">{new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                     <p className="text-[9px] font-medium text-slate-500 truncate">{lastMsg.content}</p>
@@ -589,7 +589,7 @@ const CommunicationMatrix: React.FC<{
                   <div className="flex-1 flex flex-col overflow-hidden">
                      <button
                         onClick={() => setSelectedThread(null)}
-                        className="p-3 bg-slate-950/40 border-b border-white/[0.03] text-[9px] font-black text-indigo-500 hover:text-indigo-400 uppercase tracking-widest flex items-center gap-2"
+                        className="p-3 bg-secondary/40 border-b border-white/[0.03] text-[9px] font-black text-indigo-500 hover:text-indigo-400 uppercase tracking-widest flex items-center gap-2"
                      >
                         <ArrowUpRight className="w-3 h-3 rotate-180" /> BACK_TO_INTEL
                      </button>
@@ -598,7 +598,7 @@ const CommunicationMatrix: React.FC<{
                            <div key={msg.id} className={cn("flex flex-col", msg.sender_id === currentUser.id ? "items-end" : "items-start")}>
                               <div className={cn(
                                  "max-w-[85%] rounded-[1rem] px-4 py-2 text-[10px] font-medium leading-relaxed shadow-lg",
-                                 msg.sender_id === currentUser.id ? "bg-indigo-600 text-white rounded-br-none" : "bg-slate-900/60 text-slate-300 border border-white/5 rounded-bl-none"
+                                 msg.sender_id === currentUser.id ? "bg-indigo-600 text-foreground rounded-br-none" : "bg-secondary/60 text-slate-300 border border-white/5 rounded-bl-none"
                               )}>
                                  {msg.content}
                               </div>
@@ -618,10 +618,10 @@ const CommunicationMatrix: React.FC<{
                         <div className="relative">
                            <input
                               name="msg"
-                              className="w-full bg-slate-900/30 border border-white/5 rounded-full py-2 pl-4 pr-10 text-[10px] font-medium text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-800"
+                              className="w-full bg-secondary/30 border border-white/5 rounded-full py-2 pl-4 pr-10 text-[10px] font-medium text-foreground outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-800"
                               placeholder="TRANSMIT_DATA..."
                            />
-                           <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-all">
+                           <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-indigo-600 text-foreground rounded-lg hover:bg-indigo-500 transition-all">
                               <Send className="w-3 h-3" />
                            </button>
                         </div>
@@ -648,7 +648,7 @@ const PostShareWidget: React.FC<{
    };
 
    return (
-      <div className="p-6 rounded-[2rem] bg-slate-900/10 border border-white/[0.03] shadow-lg">
+      <div className="p-6 rounded-[2rem] bg-secondary/10 border border-white/[0.03] shadow-lg">
          <div className="flex gap-4">
             <Avatar className="w-12 h-12 rounded-2xl border border-white/5 shadow-2xl">
                <AvatarImage src={user.avatar} />
@@ -656,7 +656,7 @@ const PostShareWidget: React.FC<{
             </Avatar>
             <form onSubmit={handleSubmit} className="flex-1">
                <input
-                  className="w-full bg-slate-950/50 border border-white/5 rounded-[1.25rem] py-4 px-6 text-[11px] font-medium text-white outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-800"
+                  className="w-full bg-secondary/50 border border-white/5 rounded-[1.25rem] py-4 px-6 text-[11px] font-medium text-foreground outline-none focus:border-indigo-500/30 transition-all placeholder:text-slate-800"
                   placeholder={`SHARE_NEW_INTEL, ${user.name.toUpperCase()}...`}
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -722,7 +722,7 @@ const PostCommentSection: React.FC<{
                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                            <span
-                              className="text-[10px] font-black text-white cursor-pointer hover:text-blue-400"
+                              className="text-[10px] font-black text-foreground cursor-pointer hover:text-blue-400"
                               onClick={() => navigate(`/u/${c.author_id}`)}
                            >
                               {c.author_name}
@@ -750,10 +750,10 @@ const PostCommentSection: React.FC<{
                               </Avatar>
                               <div className="flex-1 min-w-0">
                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="text-[9px] font-black text-white">{r.author_name}</span>
+                                    <span className="text-[9px] font-black text-foreground">{r.author_name}</span>
                                     <span className="text-[7px] font-bold text-slate-700">{new Date(r.created_at).toLocaleDateString()}</span>
                                  </div>
-                                 <p className="text-[10px] font-medium text-slate-400 leading-relaxed bg-slate-900/30 p-2 rounded-lg">{r.content}</p>
+                                 <p className="text-[10px] font-medium text-slate-400 leading-relaxed bg-secondary/30 p-2 rounded-lg">{r.content}</p>
                               </div>
                            </div>
                         ))}
@@ -767,12 +767,12 @@ const PostCommentSection: React.FC<{
             {replyTo && (
                <div className="flex items-center justify-between px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                   <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">Replying to {replyTo.author_name}</span>
-                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white"><X className="w-3 h-3" /></button>
+                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-foreground"><X className="w-3 h-3" /></button>
                </div>
             )}
             <div className="flex-1 relative">
                <input
-                  className="w-full h-10 bg-slate-950/50 border border-white/10 rounded-xl px-4 text-[11px] font-medium text-white outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-700"
+                  className="w-full h-10 bg-secondary/50 border border-border/50 rounded-xl px-4 text-[11px] font-medium text-foreground outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-700"
                   placeholder={replyTo ? "TRANSMIT_DATA_REPLY..." : "TRANSMIT_SIGNAL..."}
                   value={input}
                   onChange={e => setInput(e.target.value)}
@@ -805,7 +805,7 @@ const StatusBeacons: React.FC<{ teams: Team[], onShare: (team: Team) => void }> 
             >
                <div className="w-full aspect-square rounded-2xl p-[2px] bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 group-hover:scale-105 transition-transform shadow-xl shadow-indigo-500/10">
                   <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center border-2 border-slate-950 overflow-hidden">
-                     <span className="text-[10px] font-black text-white italic">{team.name[0]}</span>
+                     <span className="text-[10px] font-black text-foreground italic">{team.name[0]}</span>
                   </div>
                </div>
                <span className="text-[8px] font-black text-slate-300 uppercase tracking-tight truncate w-full text-center">{team.name}</span>
@@ -1070,24 +1070,24 @@ export function CommunityView() {
                            <div className="w-full h-px bg-slate-800 my-4" />
 
                            <div className="flex flex-col gap-3 text-sm font-medium text-slate-400">
-                              <div className="flex justify-between items-center hover:text-white transition-colors">
+                              <div className="flex justify-between items-center hover:text-foreground transition-colors">
                                  <span>Network Rank</span>
                                  <span className="font-['JetBrains_Mono'] text-blue-400 font-semibold">{user.reputation}</span>
                               </div>
-                              <div className="flex justify-between items-center hover:text-white transition-colors">
+                              <div className="flex justify-between items-center hover:text-foreground transition-colors">
                                  <span>Active Squads</span>
                                  <span className="font-['JetBrains_Mono'] text-slate-100 font-semibold">{teams.length}</span>
                               </div>
                               <div
                                  onClick={() => handleOpenSocialList("followers")}
-                                 className="flex justify-between items-center hover:text-white transition-colors cursor-pointer group/stat"
+                                 className="flex justify-between items-center hover:text-foreground transition-colors cursor-pointer group/stat"
                               >
                                  <span className="group-hover/stat:text-blue-400">Followers</span>
                                  <span className="font-['JetBrains_Mono'] text-slate-100 font-semibold group-hover/stat:text-blue-400">{followerCount}</span>
                               </div>
                               <div
                                  onClick={() => handleOpenSocialList("following")}
-                                 className="flex justify-between items-center hover:text-white transition-colors cursor-pointer group/stat"
+                                 className="flex justify-between items-center hover:text-foreground transition-colors cursor-pointer group/stat"
                               >
                                  <span className="group-hover/stat:text-blue-400">Following</span>
                                  <span className="font-['JetBrains_Mono'] text-slate-100 font-semibold group-hover/stat:text-blue-400">{followingCount}</span>
@@ -1268,7 +1268,7 @@ export function CommunityView() {
          {/* FLOATING ACTION: NEW POST (Replaced Broadcast) */}
          <button
             onClick={() => setShowBroadcastModal(true)}
-            className="fixed bottom-10 right-10 md:hidden p-4 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-600/30 hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer"
+            className="fixed bottom-10 right-10 md:hidden p-4 bg-blue-600 text-foreground rounded-full shadow-lg shadow-blue-600/30 hover:scale-105 active:scale-95 transition-all z-50 cursor-pointer"
          >
             <Plus className="w-6 h-6" />
          </button>
@@ -1347,7 +1347,7 @@ export function CommunityView() {
                         <Button
                            onClick={handleBroadcast}
                            disabled={!newPostContent.trim()}
-                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-full text-sm font-semibold transition-colors cursor-pointer shadow-sm"
+                           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 disabled:text-slate-500 text-foreground rounded-full text-sm font-semibold transition-colors cursor-pointer shadow-sm"
                         >
                            Broadcast
                         </Button>
@@ -1546,7 +1546,7 @@ function RecruitTeamModal({ team, onClose, onShare }: { team: Team, onClose: () 
                         {selectedRoles.map(role => (
                            <div key={role} className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-[10px] font-bold text-blue-400 uppercase tracking-wider group">
                               {role}
-                              <button onClick={() => setSelectedRoles(prev => prev.filter(r => r !== role))} className="hover:text-white transition-colors">
+                              <button onClick={() => setSelectedRoles(prev => prev.filter(r => r !== role))} className="hover:text-foreground transition-colors">
                                  <X className="w-3 h-3" />
                               </button>
                            </div>
@@ -1630,7 +1630,7 @@ function RecruitTeamModal({ team, onClose, onShare }: { team: Team, onClose: () 
                      teamType: team.type,
                      imageUrl: imageUrl
                   })}
-                  className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-foreground rounded-xl text-sm font-bold shadow-lg shadow-blue-600/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                >
                   Broadcast Recruitment Mission
                </Button>

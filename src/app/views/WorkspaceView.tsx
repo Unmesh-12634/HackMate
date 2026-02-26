@@ -67,7 +67,7 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
     return (
         <div
             ref={drag as any}
-            className={`group relative p-4 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-all duration-300 mb-3 shadow-lg shadow-black/20 ${isDragging ? "opacity-40 scale-95" : "opacity-100"
+            className={`group relative p-4 rounded-2xl bg-card/20 border border-border/50 hover:border-blue-500/30 transition-all duration-300 mb-3 shadow-lg shadow-black/20 ${isDragging ? "opacity-40 scale-95" : "opacity-100"
                 } ${task.is_critical ? "ring-1 ring-blue-500/50 shadow-blue-500/10" : ""}`}
         >
             {task.is_critical && (
@@ -94,7 +94,7 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
                 </div>
             </div>
 
-            <h4 className="text-sm font-bold text-slate-100 mb-1 group-hover:text-blue-400 transition-colors">
+            <h4 className="text-sm font-bold text-foreground mb-1 group-hover:text-blue-400 transition-colors">
                 {task.title}
             </h4>
 
@@ -107,15 +107,15 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
             <div className="flex items-center justify-between mt-auto">
                 <div className="flex -space-x-2">
                     {task.assignee ? (
-                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden group/avatar">
+                        <div className="w-6 h-6 rounded-full ring-2 ring-background bg-secondary border border-border/50 flex items-center justify-center overflow-hidden group/avatar">
                             <img src={task.assignee.avatar} alt={task.assignee.name} className="w-full h-full object-cover" />
-                            <div className="absolute hidden group-hover/avatar:block bottom-full mb-2 px-2 py-1 bg-slate-900 border border-white/10 rounded text-[10px] text-white whitespace-nowrap z-50">
+                            <div className="absolute hidden group-hover/avatar:block bottom-full mb-2 px-2 py-1 bg-popover border border-border/50 rounded text-[10px] text-popover-foreground whitespace-nowrap z-50">
                                 {task.assignee.name}
                             </div>
                         </div>
                     ) : (
-                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-slate-900 border border-white/5 flex items-center justify-center">
-                            <Users className="w-3 h-3 text-slate-600" />
+                        <div className="w-6 h-6 rounded-full ring-2 ring-background bg-secondary border border-border/50 flex items-center justify-center">
+                            <Users className="w-3 h-3 text-muted-foreground" />
                         </div>
                     )}
                 </div>
@@ -156,16 +156,15 @@ const KanbanColumn: React.FC<{
     return (
         <div
             ref={drop as any}
-            className={`flex flex-col w-80 min-w-[320px] rounded-3xl bg-slate-950/30 border border-white/5 p-4 transition-colors duration-300 ${isOver ? "bg-blue-500/5 border-blue-500/20" : ""
-                }`}
+            className={`flex flex-col w-80 min-w-[320px] rounded-3xl bg-secondary/30 border border-border/50 p-4 transition-colors duration-300 ${isOver ? "bg-blue-500/5 border-blue-500/20" : ""}`}
         >
             <div className="flex items-center justify-between mb-6 px-2">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5">
+                    <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center border border-border/50">
                         {statusIcons[status as keyof typeof statusIcons]}
                     </div>
                     <div>
-                        <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">{title}</h3>
+                        <h3 className="text-xs font-black text-foreground uppercase tracking-widest">{title}</h3>
                         <span className="text-[10px] font-bold text-slate-500 uppercase">{tasks.length} Operations</span>
                     </div>
                 </div>
@@ -216,12 +215,12 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Real-time Link Active</span>
                         </div>
-                        <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Tactical Board</h2>
+                        <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Tactical Board</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         <Button
                             onClick={() => handleAddTask()}
-                            className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-600/20 font-black uppercase tracking-widest text-[10px] h-10 px-6"
+                            className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground border-0 shadow-lg shadow-blue-600/20 font-black uppercase tracking-widest text-[10px] h-10 px-6"
                         >
                             <Plus className="w-4 h-4 mr-2 stroke-[3px]" /> Deploy New Task
                         </Button>
@@ -244,12 +243,12 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
 
                 <AnimatePresence>
                     {isAddingTask && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-secondary/80 backdrop-blur-sm">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden"
+                                className="w-full max-w-2xl bg-slate-900 border border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden"
                             >
                                 <div className="p-8 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
                                     <div>
@@ -257,11 +256,11 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                                             <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">New Tactical Deployment</span>
                                         </div>
-                                        <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Deploy Task</h3>
+                                        <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">Deploy Task</h3>
                                     </div>
                                     <button
                                         onClick={() => setIsAddingTask(false)}
-                                        className="p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all"
+                                        className="p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-foreground hover:bg-white/10 transition-all"
                                     >
                                         <X className="w-6 h-6" />
                                     </button>
@@ -323,20 +322,20 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-slate-950/20">
+        <div className="h-full flex flex-col bg-secondary/20">
             <header className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/40 backdrop-blur-md">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Encrypted Tactical Channel</span>
                     </div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Comms Link</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tighter uppercase">Comms Link</h2>
                 </div>
                 <div className="flex -space-x-3">
                     {team.currentMembers.map((m: any) => (
                         <div key={m.id} className="w-10 h-10 rounded-2xl border-2 border-slate-950 bg-slate-800 flex items-center justify-center overflow-hidden ring-1 ring-white/10 group relative">
                             <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
-                            <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 border border-white/10 rounded text-[10px] text-white whitespace-nowrap z-50">
+                            <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 border border-border/50 rounded text-[10px] text-foreground whitespace-nowrap z-50">
                                 {m.name}
                             </div>
                         </div>
@@ -350,7 +349,7 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
             >
                 {teamMessages.length === 0 && (
                     <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
-                        <div className="w-16 h-16 rounded-full border border-dashed border-white/10 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full border border-dashed border-border/50 flex items-center justify-center">
                             <MessageSquare className="w-8 h-8 opacity-20" />
                         </div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30">No active transmissions in this sector.</p>
@@ -361,7 +360,7 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                     const isMe = msg.author_id === user?.id;
                     return (
                         <div key={msg.id} className={`flex items-end gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
-                            <div className="w-8 h-8 rounded-xl bg-slate-800 border border-white/10 overflow-hidden flex-shrink-0">
+                            <div className="w-8 h-8 rounded-xl bg-slate-800 border border-border/50 overflow-hidden flex-shrink-0">
                                 <img src={msg.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user}`} alt="" />
                             </div>
                             <div className={`max-w-[70%] group`}>
@@ -370,8 +369,8 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                                     <span className="text-[9px] font-medium text-slate-600 uppercase">{msg.time}</span>
                                 </div>
                                 <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all shadow-lg ${isMe
-                                    ? "bg-blue-600 text-white rounded-br-none shadow-blue-500/10"
-                                    : "bg-white/5 text-slate-200 border border-white/5 rounded-bl-none shadow-black/20"
+                                    ? "bg-blue-600 text-foreground rounded-br-none shadow-blue-500/10"
+                                    : "bg-white/5 text-foreground border border-white/5 rounded-bl-none shadow-black/20"
                                     }`}>
                                     {msg.content}
                                 </div>
@@ -391,11 +390,11 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Transmit data to squadron..."
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all group-hover:bg-white/10"
+                        className="w-full bg-white/5 border border-border/50 rounded-2xl px-6 py-4 pr-16 text-sm text-foreground placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all group-hover:bg-white/10"
                     />
                     <button
                         type="submit"
-                        className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 active:scale-95"
+                        className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-blue-600 text-foreground hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 active:scale-95"
                     >
                         <Send className="w-4 h-4" />
                     </button>
@@ -450,7 +449,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full flex bg-[#020617]">
+        <div className="h-full flex bg-background">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -458,7 +457,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 onChange={handleFileUpload}
             />
 
-            <aside className="w-80 border-r border-white/5 flex flex-col bg-slate-900/20">
+            <aside className="w-80 border-r border-border/50 flex flex-col bg-card/20">
                 <header className="p-6 border-b border-white/5">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Document Vault</h3>
@@ -486,7 +485,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                 onChange={(e) => setNewDocTitle(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                                 placeholder="Core Matrix Title..."
-                                className="w-full bg-slate-950 border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
+                                className="w-full bg-secondary border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none"
                             />
                             <div className="flex gap-2">
                                 <Button onClick={handleCreate} size="sm" className="flex-1 text-[10px] uppercase">Confirm</Button>
@@ -500,7 +499,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                             placeholder="Search intel..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-bold"
+                            className="w-full bg-white/5 border border-border/50 rounded-xl px-4 py-2 text-[10px] text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-bold"
                         />
                     </div>
                 </header>
@@ -520,7 +519,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                 {getDocIcon(doc)}
                             </div>
                             <div className="text-left overflow-hidden">
-                                <div className={`text-sm font-bold truncate ${selectedDocId === doc.id ? "text-blue-400" : "text-slate-200"}`}>
+                                <div className={`text-sm font-bold truncate ${selectedDocId === doc.id ? "text-blue-400" : "text-foreground"}`}>
                                     {doc.title}
                                 </div>
                                 <div className="text-[9px] text-slate-500 uppercase font-black">
@@ -532,7 +531,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 </div>
             </aside>
 
-            <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative">
+            <main className="flex-1 flex flex-col min-w-0 bg-background relative">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
 
                 {selectedDoc ? (
@@ -543,9 +542,9 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                     {getDocIcon(selectedDoc)}
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">{selectedDoc.title}</h2>
+                                    <h2 className="text-xl font-black text-foreground uppercase tracking-tighter">{selectedDoc.title}</h2>
                                     <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                        <Badge variant="outline" className="text-[8px] border-white/10">{selectedDoc.type}</Badge>
+                                        <Badge variant="outline" className="text-[8px] border-border/50">{selectedDoc.type}</Badge>
                                         <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                                         <span>Vault Entry: {new Date(selectedDoc.updatedAt).toLocaleTimeString()}</span>
                                     </div>
@@ -557,14 +556,14 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-xl border-white/10 hover:bg-white/5 h-9 font-bold uppercase text-[10px] tracking-widest"
+                                            className="rounded-xl border-border/50 hover:bg-white/5 h-9 font-bold uppercase text-[10px] tracking-widest"
                                             onClick={() => window.open(selectedDoc.url, '_blank')}
                                         >
                                             <ExternalLink className="w-3.5 h-3.5 mr-2" />
                                             Live View
                                         </Button>
                                         <a href={selectedDoc.url} download={selectedDoc.title} className="contents">
-                                            <Button variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5 h-9 px-3">
+                                            <Button variant="outline" size="sm" className="rounded-xl border-border/50 hover:bg-white/5 h-9 px-3">
                                                 <Download className="w-3.5 h-3.5 text-slate-400" />
                                             </Button>
                                         </a>
@@ -601,7 +600,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                         <img
                                             src={selectedDoc.url}
                                             alt={selectedDoc.title}
-                                            className="relative max-w-full max-h-[60vh] rounded-3xl border border-white/10 shadow-2xl object-contain bg-slate-900/50 p-2"
+                                            className="relative max-w-full max-h-[60vh] rounded-3xl border border-border/50 shadow-2xl object-contain bg-slate-900/50 p-2"
                                         />
                                     </motion.div>
                                     <div className="flex gap-4">
@@ -615,11 +614,11 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                     <div className="w-24 h-24 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
                                         <FileIcon className="w-10 h-10 text-red-400" />
                                     </div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Portable Intel Packet</h3>
+                                    <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Portable Intel Packet</h3>
                                     <p className="text-sm text-slate-400 mb-8 max-w-xs text-center font-medium">PDF assets require external visor for full decryption.</p>
                                     <Button
                                         onClick={() => window.open(selectedDoc.url, '_blank')}
-                                        className="bg-red-600 hover:bg-red-500 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest"
+                                        className="bg-red-600 hover:bg-red-500 text-foreground rounded-2xl px-8 h-12 font-black uppercase tracking-widest"
                                     >
                                         Open in Secondary Visor
                                     </Button>
@@ -629,10 +628,10 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                     <div className="w-24 h-24 rounded-3xl bg-slate-800/50 border border-white/5 flex items-center justify-center mb-6">
                                         <FileIcon className="w-10 h-10 text-slate-500" />
                                     </div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Foreign Intel Structure</h3>
+                                    <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Foreign Intel Structure</h3>
                                     <p className="text-sm text-slate-400 mb-8 font-medium">Unknown data protocol. Recommendation: Manual download.</p>
                                     <a href={selectedDoc.url} download={selectedDoc.title}>
-                                        <Button className="bg-slate-800 hover:bg-slate-700 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest">
+                                        <Button className="bg-slate-800 hover:bg-slate-700 text-foreground rounded-2xl px-8 h-12 font-black uppercase tracking-widest">
                                             <Download className="w-4 h-4 mr-2" /> Extract Data
                                         </Button>
                                     </a>
@@ -689,7 +688,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                     <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Signal Processing Optimized</span>
                 </div>
-                <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Squad Intel</h2>
+                <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Squad Intel</h2>
             </header>
 
             {/* Stats Grid */}
@@ -700,22 +699,22 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-3xl bg-slate-900/40 border border-white/5 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
+                        className="p-6 rounded-3xl bg-card/40 border border-border/50 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
                     >
-                        <div className={`p-3 rounded-2xl bg-slate-950 w-fit mb-4 border border-white/5 ${stat.color}`}>
+                        <div className={`p-3 rounded-2xl bg-secondary w-fit mb-4 border border-white/5 ${stat.color}`}>
                             <stat.icon className="w-6 h-6" />
                         </div>
                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{stat.label}</div>
-                        <div className="text-2xl font-black text-white uppercase tracking-tighter">{stat.value}</div>
+                        <div className="text-2xl font-black text-foreground uppercase tracking-tighter">{stat.value}</div>
                     </motion.div>
                 ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Performance Chart */}
-                <div className="lg:col-span-2 p-8 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm">
+                <div className="lg:col-span-2 p-8 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Productivity Pulse</h3>
+                        <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Productivity Pulse</h3>
                         <Badge variant="outline" className="border-blue-500/30 text-blue-400 uppercase text-[10px]">Real-time Telemetry</Badge>
                     </div>
                     <div className="h-80 w-full">
@@ -767,8 +766,8 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                 </div>
 
                 {/* Task Distribution */}
-                <div className="p-8 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm">
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest mb-8">Sector Deployment</h3>
+                <div className="p-8 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-sm">
+                    <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-8">Sector Deployment</h3>
                     <div className="space-y-6">
                         {["Design", "Backend", "Frontend", "Research"].map((label, i) => {
                             const progress = Math.floor(Math.random() * 60) + 20;
@@ -777,9 +776,9 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                                 <div key={label}>
                                     <div className="flex justify-between mb-2">
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
-                                        <span className="text-[10px] font-black text-white">{progress}%</span>
+                                        <span className="text-[10px] font-black text-foreground">{progress}%</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                                    <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${progress}%` }}
@@ -792,14 +791,14 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                         })}
                     </div>
 
-                    <div className="mt-12 p-6 rounded-3xl bg-slate-950/50 border border-white/5">
+                    <div className="mt-12 p-6 rounded-3xl bg-secondary/50 border border-white/5">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
                                 <Zap className="w-5 h-5" />
                             </div>
                             <div>
                                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Efficiency Rating</div>
-                                <div className="text-lg font-black text-white uppercase tracking-tighter">Peak Operational</div>
+                                <div className="text-lg font-black text-foreground uppercase tracking-tighter">Peak Operational</div>
                             </div>
                         </div>
                         <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold tracking-widest">
@@ -851,7 +850,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                         <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Command Authorization Required</span>
                     </div>
-                    <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Command Center</h2>
+                    <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Command Center</h2>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-[1px] bg-white/10 mx-2" />
@@ -865,7 +864,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-2 space-y-8">
                     {/* Mission Objective Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/50 backdrop-blur-md relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Zap className="w-32 h-32 text-blue-500" />
                         </div>
@@ -875,7 +874,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-lg shadow-blue-500/5">
                                     <Zap className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Main Mission Objective</h3>
+                                <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Main Mission Objective</h3>
                             </div>
                             {isLeader && !editingObjective && (
                                 <Button
@@ -894,16 +893,16 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <textarea
                                     value={objective}
                                     onChange={(e) => setObjective(e.target.value)}
-                                    className="w-full bg-slate-950/50 border border-blue-500/30 rounded-[2rem] p-6 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all min-h-[120px] resize-none"
+                                    className="w-full bg-secondary/50 border border-blue-500/30 rounded-[2rem] p-6 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all min-h-[120px] resize-none"
                                     placeholder="Define the primary objective for this squadron..."
                                 />
                                 <div className="flex gap-2">
-                                    <Button onClick={handleObjectiveSave} className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-white px-8 font-black uppercase text-[10px] tracking-widest h-11">Sync Objective</Button>
-                                    <Button onClick={() => setEditingObjective(false)} variant="ghost" className="rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase text-[10px] tracking-widest h-11 px-8">Abord</Button>
+                                    <Button onClick={handleObjectiveSave} className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground px-8 font-black uppercase text-[10px] tracking-widest h-11">Sync Objective</Button>
+                                    <Button onClick={() => setEditingObjective(false)} variant="ghost" className="rounded-2xl text-slate-400 hover:text-foreground hover:bg-white/5 font-black uppercase text-[10px] tracking-widest h-11 px-8">Abord</Button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-8 rounded-[2rem] bg-slate-950/50 border border-white/5 relative z-10">
+                            <div className="p-8 rounded-[2rem] bg-secondary/50 border border-white/5 relative z-10">
                                 <p className="text-lg font-medium text-slate-300 italic leading-relaxed">
                                     "{team.mission_objective || "No primary objective set for this operation."}"
                                 </p>
@@ -912,7 +911,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
 
                     {/* GitHub Repository Link Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/50 backdrop-blur-md relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Activity className="w-32 h-32 text-emerald-500" />
                         </div>
@@ -923,13 +922,13 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                     <Terminal className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] mb-1">Source Code Repositories</h3>
+                                    <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em] mb-1">Source Code Repositories</h3>
                                     <p className="text-xs text-slate-400">Manage connected GitHub repositories.</p>
                                 </div>
                             </div>
                             <Button
                                 onClick={onNavigateToCodebase}
-                                className="rounded-2xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-400 hover:text-white px-6 font-black uppercase text-[10px] tracking-widest h-10 transition-all"
+                                className="rounded-2xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-400 hover:text-foreground px-6 font-black uppercase text-[10px] tracking-widest h-10 transition-all"
                             >
                                 Manage Repositories
                             </Button>
@@ -938,22 +937,22 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
 
                     {/* Member Management Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/50 backdrop-blur-md">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                                     <Users className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Active Squadron</h3>
+                                <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Active Squadron</h3>
                             </div>
                             <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 uppercase text-[10px]">{team.currentMembers.length} Operatives</Badge>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {team.currentMembers.map((member: any) => (
-                                <div key={member.id} className="p-4 rounded-[2rem] bg-slate-950/50 border border-white/5 flex items-center gap-4 group hover:border-blue-500/30 transition-all duration-300 py-6 px-6">
+                                <div key={member.id} className="p-4 rounded-[2rem] bg-secondary/50 border border-white/5 flex items-center gap-4 group hover:border-blue-500/30 transition-all duration-300 py-6 px-6">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/10 ring-1 ring-white/5 group-hover:ring-blue-500/50 transition-all">
+                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-border/50 ring-1 ring-white/5 group-hover:ring-blue-500/50 transition-all">
                                             <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                                         </div>
                                         {member.online && (
@@ -961,7 +960,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <div className="text-sm font-black text-white uppercase tracking-tight mb-0.5">{member.name}</div>
+                                        <div className="text-sm font-black text-foreground uppercase tracking-tight mb-0.5">{member.name}</div>
                                         <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{member.member_role || member.role}</div>
                                     </div>
                                     {isLeader && member.id !== user?.id && (
@@ -980,12 +979,12 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
                 <div className="space-y-8">
                     {/* Settings Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/50 backdrop-blur-md">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-2xl bg-purple-600/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
                                 <Settings className="w-5 h-5" />
                             </div>
-                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Operational Protocols</h3>
+                            <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Operational Protocols</h3>
                         </div>
 
                         <div className="space-y-4">
@@ -993,9 +992,9 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 { key: "allow_task_creation", label: "Permission: Global Deployment", desc: "Allow all squadron members to deploy new tasks." },
                                 { key: "allow_invites", label: "Permission: Uplink Requests", desc: "Enable squadron members to invite more operatives." },
                             ].map((setting) => (
-                                <div key={setting.key} className="p-5 rounded-[1.5rem] bg-slate-950/50 border border-white/5 flex items-start gap-4">
+                                <div key={setting.key} className="p-5 rounded-[1.5rem] bg-secondary/50 border border-white/5 flex items-start gap-4">
                                     <div className="flex-1">
-                                        <div className="text-[11px] font-black text-slate-200 uppercase tracking-widest mb-1">{setting.label}</div>
+                                        <div className="text-[11px] font-black text-foreground uppercase tracking-widest mb-1">{setting.label}</div>
                                         <p className="text-[10px] text-slate-500 leading-tight pr-4 font-medium">{setting.desc}</p>
                                     </div>
                                     <button
@@ -1019,8 +1018,8 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <Lock className="w-3 h-3 text-blue-500" />
                                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Encrypted Invite Code</span>
                             </div>
-                            <div className="flex items-center justify-between bg-slate-950/80 rounded-2xl px-5 py-4 border border-white/5 group cursor-pointer active:scale-95 transition-all">
-                                <span className="text-xl font-black text-white tracking-[0.4em] translate-x-1">{team.invite_code || "N/A"}</span>
+                            <div className="flex items-center justify-between bg-secondary/80 rounded-2xl px-5 py-4 border border-white/5 group cursor-pointer active:scale-95 transition-all">
+                                <span className="text-xl font-black text-foreground tracking-[0.4em] translate-x-1">{team.invite_code || "N/A"}</span>
                                 <Activity className="w-4 h-4 text-blue-500 group-hover:animate-pulse" />
                             </div>
                             <p className="text-[9px] text-slate-600 mt-4 uppercase font-bold tracking-widest text-center">Share this uplink code to authorize new squadron members.</p>
@@ -1028,12 +1027,12 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
 
                     {/* Audit Log / Pulse Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md flex-1">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/50 backdrop-blur-md flex-1">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-2xl bg-amber-600/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
                                 <Activity className="w-5 h-5" />
                             </div>
-                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Audit Pulse</h3>
+                            <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Audit Pulse</h3>
                         </div>
 
                         <div className="space-y-6 max-h-[300px] overflow-y-auto scrollbar-hide">
@@ -1094,7 +1093,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-3xl font-black text-white tracking-tighter uppercase"
+                    className="text-3xl font-black text-foreground tracking-tighter uppercase"
                 >
                     Mission Logs
                 </motion.h2>
@@ -1120,7 +1119,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                                 whileHover={{ scale: 1.01, borderColor: 'rgba(99, 102, 241, 0.3)' }}
-                                className="p-6 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm group transition-all flex items-center justify-between"
+                                className="p-6 rounded-[2rem] bg-card/40 border border-border/50 backdrop-blur-sm group transition-all flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-6">
                                     <div className={cn(
@@ -1131,8 +1130,8 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
-                                            <h3 className="text-lg font-black text-white uppercase tracking-tighter">{bounty.title}</h3>
-                                            <Badge variant="outline" className="text-[8px] uppercase border-white/10 text-slate-500 pointer-events-none">{bounty.difficulty}</Badge>
+                                            <h3 className="text-lg font-black text-foreground uppercase tracking-tighter">{bounty.title}</h3>
+                                            <Badge variant="outline" className="text-[8px] uppercase border-border/50 text-slate-500 pointer-events-none">{bounty.difficulty}</Badge>
                                         </div>
                                         <p className="text-xs text-slate-500 font-medium max-w-sm">{bounty.description}</p>
                                     </div>
@@ -1161,7 +1160,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
             >
                 <div>
                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Squad Reputation</div>
-                    <div className="text-2xl font-black text-white">LEVEL_{level.toString().padStart(2, '0')}</div>
+                    <div className="text-2xl font-black text-foreground">LEVEL_{level.toString().padStart(2, '0')}</div>
                 </div>
                 <div className="h-12 w-[1px] bg-indigo-500/20 mx-6" />
                 <div className="flex-1">
@@ -1169,7 +1168,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                         <span>XP Progress</span>
                         <span>{totalXP} / {nextLevelXP}</span>
                     </div>
-                    <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
@@ -1464,7 +1463,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         <div className="flex items-baseline gap-3">
                             <span className={cn(
                                 "text-2xl font-black font-mono tracking-tighter tabular-nums",
-                                isOvertime ? "text-rose-400" : "text-white"
+                                isOvertime ? "text-rose-400" : "text-foreground"
                             )}>
                                 {isOvertime && "-"}
                                 {remaining && (
@@ -1517,7 +1516,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         onClick={() => setShowAbortModal(true)}
                         size="sm"
                         variant="ghost"
-                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-rose-500 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition-all rounded-xl"
+                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-rose-500 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-foreground transition-all rounded-xl"
                     >
                         <Trash2 className="w-3 h-3 mr-2" />
                         Abort Mission
@@ -1547,7 +1546,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                     <AlertTriangle className="w-10 h-10 text-rose-500" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">Critical Alpha Alert</h2>
+                                    <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter leading-none mb-2">Critical Alpha Alert</h2>
                                     <p className="text-sm text-rose-400 font-bold uppercase tracking-widest animate-pulse">Confirm Mission Abortion</p>
                                 </div>
                                 <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl text-xs text-slate-400 font-mono leading-relaxed">
@@ -1556,7 +1555,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                 <div className="flex gap-4 w-full">
                                     <Button
                                         onClick={() => setShowAbortModal(false)}
-                                        className="flex-1 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase tracking-widest text-[10px]"
+                                        className="flex-1 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-foreground font-bold uppercase tracking-widest text-[10px]"
                                     >
                                         Cancel Protocol
                                     </Button>
@@ -1568,7 +1567,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                                 navigate('/dashboard');
                                             }
                                         }}
-                                        className="flex-1 h-14 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(244,63,94,0.4)]"
+                                        className="flex-1 h-14 rounded-2xl bg-rose-600 hover:bg-rose-500 text-foreground font-bold uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(244,63,94,0.4)]"
                                     >
                                         Execute Purge
                                     </Button>
@@ -1594,11 +1593,11 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="w-full max-w-md bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative z-10"
+                            className="w-full max-w-md bg-slate-900 border border-border/50 rounded-[2.5rem] p-8 shadow-2xl relative z-10"
                         >
                             <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Mission Timeline</h2>
+                                    <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter">Mission Timeline</h2>
                                     <p className="text-xs text-slate-500 font-medium">Define the operational window for this sector.</p>
                                 </div>
                                 <Button variant="ghost" size="icon" onClick={() => setShowDeadlineModal(false)} className="rounded-2xl bg-white/5 hover:bg-white/10">
@@ -1617,13 +1616,13 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                         required
                                         value={deadlineInput}
                                         onChange={(e) => setDeadlineInput(e.target.value)}
-                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-5 text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-center shadow-inner"
+                                        className="w-full bg-secondary border border-border/50 rounded-2xl p-5 text-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-center shadow-inner"
                                     />
                                     <p className="text-[10px] text-slate-600 text-center font-bold uppercase tracking-widest mt-2 px-4">
                                         All squadron members will be synchronized to this timeline.
                                     </p>
                                 </div>
-                                <Button className="w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 text-sm active:scale-[0.98] transition-all">
+                                <Button className="w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-500 text-foreground font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 text-sm active:scale-[0.98] transition-all">
                                     Synchronize Strategy
                                 </Button>
                             </form>
@@ -1656,7 +1655,7 @@ export const WorkspaceView: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] text-slate-400 p-4">
                 <Activity className="w-12 h-12 text-blue-500/20 mb-4 animate-pulse" />
-                <h2 className="text-xl font-bold text-slate-200 mb-2 uppercase tracking-widest">Uplink Lost</h2>
+                <h2 className="text-xl font-bold text-foreground mb-2 uppercase tracking-widest">Uplink Lost</h2>
                 <p className="mb-6 text-sm">Team profile not found in current signal range.</p>
                 <Button
                     onClick={() => navigate("/workspace")}
@@ -1688,7 +1687,7 @@ export const WorkspaceView: React.FC = () => {
                 <div className="p-4 border-b border-border/50">
                     <button
                         onClick={() => navigate("/workspace")}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-400 hover:text-foreground hover:bg-white/5 transition-all group"
                     >
                         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Sector</span>
@@ -1698,7 +1697,7 @@ export const WorkspaceView: React.FC = () => {
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-8">
                         <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-white/20`}>
-                            <Zap className="w-5 h-5 text-white" />
+                            <Zap className="w-5 h-5 text-foreground" />
                         </div>
                         <div>
                             <h1 className="text-sm font-black text-foreground uppercase tracking-tighter truncate w-32">

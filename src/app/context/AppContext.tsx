@@ -480,6 +480,7 @@ const defaultUserHistory: HistoryItem[] = [
 ];
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
   const [theme, setTheme] = useState<Theme>("dark");
   const [user, setUser] = useState<User | null>(null);
   const [followingIds, setFollowingIds] = useState<string[]>([]);
@@ -780,79 +781,99 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchPosts = async () => {
-    try {
-      // Logic moved to Server-Side API to bypass ISP blocks
-      const url = `/api/posts${user ? `?userId=${user.id}` : ''}`;
-      const response = await fetch(url);
+    // Environment Awareness: Use direct Supabase in local dev to avoid proxy issues (500 errors)
+    if (!isLocalDev) {
+      try {
+        const url = `/api/posts${user ? `?userId=${user.id}` : ''}`;
+        const response = await fetch(url);
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        if (response.ok) {
+          const { posts: postsData, likedPostIds } = await response.json();
+          const likedSet = new Set(likedPostIds || []);
+          if (postsData && postsData.length > 0) {
+            setPosts(postsData.map((p: any) => ({
+              id: p.id,
+              type: p.type || "text",
+              user: p.profiles?.full_name || "Anon",
+              user_id: p.author_id,
+              handle: p.profiles?.email?.split('@')[0] || "anon",
+              content: p.content,
+              codeSnippet: p.code_snippet,
+              codeLanguage: p.code_language,
+              projectDetails: p.project_details,
+              tags: p.tags || [],
+              likes: p.likes_count || 0,
+              comments: p.comments_count || 0,
+              time: new Date(p.created_at).toLocaleTimeString(),
+              avatar: p.profiles?.avatar_url,
+              isLiked: likedSet.has(p.id),
+              imageUrl: p.image_url
+            })));
+            return; // Success
+          }
+        }
+      } catch (err) {
+        // Fallback silently
       }
+    }
 
-      const { posts: postsData, likedPostIds } = await response.json();
-      const likedSet = new Set(likedPostIds || []);
+    // FALLBACK TO DIRECT SUPABASE
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`*, profiles:author_id(*)`)
+      .order('created_at', { ascending: false });
 
-      if (postsData && postsData.length > 0) {
-        setPosts(postsData.map((p: any) => ({
-          id: p.id,
-          type: p.type || "text",
-          user: p.profiles?.full_name || "Anon",
-          user_id: p.author_id,
-          handle: p.profiles?.email?.split('@')[0] || "anon",
-          content: p.content,
-          codeSnippet: p.code_snippet,
-          codeLanguage: p.code_language,
-          projectDetails: p.project_details,
-          tags: p.tags || [],
-          likes: p.likes_count || 0,
-          comments: p.comments_count || 0,
-          time: new Date(p.created_at).toLocaleTimeString(),
-          avatar: p.profiles?.avatar_url,
-          isLiked: likedSet.has(p.id),
-          imageUrl: p.image_url
-        })));
-      } else {
-        setPosts([]);
-      }
-    } catch (err) {
-      console.warn("API [posts] fallback triggered:", err);
-      // FALLBACK TO DIRECT SUPABASE
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`*, profiles:author_id(*)`)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        handleSupabaseError(error, "fetchPosts_Fallback");
-      } else if (data) {
-        setPosts(data.map((p: any) => ({
-          id: p.id,
-          type: p.type || "text",
-          user: p.profiles?.full_name || "Anon",
-          user_id: p.author_id,
-          handle: p.profiles?.email?.split('@')[0] || "anon",
-          content: p.content,
-          codeSnippet: p.code_snippet,
-          codeLanguage: p.code_language,
-          projectDetails: p.project_details,
-          tags: p.tags || [],
-          likes: p.likes_count || 0,
-          comments: p.comments_count || 0,
-          time: new Date(p.created_at).toLocaleTimeString(),
-          avatar: p.profiles?.avatar_url,
-          imageUrl: p.image_url
-        })));
-      }
+    if (error) {
+      handleSupabaseError(error, "fetchPosts_Fallback");
+    } else if (data) {
+      setPosts(data.map((p: any) => ({
+        id: p.id,
+        type: p.type || "text",
+        user: p.profiles?.full_name || "Anon",
+        user_id: p.author_id,
+        handle: p.profiles?.email?.split('@')[0] || "anon",
+        content: p.content,
+        codeSnippet: p.code_snippet,
+        codeLanguage: p.code_language,
+        projectDetails: p.project_details,
+        tags: p.tags || [],
+        likes: p.likes_count || 0,
+        comments: p.comments_count || 0,
+        time: new Date(p.created_at).toLocaleTimeString(),
+        avatar: p.profiles?.avatar_url,
+        imageUrl: p.image_url
+      })));
     }
   };
 
   const fetchNotifications = async () => {
     if (!user) return;
-    try {
-      const response = await fetch('/api/notifications');
-      if (!response.ok) throw new Error("API [notifications] failed");
-      const data = await response.json();
 
+    // Environment Awareness: Use direct Supabase in local dev to avoid proxy issues (500 errors)
+    if (!isLocalDev) {
+      try {
+        const response = await fetch('/api/notifications');
+        if (response.ok) {
+          const data = await response.json();
+          setNotifications(data.map((n: any) => ({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: n.type,
+            read: n.is_read,
+            time: new Date(n.created_at).toLocaleTimeString()
+          })));
+          return; // Success
+        }
+      } catch (err) {
+        // Fallback silently
+      }
+    }
+
+    // FALLBACK TO DIRECT SUPABASE
+    const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
+    if (error) handleSupabaseError(error, "fetchNotifications_Fallback");
+    else if (data) {
       setNotifications(data.map((n: any) => ({
         id: n.id,
         title: n.title,
@@ -861,35 +882,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         read: n.is_read,
         time: new Date(n.created_at).toLocaleTimeString()
       })));
-    } catch (err) {
-      console.warn("API [notifications] fallback triggered");
-      const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
-      if (error) handleSupabaseError(error, "fetchNotifications_Fallback");
-      else if (data) {
-        setNotifications(data.map((n: any) => ({
-          id: n.id,
-          title: n.title,
-          message: n.message,
-          type: n.type,
-          read: n.is_read,
-          time: new Date(n.created_at).toLocaleTimeString()
-        })));
-      }
     }
   };
 
   const fetchBounties = async () => {
-    try {
-      const response = await fetch('/api/bounties');
-      if (!response.ok) throw new Error("API [bounties] failed");
-      const data = await response.json();
-      setBounties(data);
-    } catch (err) {
-      console.warn("API [bounties] fallback triggered");
-      const { data, error } = await supabase.from('bounties').select('*').order('created_at', { ascending: false });
-      if (error) handleSupabaseError(error, "fetchBounties_Fallback");
-      else setBounties(data || []);
+    // Environment Awareness: Use direct Supabase in local dev to avoid proxy issues (500 errors)
+    if (!isLocalDev) {
+      try {
+        const response = await fetch('/api/bounties');
+        if (response.ok) {
+          const data = await response.json();
+          setBounties(data);
+          return; // Success
+        }
+      } catch (err) {
+        // Fallback silently
+      }
     }
+
+    // FALLBACK TO DIRECT SUPABASE
+    const { data, error } = await supabase.from('bounties').select('*').order('created_at', { ascending: false });
+    if (error) handleSupabaseError(error, "fetchBounties_Fallback");
+    else setBounties(data || []);
   };
 
   const [userHistory, setUserHistory] = useState<HistoryItem[]>(() => getFromStorage("hm_history", defaultUserHistory));
