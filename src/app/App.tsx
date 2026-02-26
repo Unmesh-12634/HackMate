@@ -22,7 +22,7 @@ function ProtectedLayout() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#020617]">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
       </div>
     );
@@ -39,8 +39,9 @@ function ProtectedLayout() {
  * Main App Component with Routing
  */
 function AppContent() {
+  const { theme } = useAppContext();
   return (
-    <div className="min-h-screen bg-[#020617] text-foreground selection:bg-blue-500/30 selection:text-white transition-colors duration-300 overflow-hidden font-sans">
+    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30 selection:text-foreground transition-colors duration-300 overflow-hidden font-sans">
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingView />} />
@@ -102,16 +103,13 @@ function AppContent() {
 
       <Toaster
         position="bottom-right"
-        theme="dark"
+        theme={theme as "light" | "dark"}
         closeButton
         richColors
         toastOptions={{
           style: {
             borderRadius: '24px',
             border: '1px solid rgba(59,130,246,0.2)',
-            background: 'rgba(15, 23, 42, 0.95)',
-            backdropFilter: 'blur(10px)',
-            color: '#fff',
             fontFamily: 'inherit',
             fontWeight: '900',
             textTransform: 'uppercase',

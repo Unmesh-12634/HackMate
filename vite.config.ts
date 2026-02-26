@@ -19,20 +19,4 @@ export default defineConfig({
 
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000', // Default Vercel dev port
-        changeOrigin: true,
-        rewrite: (path) => path,
-        // Fallback for when vercel dev is not running
-        configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, res) => {
-            console.warn('Vercel Dev not detected, proxying might fail. Run `vercel dev` for full API support.', err);
-            // Optionally redirect to Supabase directly if it's the proxy route
-          });
-        },
-      },
-    },
-  },
 })

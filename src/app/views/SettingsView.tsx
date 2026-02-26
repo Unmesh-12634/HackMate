@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -21,13 +21,250 @@ import {
    Activity,
    Mail,
    Laptop,
-   Smartphone
+   Smartphone,
+   ChevronDown,
+   Search,
+   Briefcase
 } from "lucide-react";
 import { cn } from "../components/ui/button";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 
+// ------------------------------------
+// ROLE DEFINITIONS (Technical + Non-technical)
+// ------------------------------------
+const ROLE_GROUPS = [
+   {
+      group: "🛠️ Engineering & Dev",
+      roles: [
+         "Frontend Developer",
+         "Backend Developer",
+         "Full Stack Developer",
+         "Mobile Developer (iOS)",
+         "Mobile Developer (Android)",
+         "Mobile Developer (React Native)",
+         "Mobile Developer (Flutter)",
+         "Systems Programmer",
+         "Embedded Systems Engineer",
+         "Game Developer",
+         "Blockchain Developer",
+         "Smart Contract Developer",
+         "WebAssembly Engineer",
+         "API Engineer",
+         "SDK Engineer",
+      ],
+   },
+   {
+      group: "🤖 AI & Data",
+      roles: [
+         "AI/ML Engineer",
+         "Deep Learning Researcher",
+         "NLP Engineer",
+         "Computer Vision Engineer",
+         "AI Agent Developer",
+         "LLM Fine-tuner",
+         "Data Scientist",
+         "Data Analyst",
+         "Data Engineer",
+         "MLOps Engineer",
+         "Research Scientist",
+         "Prompt Engineer",
+      ],
+   },
+   {
+      group: "☁️ Infrastructure & Platform",
+      roles: [
+         "DevOps Engineer",
+         "Cloud Architect",
+         "Site Reliability Engineer (SRE)",
+         "Platform Engineer",
+         "Database Administrator",
+         "Network Engineer",
+         "Infrastructure Engineer",
+         "Kubernetes Administrator",
+      ],
+   },
+   {
+      group: "🔐 Security",
+      roles: [
+         "Security Engineer",
+         "Security Analyst",
+         "Penetration Tester",
+         "Red Team Operator",
+         "Bug Bounty Hunter",
+         "Cryptography Engineer",
+         "GRC Analyst",
+      ],
+   },
+   {
+      group: "🎨 Design & UX",
+      roles: [
+         "UI Designer",
+         "UX Designer",
+         "Product Designer",
+         "Motion Designer",
+         "Brand Designer",
+         "3D Artist",
+         "Graphic Designer",
+      ],
+   },
+   {
+      group: "📦 Product & Strategy",
+      roles: [
+         "Product Manager",
+         "Technical Product Manager",
+         "Product Strategist",
+         "Growth Hacker",
+         "Business Analyst",
+         "Solutions Architect",
+      ],
+   },
+   {
+      group: "📣 Marketing & Community",
+      roles: [
+         "Marketing Strategist",
+         "Content Creator",
+         "Community Manager",
+         "Developer Advocate",
+         "SEO Specialist",
+         "Social Media Manager",
+         "Brand Strategist",
+      ],
+   },
+   {
+      group: "🏗️ Management & Leadership",
+      roles: [
+         "Engineering Manager",
+         "CTO",
+         "Founder / Co-Founder",
+         "Project Manager",
+         "Scrum Master",
+         "Team Lead",
+         "Technical Lead",
+      ],
+   },
+   {
+      group: "📝 Writing & Docs",
+      roles: [
+         "Technical Writer",
+         "Documentation Engineer",
+         "Developer Relations (DevRel)",
+         "Content Strategist",
+      ],
+   },
+   {
+      group: "🎓 Other",
+      roles: [
+         "Student / Learner",
+         "Open Source Contributor",
+         "Indie Hacker",
+         "Hobbyist",
+         "Consultant",
+         "Freelancer",
+      ],
+   },
+];
+
+// ------------------------------------
+// ROLE PICKER COMPONENT
+// ------------------------------------
+function RolePicker({ value, onChange }: { value: string; onChange: (role: string) => void }) {
+   const [open, setOpen] = useState(false);
+   const [search, setSearch] = useState("");
+   const ref = useRef<HTMLDivElement>(null);
+
+   useEffect(() => {
+      const handler = (e: MouseEvent) => {
+         if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      };
+      document.addEventListener("mousedown", handler);
+      return () => document.removeEventListener("mousedown", handler);
+   }, []);
+
+   const filtered = ROLE_GROUPS
+      .map(g => ({
+         ...g,
+         roles: g.roles.filter(r => r.toLowerCase().includes(search.toLowerCase())),
+      }))
+      .filter(g => g.roles.length > 0);
+
+   const handleSelect = (role: string) => {
+      onChange(role);
+      setOpen(false);
+      setSearch("");
+   };
+
+   return (
+      <div ref={ref} className="relative">
+         <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className="w-full flex items-center justify-between gap-3 h-11 px-4 bg-background border border-input rounded-xl text-sm font-medium text-foreground hover:border-hack-blue/50 focus:outline-none focus:ring-2 focus:ring-hack-blue/20 transition-all"
+         >
+            <span className="flex items-center gap-2 truncate">
+               <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
+               {value ? value : <span className="text-muted-foreground font-normal">Select your primary role...</span>}
+            </span>
+            <ChevronDown className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", open && "rotate-180")} />
+         </button>
+
+         {open && (
+            <div className="absolute z-[100] top-full mt-2 left-0 w-full max-h-72 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+               {/* Search */}
+               <div className="p-3 border-b border-border bg-card">
+                  <div className="relative">
+                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                     <input
+                        autoFocus
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search roles..."
+                        className="w-full h-8 pl-9 pr-3 text-xs font-medium bg-secondary/40 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-hack-blue/20 text-foreground placeholder:text-muted-foreground"
+                     />
+                  </div>
+               </div>
+               {/* List */}
+               <div className="overflow-y-auto flex-1 p-2 space-y-3">
+                  {filtered.length === 0 ? (
+                     <p className="text-center py-6 text-xs text-muted-foreground">No roles found</p>
+                  ) : (
+                     filtered.map(g => (
+                        <div key={g.group}>
+                           <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1.5">
+                              {g.group}
+                           </p>
+                           <div className="space-y-0.5">
+                              {g.roles.map(role => (
+                                 <button
+                                    key={role}
+                                    type="button"
+                                    onClick={() => handleSelect(role)}
+                                    className={cn(
+                                       "w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                                       value === role
+                                          ? "bg-hack-blue/10 text-hack-blue font-bold"
+                                          : "text-foreground hover:bg-secondary/80"
+                                    )}
+                                 >
+                                    {value === role && <CheckCircle2 className="w-3 h-3 inline mr-2 text-hack-blue" />}
+                                    {role}
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+                     ))
+                  )}
+               </div>
+            </div>
+         )}
+      </div>
+   );
+}
+
+// ------------------------------------
+// SETTINGS VIEW
+// ------------------------------------
 type Tab = "Account" | "Security" | "Notifications" | "Appearance" | "Billing" | "Developer";
 
 export function SettingsView() {
@@ -40,7 +277,6 @@ export function SettingsView() {
          toast.success("Security Uplink Established: GitHub identity confirmed.", {
             style: { background: '#059669', color: '#fff', border: '0' }
          });
-         // Clean up URL
          window.history.replaceState({}, document.title, "/settings");
       }
    }, []);
@@ -104,6 +340,7 @@ function AccountTab() {
    const [formData, setFormData] = useState({
       name: "", email: "", bio: "", twitter: "", website: ""
    });
+   const [selectedRole, setSelectedRole] = useState("");
    const [skillsInput, setSkillsInput] = useState("");
    const [githubInput, setGithubInput] = useState("");
    const [loading, setLoading] = useState(false);
@@ -120,6 +357,7 @@ function AccountTab() {
             website: user.socials?.website || ""
          });
          setSkillsInput(user.skills?.join(", ") || "");
+         setSelectedRole(user.role || "");
       }
    }, [user]);
 
@@ -130,7 +368,8 @@ function AccountTab() {
             name: formData.name,
             bio: formData.bio,
             skills: skillsInput.split(",").map(s => s.trim()).filter(Boolean),
-            socials: { ...user?.socials, twitter: formData.twitter, website: formData.website }
+            socials: { ...user?.socials, twitter: formData.twitter, website: formData.website },
+            ...(selectedRole ? { role: selectedRole } : {}),
          });
          toast.success("Profile saved instantly!");
       } catch (error) {
@@ -143,7 +382,6 @@ function AccountTab() {
    const handleConnectGithub = async () => {
       setGhLoading(true);
       const success = await connectGitHub();
-      // If it fails because linking is disabled, show manual
       if (!success) {
          setShowManual(true);
       }
@@ -195,6 +433,17 @@ function AccountTab() {
                   />
                </div>
 
+               {/* ── PRIMARY ROLE PICKER ── */}
+               <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
+                     <Briefcase className="w-3 h-3" /> Primary Role
+                  </label>
+                  <RolePicker value={selectedRole} onChange={setSelectedRole} />
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
+                     Shown on your profile, in the global workspace sidebar, and across the platform in real-time.
+                  </p>
+               </div>
+
                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                      <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1"><Twitter className="w-3 h-3" /> Twitter</label>
@@ -238,7 +487,7 @@ function AccountTab() {
                            <Button
                               onClick={handleConnectGithub}
                               disabled={ghLoading}
-                              className="bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-2 h-12 px-8 rounded-xl shadow-xl border border-white/10"
+                              className="bg-foreground text-background hover:bg-foreground/90 flex items-center gap-2 h-12 px-8 rounded-xl shadow-xl border border-border"
                            >
                               {ghLoading ? <Activity className="w-4 h-4 animate-pulse" /> : <Github className="w-5 h-5" />}
                               {ghLoading ? "Redirecting..." : "Connect Securely via GitHub"}
@@ -277,7 +526,6 @@ function AccountTab() {
                   </div>
                ) : (
                   <div className="space-y-6">
-                     {/* Connection Status & Profile Preview */}
                      <div className="flex items-center justify-between p-4 bg-background border border-border/50 rounded-xl">
                         <div className="flex items-center gap-4">
                            <Avatar className="w-12 h-12 ring-2 ring-green-500/50 ring-offset-2 ring-offset-background">
@@ -444,7 +692,7 @@ function NotificationsTab() {
                         onClick={() => toggle(item.key)}
                         className={cn(
                            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all duration-300 ease-in-out focus:outline-none",
-                           alerts[item.key as keyof typeof alerts] ? "bg-hack-blue shadow-[0_0_10px_rgba(0,119,255,0.4)]" : "bg-slate-700"
+                           alerts[item.key as keyof typeof alerts] ? "bg-hack-blue shadow-[0_0_10px_rgba(0,119,255,0.4)]" : "bg-muted"
                         )}
                      >
                         <span className={cn(
@@ -496,7 +744,7 @@ function AppearanceTab() {
                      }}
                      className={cn(
                         "w-12 h-6 rounded-full p-1 transition-colors relative",
-                        theme === "dark" ? "bg-hack-blue" : "bg-slate-300"
+                        theme === "dark" ? "bg-hack-blue" : "bg-muted"
                      )}
                   >
                      <div className={cn(
@@ -530,7 +778,7 @@ function AppearanceTab() {
                            className={cn(
                               "w-8 h-8 rounded-full cursor-pointer ring-offset-2 ring-offset-background hover:ring-2 transition-all duration-300",
                               color.bg,
-                              currentAccent === color.bg ? "ring-2 ring-hack-blue scale-110 shadow-lg shadow-hack-blue/20" : "scale-100 opcaity-80 hover:opacity-100"
+                              currentAccent === color.bg ? "ring-2 ring-hack-blue scale-110 shadow-lg shadow-hack-blue/20" : "scale-100 opacity-80 hover:opacity-100"
                            )}
                            title={color.name}
                         />

@@ -314,7 +314,7 @@ export function ProfileView() {
                            <stat.icon className={cn("w-3 h-3", (stat as any).isSocial && "group-hover:text-blue-400")} /> {stat.label}
                         </p>
                         <p className={cn(
-                           "text-2xl font-black text-white font-['JetBrains_Mono']",
+                           "text-2xl font-black text-foreground font-['JetBrains_Mono']",
                            (stat as any).isSocial && "group-hover:text-blue-400"
                         )}>
                            {stat.label === "Reputation" ? new Intl.NumberFormat('en-US').format(user?.reputation || 0) : stat.value}
@@ -518,11 +518,11 @@ export function ProfileView() {
                                                          <Zap className="w-2.5 h-2.5 text-hack-neon" />}
                                              </div>
 
-                                             <div className="bg-background/40 backdrop-blur-sm rounded-xl p-3 border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all relative overflow-hidden">
+                                             <div className="bg-card/50 rounded-xl p-3 border border-border/30 hover:border-border hover:bg-card transition-all relative overflow-hidden">
                                                 <div className="absolute inset-0 bg-gradient-to-r from-hack-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 <div className="flex justify-between items-start gap-3 relative z-10">
                                                    <div className="flex-1 space-y-1">
-                                                      <p className="text-[13px] font-bold text-slate-100 leading-tight group-hover:text-white transition-colors">
+                                                      <p className="text-[13px] font-bold text-foreground leading-tight transition-colors">
                                                          {act.description}
                                                       </p>
                                                       <div className="flex items-center gap-2 text-[9px] text-muted-foreground font-black uppercase tracking-tighter">

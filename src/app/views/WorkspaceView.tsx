@@ -61,13 +61,13 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
         urgent: "text-rose-500 bg-rose-500/10 border-rose-500/20",
         high: "text-amber-500 bg-amber-500/10 border-amber-500/20",
         medium: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-        low: "text-slate-500 bg-slate-500/10 border-slate-500/20",
+        low: "text-muted-foreground bg-slate-500/10 border-slate-500/20",
     };
 
     return (
         <div
             ref={drag as any}
-            className={`group relative p-4 rounded-2xl bg-slate-900/50 border border-white/5 hover:border-blue-500/30 transition-all duration-300 mb-3 shadow-lg shadow-black/20 ${isDragging ? "opacity-40 scale-95" : "opacity-100"
+            className={`group relative p-4 rounded-2xl bg-card/50 border border-border/30 hover:border-blue-500/30 transition-all duration-300 mb-3 shadow-lg shadow-black/20 ${isDragging ? "opacity-40 scale-95" : "opacity-100"
                 } ${task.is_critical ? "ring-1 ring-blue-500/50 shadow-blue-500/10" : ""}`}
         >
             {task.is_critical && (
@@ -81,25 +81,25 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={() => toggleCritical(task.id, !task.is_critical)}
-                        className={`p-1 rounded-lg hover:bg-white/5 transition-colors ${task.is_critical ? "text-blue-400" : "text-slate-500"}`}
+                        className={`p-1 rounded-lg hover:bg-muted/50 transition-colors ${task.is_critical ? "text-blue-400" : "text-muted-foreground"}`}
                     >
                         <Zap className="w-3 h-3" />
                     </button>
                     <button
                         onClick={() => deleteTask(task.id)}
-                        className="p-1 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 transition-colors"
+                        className="p-1 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 transition-colors"
                     >
                         <X className="w-3 h-3" />
                     </button>
                 </div>
             </div>
 
-            <h4 className="text-sm font-bold text-slate-100 mb-1 group-hover:text-blue-400 transition-colors">
+            <h4 className="text-sm font-bold text-foreground mb-1 group-hover:text-blue-400 transition-colors">
                 {task.title}
             </h4>
 
             {task.description && (
-                <p className="text-xs text-slate-500 line-clamp-2 mb-3 leading-relaxed">
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                     {task.description}
                 </p>
             )}
@@ -107,21 +107,21 @@ const TaskCard: React.FC<{ task: any }> = ({ task }) => {
             <div className="flex items-center justify-between mt-auto">
                 <div className="flex -space-x-2">
                     {task.assignee ? (
-                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-slate-800 border border-white/10 flex items-center justify-center overflow-hidden group/avatar">
+                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-muted border border-border/50 flex items-center justify-center overflow-hidden group/avatar">
                             <img src={task.assignee.avatar} alt={task.assignee.name} className="w-full h-full object-cover" />
-                            <div className="absolute hidden group-hover/avatar:block bottom-full mb-2 px-2 py-1 bg-slate-900 border border-white/10 rounded text-[10px] text-white whitespace-nowrap z-50">
+                            <div className="absolute hidden group-hover/avatar:block bottom-full mb-2 px-2 py-1 bg-card border border-border/50 rounded text-[10px] text-foreground whitespace-nowrap z-50">
                                 {task.assignee.name}
                             </div>
                         </div>
                     ) : (
-                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-slate-900 border border-white/5 flex items-center justify-center">
-                            <Users className="w-3 h-3 text-slate-600" />
+                        <div className="w-6 h-6 rounded-full ring-2 ring-slate-950 bg-card border border-border/30 flex items-center justify-center">
+                            <Users className="w-3 h-3 text-muted-foreground/70" />
                         </div>
                     )}
                 </div>
 
                 {task.deadline && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-500">
+                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground">
                         <Activity className="w-3 h-3 text-blue-500/50" />
                         {new Date(task.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </div>
@@ -147,7 +147,7 @@ const KanbanColumn: React.FC<{
     }));
 
     const statusIcons = {
-        todo: <Lock className="w-4 h-4 text-slate-500" />,
+        todo: <Lock className="w-4 h-4 text-muted-foreground" />,
         in_progress: <Zap className="w-4 h-4 text-emerald-400 animate-pulse" />,
         review: <Activity className="w-4 h-4 text-amber-400" />,
         done: <Shield className="w-4 h-4 text-blue-400" />,
@@ -156,22 +156,22 @@ const KanbanColumn: React.FC<{
     return (
         <div
             ref={drop as any}
-            className={`flex flex-col w-80 min-w-[320px] rounded-3xl bg-slate-950/30 border border-white/5 p-4 transition-colors duration-300 ${isOver ? "bg-blue-500/5 border-blue-500/20" : ""
+            className={`flex flex-col w-80 min-w-[320px] rounded-3xl bg-card/50 border border-border/30 p-4 transition-colors duration-300 ${isOver ? "bg-blue-500/5 border-blue-500/20" : ""
                 }`}
         >
             <div className="flex items-center justify-between mb-6 px-2">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5">
+                    <div className="w-8 h-8 rounded-xl bg-card flex items-center justify-center border border-border/30">
                         {statusIcons[status as keyof typeof statusIcons]}
                     </div>
                     <div>
-                        <h3 className="text-xs font-black text-slate-200 uppercase tracking-widest">{title}</h3>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase">{tasks.length} Operations</span>
+                        <h3 className="text-xs font-black text-foreground/90 uppercase tracking-widest">{title}</h3>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{tasks.length} Operations</span>
                     </div>
                 </div>
                 <button
                     onClick={() => onAddTask(status)}
-                    className="p-2 rounded-xl text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                    className="p-2 rounded-xl text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 transition-all"
                 >
                     <Plus className="w-4 h-4" />
                 </button>
@@ -182,7 +182,7 @@ const KanbanColumn: React.FC<{
                     <TaskCard key={task.id} task={task} />
                 ))}
                 {tasks.length === 0 && (
-                    <div className="h-32 rounded-2xl border-2 border-dashed border-white/5 flex flex-col items-center justify-center text-slate-600 gap-2">
+                    <div className="h-32 rounded-2xl border-2 border-dashed border-border/30 flex flex-col items-center justify-center text-muted-foreground/70 gap-2">
                         <div className="text-[10px] font-bold uppercase tracking-widest italic opacity-50">Empty Sector</div>
                     </div>
                 )}
@@ -216,12 +216,12 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                             <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                             <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Real-time Link Active</span>
                         </div>
-                        <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Tactical Board</h2>
+                        <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Tactical Board</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         <Button
                             onClick={() => handleAddTask()}
-                            className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-white border-0 shadow-lg shadow-blue-600/20 font-black uppercase tracking-widest text-[10px] h-10 px-6"
+                            className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground border-0 shadow-lg shadow-blue-600/20 font-black uppercase tracking-widest text-[10px] h-10 px-6"
                         >
                             <Plus className="w-4 h-4 mr-2 stroke-[3px]" /> Deploy New Task
                         </Button>
@@ -244,24 +244,24 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
 
                 <AnimatePresence>
                     {isAddingTask && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-card/90 backdrop-blur-sm">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden"
+                                className="w-full max-w-2xl bg-card border border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden"
                             >
-                                <div className="p-8 border-b border-white/5 flex items-center justify-between bg-slate-900/50">
+                                <div className="p-8 border-b border-border/30 flex items-center justify-between bg-card/50">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">New Tactical Deployment</span>
                                         </div>
-                                        <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Deploy Task</h3>
+                                        <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">Deploy Task</h3>
                                     </div>
                                     <button
                                         onClick={() => setIsAddingTask(false)}
-                                        className="p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-white hover:bg-white/10 transition-all"
+                                        className="p-3 rounded-2xl bg-muted/30 text-muted-foreground hover:text-white hover:bg-muted transition-all"
                                     >
                                         <X className="w-6 h-6" />
                                     </button>
@@ -323,20 +323,20 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-slate-950/20">
-            <header className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/40 backdrop-blur-md">
+        <div className="h-full flex flex-col bg-card/20">
+            <header className="p-6 border-b border-border/30 flex items-center justify-between bg-card/40 backdrop-blur-md">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Encrypted Tactical Channel</span>
                     </div>
-                    <h2 className="text-2xl font-black text-white tracking-tighter uppercase">Comms Link</h2>
+                    <h2 className="text-2xl font-black text-foreground tracking-tighter uppercase">Comms Link</h2>
                 </div>
                 <div className="flex -space-x-3">
                     {team.currentMembers.map((m: any) => (
-                        <div key={m.id} className="w-10 h-10 rounded-2xl border-2 border-slate-950 bg-slate-800 flex items-center justify-center overflow-hidden ring-1 ring-white/10 group relative">
+                        <div key={m.id} className="w-10 h-10 rounded-2xl border-2 border-slate-950 bg-muted flex items-center justify-center overflow-hidden ring-1 ring-border/50 group relative">
                             <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
-                            <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-900 border border-white/10 rounded text-[10px] text-white whitespace-nowrap z-50">
+                            <div className="absolute hidden group-hover:block bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-card border border-border/50 rounded text-[10px] text-foreground whitespace-nowrap z-50">
                                 {m.name}
                             </div>
                         </div>
@@ -349,8 +349,8 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                 className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide"
             >
                 {teamMessages.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
-                        <div className="w-16 h-16 rounded-full border border-dashed border-white/10 flex items-center justify-center">
+                    <div className="h-full flex flex-col items-center justify-center text-muted-foreground/70 space-y-4">
+                        <div className="w-16 h-16 rounded-full border border-dashed border-border/50 flex items-center justify-center">
                             <MessageSquare className="w-8 h-8 opacity-20" />
                         </div>
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30">No active transmissions in this sector.</p>
@@ -361,17 +361,17 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                     const isMe = msg.author_id === user?.id;
                     return (
                         <div key={msg.id} className={`flex items-end gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
-                            <div className="w-8 h-8 rounded-xl bg-slate-800 border border-white/10 overflow-hidden flex-shrink-0">
+                            <div className="w-8 h-8 rounded-xl bg-muted border border-border/50 overflow-hidden flex-shrink-0">
                                 <img src={msg.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.user}`} alt="" />
                             </div>
                             <div className={`max-w-[70%] group`}>
                                 <div className={`flex items-center gap-2 mb-1 px-1 ${isMe ? "flex-row-reverse" : ""}`}>
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{msg.user}</span>
-                                    <span className="text-[9px] font-medium text-slate-600 uppercase">{msg.time}</span>
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{msg.user}</span>
+                                    <span className="text-[9px] font-medium text-muted-foreground/70 uppercase">{msg.time}</span>
                                 </div>
                                 <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed transition-all shadow-lg ${isMe
-                                    ? "bg-blue-600 text-white rounded-br-none shadow-blue-500/10"
-                                    : "bg-white/5 text-slate-200 border border-white/5 rounded-bl-none shadow-black/20"
+                                    ? "bg-blue-600 text-foreground rounded-br-none shadow-blue-500/10"
+                                    : "bg-muted/30 text-foreground/90 border border-border/30 rounded-bl-none shadow-black/20"
                                     }`}>
                                     {msg.content}
                                 </div>
@@ -381,7 +381,7 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                 })}
             </div>
 
-            <div className="p-6 border-t border-white/5">
+            <div className="p-6 border-t border-border/30">
                 <form
                     onSubmit={handleSend}
                     className="relative group"
@@ -391,11 +391,11 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Transmit data to squadron..."
-                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 pr-16 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all group-hover:bg-white/10"
+                        className="w-full bg-muted/30 border border-border/50 rounded-2xl px-6 py-4 pr-16 text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all group-hover:bg-muted"
                     />
                     <button
                         type="submit"
-                        className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 active:scale-95"
+                        className="absolute right-2 top-2 bottom-2 px-4 rounded-xl bg-blue-600 text-foreground hover:bg-blue-500 transition-all flex items-center justify-center shadow-lg shadow-blue-600/20 active:scale-95"
                     >
                         <Send className="w-4 h-4" />
                     </button>
@@ -450,7 +450,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full flex bg-[#020617]">
+        <div className="h-full flex bg-background">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -458,10 +458,10 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 onChange={handleFileUpload}
             />
 
-            <aside className="w-80 border-r border-white/5 flex flex-col bg-slate-900/20">
-                <header className="p-6 border-b border-white/5">
+            <aside className="w-80 border-r border-border/30 flex flex-col bg-card/20">
+                <header className="p-6 border-b border-border/30">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Document Vault</h3>
+                        <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Document Vault</h3>
                         <div className="flex gap-2">
                             <button
                                 onClick={() => fileInputRef.current?.click()}
@@ -486,7 +486,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                 onChange={(e) => setNewDocTitle(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                                 placeholder="Core Matrix Title..."
-                                className="w-full bg-slate-950 border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
+                                className="w-full bg-card border border-blue-500/30 rounded-xl px-3 py-2 text-xs text-foreground/90 focus:outline-none"
                             />
                             <div className="flex gap-2">
                                 <Button onClick={handleCreate} size="sm" className="flex-1 text-[10px] uppercase">Confirm</Button>
@@ -500,7 +500,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                             placeholder="Search intel..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-[10px] text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-bold"
+                            className="w-full bg-muted/30 border border-border/50 rounded-xl px-4 py-2 text-[10px] text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500/30 transition-all font-bold"
                         />
                     </div>
                 </header>
@@ -512,18 +512,18 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                             onClick={() => setSelectedDocId(doc.id)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group ${selectedDocId === doc.id
                                 ? "bg-blue-600/15 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
-                                : "border border-transparent hover:bg-white/5"
+                                : "border border-transparent hover:bg-muted/50"
                                 }`}
                         >
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border border-white/5 ${selectedDocId === doc.id ? "bg-blue-500/20 text-blue-400" : "bg-slate-900 text-slate-500"
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border border-border/30 ${selectedDocId === doc.id ? "bg-blue-500/20 text-blue-400" : "bg-card text-muted-foreground"
                                 }`}>
                                 {getDocIcon(doc)}
                             </div>
                             <div className="text-left overflow-hidden">
-                                <div className={`text-sm font-bold truncate ${selectedDocId === doc.id ? "text-blue-400" : "text-slate-200"}`}>
+                                <div className={`text-sm font-bold truncate ${selectedDocId === doc.id ? "text-blue-400" : "text-foreground/90"}`}>
                                     {doc.title}
                                 </div>
-                                <div className="text-[9px] text-slate-500 uppercase font-black">
+                                <div className="text-[9px] text-muted-foreground uppercase font-black">
                                     {doc.type} • {new Date(doc.updatedAt).toLocaleDateString()}
                                 </div>
                             </div>
@@ -532,20 +532,20 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 </div>
             </aside>
 
-            <main className="flex-1 flex flex-col min-w-0 bg-[#020617] relative">
+            <main className="flex-1 flex flex-col min-w-0 bg-background relative">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
 
                 {selectedDoc ? (
                     <>
-                        <header className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/20 backdrop-blur-sm relative z-10">
+                        <header className="p-6 border-b border-border/30 flex items-center justify-between bg-card/20 backdrop-blur-sm relative z-10">
                             <div className="flex items-center gap-4">
                                 <div className="p-3 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
                                     {getDocIcon(selectedDoc)}
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-white uppercase tracking-tighter">{selectedDoc.title}</h2>
-                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                                        <Badge variant="outline" className="text-[8px] border-white/10">{selectedDoc.type}</Badge>
+                                    <h2 className="text-xl font-black text-foreground uppercase tracking-tighter">{selectedDoc.title}</h2>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                        <Badge variant="outline" className="text-[8px] border-border/50">{selectedDoc.type}</Badge>
                                         <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                                         <span>Vault Entry: {new Date(selectedDoc.updatedAt).toLocaleTimeString()}</span>
                                     </div>
@@ -557,15 +557,15 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-xl border-white/10 hover:bg-white/5 h-9 font-bold uppercase text-[10px] tracking-widest"
+                                            className="rounded-xl border-border/50 hover:bg-muted/50 h-9 font-bold uppercase text-[10px] tracking-widest"
                                             onClick={() => window.open(selectedDoc.url, '_blank')}
                                         >
                                             <ExternalLink className="w-3.5 h-3.5 mr-2" />
                                             Live View
                                         </Button>
                                         <a href={selectedDoc.url} download={selectedDoc.title} className="contents">
-                                            <Button variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5 h-9 px-3">
-                                                <Download className="w-3.5 h-3.5 text-slate-400" />
+                                            <Button variant="outline" size="sm" className="rounded-xl border-border/50 hover:bg-muted/50 h-9 px-3">
+                                                <Download className="w-3.5 h-3.5 text-muted-foreground" />
                                             </Button>
                                         </a>
                                     </>
@@ -587,7 +587,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                 <textarea
                                     value={selectedDoc.content}
                                     onChange={(e) => updateDocument(selectedDoc.id, e.target.value)}
-                                    className="w-full h-full bg-transparent text-slate-300 font-mono text-sm leading-relaxed resize-none focus:outline-none placeholder:text-slate-800"
+                                    className="w-full h-full bg-transparent text-foreground/80 font-mono text-sm leading-relaxed resize-none focus:outline-none placeholder:text-slate-800"
                                     placeholder="# System protocols pending..."
                                 />
                             ) : selectedDoc.type === 'image' ? (
@@ -601,11 +601,11 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                         <img
                                             src={selectedDoc.url}
                                             alt={selectedDoc.title}
-                                            className="relative max-w-full max-h-[60vh] rounded-3xl border border-white/10 shadow-2xl object-contain bg-slate-900/50 p-2"
+                                            className="relative max-w-full max-h-[60vh] rounded-3xl border border-border/50 shadow-2xl object-contain bg-card/50 p-2"
                                         />
                                     </motion.div>
                                     <div className="flex gap-4">
-                                        <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        <div className="px-4 py-2 rounded-xl bg-muted/30 border border-border/30 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                                             Asset Format: {selectedDoc.title.split('.').pop()?.toUpperCase()}
                                         </div>
                                     </div>
@@ -615,24 +615,24 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                     <div className="w-24 h-24 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
                                         <FileIcon className="w-10 h-10 text-red-400" />
                                     </div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Portable Intel Packet</h3>
-                                    <p className="text-sm text-slate-400 mb-8 max-w-xs text-center font-medium">PDF assets require external visor for full decryption.</p>
+                                    <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Portable Intel Packet</h3>
+                                    <p className="text-sm text-muted-foreground mb-8 max-w-xs text-center font-medium">PDF assets require external visor for full decryption.</p>
                                     <Button
                                         onClick={() => window.open(selectedDoc.url, '_blank')}
-                                        className="bg-red-600 hover:bg-red-500 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest"
+                                        className="bg-red-600 hover:bg-red-500 text-foreground rounded-2xl px-8 h-12 font-black uppercase tracking-widest"
                                     >
                                         Open in Secondary Visor
                                     </Button>
                                 </div>
                             ) : (
                                 <div className="h-full flex flex-col items-center justify-center">
-                                    <div className="w-24 h-24 rounded-3xl bg-slate-800/50 border border-white/5 flex items-center justify-center mb-6">
-                                        <FileIcon className="w-10 h-10 text-slate-500" />
+                                    <div className="w-24 h-24 rounded-3xl bg-muted/50 border border-border/30 flex items-center justify-center mb-6">
+                                        <FileIcon className="w-10 h-10 text-muted-foreground" />
                                     </div>
-                                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">Foreign Intel Structure</h3>
-                                    <p className="text-sm text-slate-400 mb-8 font-medium">Unknown data protocol. Recommendation: Manual download.</p>
+                                    <h3 className="text-xl font-black text-foreground uppercase tracking-wider mb-2">Foreign Intel Structure</h3>
+                                    <p className="text-sm text-muted-foreground mb-8 font-medium">Unknown data protocol. Recommendation: Manual download.</p>
                                     <a href={selectedDoc.url} download={selectedDoc.title}>
-                                        <Button className="bg-slate-800 hover:bg-slate-700 text-white rounded-2xl px-8 h-12 font-black uppercase tracking-widest">
+                                        <Button className="bg-muted hover:bg-muted/80 text-foreground rounded-2xl px-8 h-12 font-black uppercase tracking-widest">
                                             <Download className="w-4 h-4 mr-2" /> Extract Data
                                         </Button>
                                     </a>
@@ -641,16 +641,16 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                         </div>
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-slate-600 space-y-6">
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/70 space-y-6">
                         <div className="relative">
                             <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full" />
-                            <div className="relative w-24 h-24 rounded-full border border-white/5 bg-slate-900/50 flex items-center justify-center shadow-2xl">
+                            <div className="relative w-24 h-24 rounded-full border border-border/30 bg-card/50 flex items-center justify-center shadow-2xl">
                                 <Lock className="w-10 h-10 opacity-20" />
                             </div>
                         </div>
                         <div className="text-center">
-                            <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.4em] mb-2">Vault Standby</h3>
-                            <p className="text-[10px] text-slate-600 uppercase font-bold tracking-widest">Select an asset from the archives to begin decryption.</p>
+                            <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.4em] mb-2">Vault Standby</h3>
+                            <p className="text-[10px] text-muted-foreground/70 uppercase font-bold tracking-widest">Select an asset from the archives to begin decryption.</p>
                         </div>
                     </div>
                 )}
@@ -683,13 +683,13 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
     ];
 
     return (
-        <div className="h-full overflow-y-auto p-8 bg-[#020617] scrollbar-hide">
+        <div className="h-full overflow-y-auto p-8 bg-background scrollbar-hide">
             <header className="mb-8">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Signal Processing Optimized</span>
                 </div>
-                <h2 className="text-3xl font-black text-white tracking-tighter uppercase">Squad Intel</h2>
+                <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Squad Intel</h2>
             </header>
 
             {/* Stats Grid */}
@@ -700,22 +700,22 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-3xl bg-slate-900/40 border border-white/5 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
+                        className="p-6 rounded-3xl bg-card/40 border border-border/30 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
                     >
-                        <div className={`p-3 rounded-2xl bg-slate-950 w-fit mb-4 border border-white/5 ${stat.color}`}>
+                        <div className={`p-3 rounded-2xl bg-card w-fit mb-4 border border-border/30 ${stat.color}`}>
                             <stat.icon className="w-6 h-6" />
                         </div>
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{stat.label}</div>
-                        <div className="text-2xl font-black text-white uppercase tracking-tighter">{stat.value}</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{stat.label}</div>
+                        <div className="text-2xl font-black text-foreground uppercase tracking-tighter">{stat.value}</div>
                     </motion.div>
                 ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Performance Chart */}
-                <div className="lg:col-span-2 p-8 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm">
+                <div className="lg:col-span-2 p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest">Productivity Pulse</h3>
+                        <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Productivity Pulse</h3>
                         <Badge variant="outline" className="border-blue-500/30 text-blue-400 uppercase text-[10px]">Real-time Telemetry</Badge>
                     </div>
                     <div className="h-80 w-full">
@@ -767,8 +767,8 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                 </div>
 
                 {/* Task Distribution */}
-                <div className="p-8 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm">
-                    <h3 className="text-sm font-black text-white uppercase tracking-widest mb-8">Sector Deployment</h3>
+                <div className="p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
+                    <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-8">Sector Deployment</h3>
                     <div className="space-y-6">
                         {["Design", "Backend", "Frontend", "Research"].map((label, i) => {
                             const progress = Math.floor(Math.random() * 60) + 20;
@@ -776,10 +776,10 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                             return (
                                 <div key={label}>
                                     <div className="flex justify-between mb-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
-                                        <span className="text-[10px] font-black text-white">{progress}%</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{label}</span>
+                                        <span className="text-[10px] font-black text-foreground">{progress}%</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden">
+                                    <div className="h-1.5 w-full bg-card rounded-full overflow-hidden">
                                         <motion.div
                                             initial={{ width: 0 }}
                                             animate={{ width: `${progress}%` }}
@@ -792,17 +792,17 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                         })}
                     </div>
 
-                    <div className="mt-12 p-6 rounded-3xl bg-slate-950/50 border border-white/5">
+                    <div className="mt-12 p-6 rounded-3xl bg-card/60 border border-border/30">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
                                 <Zap className="w-5 h-5" />
                             </div>
                             <div>
-                                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Efficiency Rating</div>
-                                <div className="text-lg font-black text-white uppercase tracking-tighter">Peak Operational</div>
+                                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Efficiency Rating</div>
+                                <div className="text-lg font-black text-foreground uppercase tracking-tighter">Peak Operational</div>
                             </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 leading-relaxed uppercase font-bold tracking-widest">
+                        <p className="text-[10px] text-muted-foreground leading-relaxed uppercase font-bold tracking-widest">
                             Signal strength optimal. All squadron members synchronized.
                         </p>
                     </div>
@@ -844,19 +844,19 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
     };
 
     return (
-        <div className="h-full overflow-y-auto p-8 bg-[#020617] scrollbar-hide">
+        <div className="h-full overflow-y-auto p-8 bg-background scrollbar-hide">
             <header className="mb-12 flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Command Authorization Required</span>
                     </div>
-                    <h2 className="text-4xl font-black text-white tracking-tighter uppercase">Command Center</h2>
+                    <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Command Center</h2>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-[1px] bg-white/10 mx-2" />
                     <div className="text-right">
-                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Auth Level</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Auth Level</div>
                         <div className="text-sm font-black text-rose-400 uppercase tracking-tighter">{team.role} Access</div>
                     </div>
                 </div>
@@ -865,7 +865,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-2 space-y-8">
                     {/* Mission Objective Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Zap className="w-32 h-32 text-blue-500" />
                         </div>
@@ -875,7 +875,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <div className="w-10 h-10 rounded-2xl bg-blue-600/10 text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-lg shadow-blue-500/5">
                                     <Zap className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Main Mission Objective</h3>
+                                <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Main Mission Objective</h3>
                             </div>
                             {isLeader && !editingObjective && (
                                 <Button
@@ -894,17 +894,17 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <textarea
                                     value={objective}
                                     onChange={(e) => setObjective(e.target.value)}
-                                    className="w-full bg-slate-950/50 border border-blue-500/30 rounded-[2rem] p-6 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all min-h-[120px] resize-none"
+                                    className="w-full bg-card/60 border border-blue-500/30 rounded-[2rem] p-6 text-sm text-foreground/90 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all min-h-[120px] resize-none"
                                     placeholder="Define the primary objective for this squadron..."
                                 />
                                 <div className="flex gap-2">
-                                    <Button onClick={handleObjectiveSave} className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-white px-8 font-black uppercase text-[10px] tracking-widest h-11">Sync Objective</Button>
-                                    <Button onClick={() => setEditingObjective(false)} variant="ghost" className="rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-black uppercase text-[10px] tracking-widest h-11 px-8">Abord</Button>
+                                    <Button onClick={handleObjectiveSave} className="rounded-2xl bg-blue-600 hover:bg-blue-500 text-foreground px-8 font-black uppercase text-[10px] tracking-widest h-11">Sync Objective</Button>
+                                    <Button onClick={() => setEditingObjective(false)} variant="ghost" className="rounded-2xl text-muted-foreground hover:text-white hover:bg-muted/50 font-black uppercase text-[10px] tracking-widest h-11 px-8">Abord</Button>
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-8 rounded-[2rem] bg-slate-950/50 border border-white/5 relative z-10">
-                                <p className="text-lg font-medium text-slate-300 italic leading-relaxed">
+                            <div className="p-8 rounded-[2rem] bg-card/60 border border-border/30 relative z-10">
+                                <p className="text-lg font-medium text-foreground/80 italic leading-relaxed">
                                     "{team.mission_objective || "No primary objective set for this operation."}"
                                 </p>
                             </div>
@@ -912,7 +912,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
 
                     {/* GitHub Repository Link Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Activity className="w-32 h-32 text-emerald-500" />
                         </div>
@@ -923,8 +923,8 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                     <Terminal className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] mb-1">Source Code Repositories</h3>
-                                    <p className="text-xs text-slate-400">Manage connected GitHub repositories.</p>
+                                    <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em] mb-1">Source Code Repositories</h3>
+                                    <p className="text-xs text-muted-foreground">Manage connected GitHub repositories.</p>
                                 </div>
                             </div>
                             <Button
@@ -938,22 +938,22 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
 
                     {/* Member Management Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                                     <Users className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Active Squadron</h3>
+                                <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Active Squadron</h3>
                             </div>
                             <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 uppercase text-[10px]">{team.currentMembers.length} Operatives</Badge>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {team.currentMembers.map((member: any) => (
-                                <div key={member.id} className="p-4 rounded-[2rem] bg-slate-950/50 border border-white/5 flex items-center gap-4 group hover:border-blue-500/30 transition-all duration-300 py-6 px-6">
+                                <div key={member.id} className="p-4 rounded-[2rem] bg-card/60 border border-border/30 flex items-center gap-4 group hover:border-blue-500/30 transition-all duration-300 py-6 px-6">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-white/10 ring-1 ring-white/5 group-hover:ring-blue-500/50 transition-all">
+                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-border/50 ring-1 ring-white/5 group-hover:ring-blue-500/50 transition-all">
                                             <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
                                         </div>
                                         {member.online && (
@@ -961,13 +961,13 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                         )}
                                     </div>
                                     <div className="flex-1">
-                                        <div className="text-sm font-black text-white uppercase tracking-tight mb-0.5">{member.name}</div>
-                                        <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{member.member_role || member.role}</div>
+                                        <div className="text-sm font-black text-foreground uppercase tracking-tight mb-0.5">{member.name}</div>
+                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{member.member_role || member.role}</div>
                                     </div>
                                     {isLeader && member.id !== user?.id && (
                                         <button
                                             onClick={() => removeMember(team.id, member.id)}
-                                            className="p-3 rounded-2xl bg-white/5 text-slate-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
+                                            className="p-3 rounded-2xl bg-muted/30 text-muted-foreground/70 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
@@ -980,12 +980,12 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
                 <div className="space-y-8">
                     {/* Settings Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-2xl bg-purple-600/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
                                 <Settings className="w-5 h-5" />
                             </div>
-                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Operational Protocols</h3>
+                            <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Operational Protocols</h3>
                         </div>
 
                         <div className="space-y-4">
@@ -993,15 +993,15 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 { key: "allow_task_creation", label: "Permission: Global Deployment", desc: "Allow all squadron members to deploy new tasks." },
                                 { key: "allow_invites", label: "Permission: Uplink Requests", desc: "Enable squadron members to invite more operatives." },
                             ].map((setting) => (
-                                <div key={setting.key} className="p-5 rounded-[1.5rem] bg-slate-950/50 border border-white/5 flex items-start gap-4">
+                                <div key={setting.key} className="p-5 rounded-[1.5rem] bg-card/60 border border-border/30 flex items-start gap-4">
                                     <div className="flex-1">
-                                        <div className="text-[11px] font-black text-slate-200 uppercase tracking-widest mb-1">{setting.label}</div>
-                                        <p className="text-[10px] text-slate-500 leading-tight pr-4 font-medium">{setting.desc}</p>
+                                        <div className="text-[11px] font-black text-foreground/90 uppercase tracking-widest mb-1">{setting.label}</div>
+                                        <p className="text-[10px] text-muted-foreground leading-tight pr-4 font-medium">{setting.desc}</p>
                                     </div>
                                     <button
                                         disabled={!isLeader}
                                         onClick={() => toggleSetting(setting.key)}
-                                        className={`w-10 h-6 rounded-full relative transition-all duration-300 ${team.settings?.[setting.key as keyof typeof team.settings] ? "bg-blue-600" : "bg-slate-800"
+                                        className={`w-10 h-6 rounded-full relative transition-all duration-300 ${team.settings?.[setting.key as keyof typeof team.settings] ? "bg-blue-600" : "bg-muted"
                                             } ${!isLeader ? "opacity-30 cursor-not-allowed" : ""}`}
                                     >
                                         <motion.div
@@ -1019,39 +1019,39 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 <Lock className="w-3 h-3 text-blue-500" />
                                 <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em]">Encrypted Invite Code</span>
                             </div>
-                            <div className="flex items-center justify-between bg-slate-950/80 rounded-2xl px-5 py-4 border border-white/5 group cursor-pointer active:scale-95 transition-all">
-                                <span className="text-xl font-black text-white tracking-[0.4em] translate-x-1">{team.invite_code || "N/A"}</span>
+                            <div className="flex items-center justify-between bg-card/90 rounded-2xl px-5 py-4 border border-border/30 group cursor-pointer active:scale-95 transition-all">
+                                <span className="text-xl font-black text-foreground tracking-[0.4em] translate-x-1">{team.invite_code || "N/A"}</span>
                                 <Activity className="w-4 h-4 text-blue-500 group-hover:animate-pulse" />
                             </div>
-                            <p className="text-[9px] text-slate-600 mt-4 uppercase font-bold tracking-widest text-center">Share this uplink code to authorize new squadron members.</p>
+                            <p className="text-[9px] text-muted-foreground/70 mt-4 uppercase font-bold tracking-widest text-center">Share this uplink code to authorize new squadron members.</p>
                         </div>
                     </section>
 
                     {/* Audit Log / Pulse Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-slate-900/40 border border-white/5 backdrop-blur-md flex-1">
+                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md flex-1">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-10 h-10 rounded-2xl bg-amber-600/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
                                 <Activity className="w-5 h-5" />
                             </div>
-                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">Audit Pulse</h3>
+                            <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Audit Pulse</h3>
                         </div>
 
                         <div className="space-y-6 max-h-[300px] overflow-y-auto scrollbar-hide">
                             {(team.history || []).map((item: any) => (
-                                <div key={item.id} className="relative pl-6 before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:rounded-full before:bg-blue-500 before:shadow-[0_0_8px_rgba(59,130,246,0.6)] border-l border-white/5 pb-2 ml-1">
-                                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-tight">{item.action}</div>
-                                    <div className="flex items-center gap-2 text-[9px] text-slate-500 uppercase font-medium mt-0.5">
+                                <div key={item.id} className="relative pl-6 before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:rounded-full before:bg-blue-500 before:shadow-[0_0_8px_rgba(59,130,246,0.6)] border-l border-border/30 pb-2 ml-1">
+                                    <div className="text-[10px] font-black text-foreground/80 uppercase tracking-tight">{item.action}</div>
+                                    <div className="flex items-center gap-2 text-[9px] text-muted-foreground uppercase font-medium mt-0.5">
                                         <span className="text-blue-500/70 font-black">{item.user}</span>
                                         <span className="w-1 h-1 rounded-full bg-slate-800" />
                                         <span>{item.time}</span>
                                     </div>
                                     {item.details && (
-                                        <div className="mt-2 text-[10px] text-slate-600 italic bg-white/5 rounded-xl px-3 py-1.5 border border-white/5">{item.details}</div>
+                                        <div className="mt-2 text-[10px] text-muted-foreground/70 italic bg-muted/30 rounded-xl px-3 py-1.5 border border-border/30">{item.details}</div>
                                     )}
                                 </div>
                             ))}
                             {(team.history || []).length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-12 text-slate-700 opacity-30">
+                                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/50 opacity-30">
                                     <Activity className="w-8 h-8 mb-2" />
                                     <span className="text-[10px] font-black uppercase tracking-widest">No pulse detected</span>
                                 </div>
@@ -1077,7 +1077,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
     const progress = Math.min(((totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100, 100);
 
     return (
-        <div className="h-full flex flex-col bg-[#020617] p-8 overflow-hidden relative">
+        <div className="h-full flex flex-col bg-background p-8 overflow-hidden relative">
             {/* Holographic Scanline Gradient */}
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] z-10 opacity-30" style={{ backgroundSize: '100% 4px' }} />
 
@@ -1094,7 +1094,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-3xl font-black text-white tracking-tighter uppercase"
+                    className="text-3xl font-black text-foreground tracking-tighter uppercase"
                 >
                     Mission Logs
                 </motion.h2>
@@ -1109,8 +1109,8 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                             exit={{ opacity: 0 }}
                             className="flex flex-col items-center justify-center py-40 opacity-20"
                         >
-                            <Target className="w-16 h-16 mb-4 text-slate-600" />
-                            <span className="text-xs font-black uppercase tracking-widest text-slate-600">No_Active_Missions</span>
+                            <Target className="w-16 h-16 mb-4 text-muted-foreground/70" />
+                            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/70">No_Active_Missions</span>
                         </motion.div>
                     ) : (
                         teamBounties.map((bounty, i) => (
@@ -1120,7 +1120,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                                 whileHover={{ scale: 1.01, borderColor: 'rgba(99, 102, 241, 0.3)' }}
-                                className="p-6 rounded-[2rem] bg-slate-900/40 border border-white/5 backdrop-blur-sm group transition-all flex items-center justify-between"
+                                className="p-6 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm group transition-all flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-6">
                                     <div className={cn(
@@ -1131,21 +1131,21 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-3 mb-1">
-                                            <h3 className="text-lg font-black text-white uppercase tracking-tighter">{bounty.title}</h3>
-                                            <Badge variant="outline" className="text-[8px] uppercase border-white/10 text-slate-500 pointer-events-none">{bounty.difficulty}</Badge>
+                                            <h3 className="text-lg font-black text-foreground uppercase tracking-tighter">{bounty.title}</h3>
+                                            <Badge variant="outline" className="text-[8px] uppercase border-border/50 text-muted-foreground pointer-events-none">{bounty.difficulty}</Badge>
                                         </div>
-                                        <p className="text-xs text-slate-500 font-medium max-w-sm">{bounty.description}</p>
+                                        <p className="text-xs text-muted-foreground font-medium max-w-sm">{bounty.description}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">Status</div>
+                                    <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Status</div>
                                     <div className={cn(
                                         "text-xs font-black uppercase tracking-widest",
                                         bounty.status === 'completed' ? "text-green-500" : "text-indigo-400 animate-pulse"
                                     )}>
                                         {bounty.status === 'in_progress' ? 'Running_Op' : bounty.status.toUpperCase()}
                                     </div>
-                                    <div className="text-[10px] font-black text-slate-700 mt-2">+{bounty.reward_xp} XP</div>
+                                    <div className="text-[10px] font-black text-muted-foreground/50 mt-2">+{bounty.reward_xp} XP</div>
                                 </div>
                             </motion.div>
                         ))
@@ -1161,15 +1161,15 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
             >
                 <div>
                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Squad Reputation</div>
-                    <div className="text-2xl font-black text-white">LEVEL_{level.toString().padStart(2, '0')}</div>
+                    <div className="text-2xl font-black text-foreground">LEVEL_{level.toString().padStart(2, '0')}</div>
                 </div>
                 <div className="h-12 w-[1px] bg-indigo-500/20 mx-6" />
                 <div className="flex-1">
-                    <div className="flex justify-between text-[10px] font-black text-slate-600 uppercase mb-2">
+                    <div className="flex justify-between text-[10px] font-black text-muted-foreground/70 uppercase mb-2">
                         <span>XP Progress</span>
                         <span>{totalXP} / {nextLevelXP}</span>
                     </div>
-                    <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden">
+                    <div className="h-2 w-full bg-card rounded-full overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
@@ -1326,7 +1326,7 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full bg-black p-8 font-mono text-emerald-500 overflow-hidden flex flex-col relative border border-white/5 rounded-[2rem] shadow-2xl">
+        <div className="h-full bg-black p-8 font-mono text-emerald-500 overflow-hidden flex flex-col relative border border-border/30 rounded-[2rem] shadow-2xl">
             {/* Scanline Effect */}
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10" style={{ backgroundSize: '100% 2px, 3px 100%' }} />
             <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.8)] z-10" />
@@ -1436,10 +1436,10 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="flex items-center gap-6 px-6 py-3 bg-slate-950/40 border-b border-white/5 backdrop-blur-xl relative z-30 min-h-[64px]">
+        <div className="flex items-center gap-6 px-6 py-3 bg-card/40 border-b border-border/30 backdrop-blur-xl relative z-30 min-h-[64px]">
             {/* Real-time Clock */}
-            <div className="flex flex-col border-r border-white/10 pr-6">
-                <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">System Time</span>
+            <div className="flex flex-col border-r border-border/50 pr-6">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-0.5">System Time</span>
                 <span className="text-sm font-mono font-bold text-emerald-400 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                 </span>
@@ -1464,7 +1464,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         <div className="flex items-baseline gap-3">
                             <span className={cn(
                                 "text-2xl font-black font-mono tracking-tighter tabular-nums",
-                                isOvertime ? "text-rose-400" : "text-white"
+                                isOvertime ? "text-rose-400" : "text-foreground"
                             )}>
                                 {isOvertime && "-"}
                                 {remaining && (
@@ -1476,15 +1476,15 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                     </>
                                 )}
                             </span>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight">
                                 Deadline: {deadlineDate.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                         </div>
                     </div>
                 ) : (
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-0.5">Status</span>
-                        <div className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span className="text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.2em] mb-0.5">Status</span>
+                        <div className="text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                             <Shield className="w-3 h-3 opacity-30" />
                             Mission_Timeline_Not_Synchronized
                         </div>
@@ -1499,7 +1499,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         onClick={() => setShowDeadlineModal(true)}
                         size="sm"
                         variant="ghost"
-                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 text-slate-300 transition-all rounded-xl"
+                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border border-border/30 bg-muted/30 hover:bg-muted text-foreground/80 transition-all rounded-xl"
                     >
                         {deadlineDate ? "Adjust Timeline" : "Set Deadline"}
                     </Button>
@@ -1540,23 +1540,23 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="w-full max-w-md bg-slate-900 border border-rose-500/50 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(244,63,94,0.3)] relative z-10"
+                            className="w-full max-w-md bg-card border border-rose-500/50 rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(244,63,94,0.3)] relative z-10"
                         >
                             <div className="flex flex-col items-center text-center space-y-6">
                                 <div className="w-20 h-20 rounded-full bg-rose-500/20 flex items-center justify-center border-2 border-rose-500 animate-pulse">
                                     <AlertTriangle className="w-10 h-10 text-rose-500" />
                                 </div>
                                 <div>
-                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none mb-2">Critical Alpha Alert</h2>
+                                    <h2 className="text-3xl font-black text-foreground uppercase tracking-tighter leading-none mb-2">Critical Alpha Alert</h2>
                                     <p className="text-sm text-rose-400 font-bold uppercase tracking-widest animate-pulse">Confirm Mission Abortion</p>
                                 </div>
-                                <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl text-xs text-slate-400 font-mono leading-relaxed">
+                                <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-2xl text-xs text-muted-foreground font-mono leading-relaxed">
                                     WARNING: This action will permanently purge squadron <span className="text-rose-400 font-bold">"{team.name}"</span> and all associated tactical data (tasks, communications, archives). This cannot be reversed.
                                 </div>
                                 <div className="flex gap-4 w-full">
                                     <Button
                                         onClick={() => setShowAbortModal(false)}
-                                        className="flex-1 h-14 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold uppercase tracking-widest text-[10px]"
+                                        className="flex-1 h-14 rounded-2xl bg-muted hover:bg-muted/80 text-foreground font-bold uppercase tracking-widest text-[10px]"
                                     >
                                         Cancel Protocol
                                     </Button>
@@ -1568,7 +1568,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                                 navigate('/dashboard');
                                             }
                                         }}
-                                        className="flex-1 h-14 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-bold uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(244,63,94,0.4)]"
+                                        className="flex-1 h-14 rounded-2xl bg-rose-600 hover:bg-rose-500 text-foreground font-bold uppercase tracking-widest text-[10px] shadow-[0_0_20px_rgba(244,63,94,0.4)]"
                                     >
                                         Execute Purge
                                     </Button>
@@ -1594,21 +1594,21 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="w-full max-w-md bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative z-10"
+                            className="w-full max-w-md bg-card border border-border/50 rounded-[2.5rem] p-8 shadow-2xl relative z-10"
                         >
                             <div className="flex items-center justify-between mb-8">
                                 <div>
-                                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter">Mission Timeline</h2>
-                                    <p className="text-xs text-slate-500 font-medium">Define the operational window for this sector.</p>
+                                    <h2 className="text-2xl font-black text-foreground uppercase tracking-tighter">Mission Timeline</h2>
+                                    <p className="text-xs text-muted-foreground font-medium">Define the operational window for this sector.</p>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => setShowDeadlineModal(false)} className="rounded-2xl bg-white/5 hover:bg-white/10">
-                                    <X className="w-5 h-5 text-slate-500" />
+                                <Button variant="ghost" size="icon" onClick={() => setShowDeadlineModal(false)} className="rounded-2xl bg-muted/30 hover:bg-muted">
+                                    <X className="w-5 h-5 text-muted-foreground" />
                                 </Button>
                             </div>
 
                             <form onSubmit={handleSetDeadline} className="space-y-8">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
                                         <Zap className="w-3 h-3 text-blue-500" />
                                         Target Timestamp (UTC)
                                     </label>
@@ -1617,13 +1617,13 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                         required
                                         value={deadlineInput}
                                         onChange={(e) => setDeadlineInput(e.target.value)}
-                                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-5 text-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-center shadow-inner"
+                                        className="w-full bg-card border border-border/50 rounded-2xl p-5 text-lg text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-center shadow-inner"
                                     />
-                                    <p className="text-[10px] text-slate-600 text-center font-bold uppercase tracking-widest mt-2 px-4">
+                                    <p className="text-[10px] text-muted-foreground/70 text-center font-bold uppercase tracking-widest mt-2 px-4">
                                         All squadron members will be synchronized to this timeline.
                                     </p>
                                 </div>
-                                <Button className="w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 text-sm active:scale-[0.98] transition-all">
+                                <Button className="w-full h-16 rounded-[1.5rem] bg-blue-600 hover:bg-blue-500 text-foreground font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-500/20 text-sm active:scale-[0.98] transition-all">
                                     Synchronize Strategy
                                 </Button>
                             </form>
@@ -1654,9 +1654,9 @@ export const WorkspaceView: React.FC = () => {
 
     if (!team) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] text-slate-400 p-4">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-background text-muted-foreground p-4">
                 <Activity className="w-12 h-12 text-blue-500/20 mb-4 animate-pulse" />
-                <h2 className="text-xl font-bold text-slate-200 mb-2 uppercase tracking-widest">Uplink Lost</h2>
+                <h2 className="text-xl font-bold text-foreground/90 mb-2 uppercase tracking-widest">Uplink Lost</h2>
                 <p className="mb-6 text-sm">Team profile not found in current signal range.</p>
                 <Button
                     onClick={() => navigate("/workspace")}
@@ -1678,17 +1678,17 @@ export const WorkspaceView: React.FC = () => {
         { id: "codebase", name: "Codebase", icon: Terminal, color: "text-emerald-500" }, // NEW Codebase Tab
         { id: "intel", name: "Squad Intel", icon: BarChart2, color: "text-purple-400" },
         { id: "management", name: "Command", icon: Shield, color: "text-rose-400" },
-        { id: "console", name: "Console", icon: Activity, color: "text-slate-400" },
+        { id: "console", name: "Console", icon: Activity, color: "text-muted-foreground" },
     ];
 
     return (
-        <div className="flex h-screen bg-[#020617] overflow-hidden">
+        <div className="flex h-screen bg-background overflow-hidden">
             {/* Workspace Sidebar */}
-            <aside className="w-64 border-r border-white/5 bg-slate-950/50 backdrop-blur-xl flex flex-col">
-                <div className="p-4 border-b border-white/5">
+            <aside className="w-64 border-r border-border/30 bg-card/60 backdrop-blur-xl flex flex-col">
+                <div className="p-4 border-b border-border/30">
                     <button
                         onClick={() => navigate("/workspace")}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-muted-foreground hover:text-white hover:bg-muted/50 transition-all group"
                     >
                         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Sector</span>
@@ -1697,16 +1697,16 @@ export const WorkspaceView: React.FC = () => {
 
                 <div className="p-6">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-white/20`}>
-                            <Zap className="w-5 h-5 text-white" />
+                        <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-border`}>
+                            <Zap className="w-5 h-5 text-foreground" />
                         </div>
                         <div>
-                            <h1 className="text-sm font-black text-white uppercase tracking-tighter truncate w-32">
+                            <h1 className="text-sm font-black text-foreground uppercase tracking-tighter truncate w-32">
                                 {team.name}
                             </h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Operational</span>
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Operational</span>
                             </div>
                         </div>
                     </div>
@@ -1721,10 +1721,10 @@ export const WorkspaceView: React.FC = () => {
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${isActive
                                         ? "bg-blue-600/10 text-blue-400"
-                                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                                        : "text-muted-foreground hover:text-foreground/90 hover:bg-muted/50"
                                         }`}
                                 >
-                                    <Icon className={`w-4 h-4 ${isActive ? tab.color : "text-slate-500 group-hover:text-slate-300"}`} />
+                                    <Icon className={`w-4 h-4 ${isActive ? tab.color : "text-muted-foreground group-hover:text-foreground/80"}`} />
                                     {tab.name}
                                     {isActive && (
                                         <motion.div
@@ -1744,7 +1744,7 @@ export const WorkspaceView: React.FC = () => {
                             <Lock className="w-3 h-3 text-blue-500" />
                             <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Security Status</span>
                         </div>
-                        <div className="text-[10px] text-slate-500 leading-tight">
+                        <div className="text-[10px] text-muted-foreground leading-tight">
                             All communications on this channel are encrypted.
                         </div>
                     </div>

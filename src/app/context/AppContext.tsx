@@ -532,30 +532,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   const [loading, setLoading] = useState(true);
 
-  // Centralized Supabase Error Handler
-  const handleSupabaseError = (error: any, context: string) => {
-    console.error(`Supabase Error [${context}]:`, error);
-
-    const errorMsg = error.message || "";
-    const isNetworkError = errorMsg.includes('fetch') ||
-      errorMsg.includes('network') ||
-      errorMsg.includes('AbortError') ||
-      error.status === 0;
-
-    if (isNetworkError) {
-      toast.error("CONNECTION BLOCKED", {
-        description: "Your ISP might be blocking the connection. If the issue persists, try changing your DNS to 8.8.8.8 or 1.1.1.1.",
-        duration: 10000,
-        id: "connection-blocked-toast" // Use fixed ID to prevent spamming
-      });
-    } else {
-      toast.error(`SYSTEM ERROR: ${context}`, {
-        description: errorMsg,
-        id: `error-${context}`
-      });
-    }
-  };
-
 
   const [posts, setPosts] = useState<Post[]>(defaultPosts);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -634,87 +610,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     else {
       toast.success("Achievement recorded in service record.");
       recordActivity("milestone_achieved", `Achieved milestone: ${milestone.title}`, 50, "milestone");
-    }
-  };
-
-  const fetchPosts = async () => {
-    try {
-      // Logic moved to Server-Side API to bypass ISP blocks and handle professional auth logic
-      const url = `/api/posts${user ? `?userId=${user.id}` : ''}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error [posts]: ${response.status} ${response.statusText}`, errorText);
-        throw new Error(`API Error: ${response.statusText || 'Internal Server Error'}`);
-      }
-
-      const { posts: postsData, likedPostIds } = await response.json();
-      const likedSet = new Set(likedPostIds || []);
-
-      if (postsData && postsData.length > 0) {
-        setPosts(postsData.map((p: any) => ({
-          id: p.id,
-          type: p.type || "text",
-          user: p.profiles?.full_name || "Anon",
-          user_id: p.author_id,
-          handle: "@" + (p.profiles?.full_name?.toLowerCase().replace(/\s/g, "_") || "anon"),
-          content: p.content,
-          codeSnippet: p.code_snippet,
-          codeLanguage: p.code_language,
-          projectDetails: p.project_details,
-          tags: p.tags || [],
-          likes: p.likes_count || 0,
-          comments: p.comments_count || 0,
-          time: new Date(p.created_at).toLocaleDateString(),
-          avatar: p.profiles?.avatar_url,
-          isLiked: likedSet.has(p.id),
-          imageUrl: p.image_url
-        })));
-      } else {
-        setPosts([]);
-      }
-    } catch (err: any) {
-      handleSupabaseError(err, "fetchPosts_API");
-    }
-  };
-
-  const fetchNotifications = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/notifications?userId=${user.id}`);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error [notifications]: ${response.status} ${response.statusText}`, errorText);
-        throw new Error("API [notifications] failed");
-      }
-      const data = await response.json();
-
-      setNotifications(data.map((n: any) => ({
-        id: n.id,
-        title: n.title,
-        message: n.message,
-        type: n.type,
-        read: n.is_read,
-        time: new Date(n.created_at).toLocaleTimeString()
-      })));
-    } catch (err) {
-      handleSupabaseError(err, "fetchNotifications_API");
-    }
-  };
-
-  const fetchBounties = async () => {
-    try {
-      const response = await fetch('/api/bounties');
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error [bounties]: ${response.status} ${response.statusText}`, errorText);
-        throw new Error("API [bounties] failed");
-      }
-      const data = await response.json();
-      setBounties(data);
-    } catch (err) {
-      handleSupabaseError(err, "fetchBounties_API");
     }
   };
 
@@ -860,6 +755,92 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (data) setActivities(data);
   };
 
+  const fetchPosts = async () => {
+    try {
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select(`
+          id, content, type, code_snippet, code_language, project_details, tags, 
+          likes_count, comments_count, created_at, author_id, image_url,
+          profiles:author_id(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (postsError) {
+        console.error("Supabase Error [fetchPosts]:", postsError);
+        const { data: fallbackData } = await supabase
+          .from('posts')
+          .select('id, content, author_id, tags, created_at, profiles:author_id(*)')
+          .order('created_at', { ascending: false });
+
+        if (fallbackData) {
+          setPosts(fallbackData.map((p: any) => ({
+            id: p.id,
+            type: "text",
+            user: p.profiles?.full_name || "Anon",
+            user_id: p.author_id,
+            handle: "@" + (p.profiles?.full_name?.toLowerCase().replace(/\s/g, "_") || "anon"),
+            content: p.content,
+            tags: p.tags || [],
+            likes: 0,
+            comments: 0,
+            time: new Date(p.created_at).toLocaleDateString(),
+            avatar: p.profiles?.avatar_url
+          })));
+        }
+        return;
+      }
+
+      let likedPostIds: Set<string> = new Set();
+      if (user) {
+        const { data: likesData } = await supabase.from('post_likes').select('post_id').eq('user_id', user.id);
+        if (likesData) {
+          likedPostIds = new Set(likesData.map((l: any) => l.post_id));
+        }
+      }
+
+      if (postsData && postsData.length > 0) {
+        setPosts(postsData.map((p: any) => ({
+          id: p.id,
+          type: p.type || "text",
+          user: p.profiles?.full_name || "Anon",
+          user_id: p.author_id,
+          handle: "@" + (p.profiles?.full_name?.toLowerCase().replace(/\s/g, "_") || "anon"),
+          content: p.content,
+          codeSnippet: p.code_snippet,
+          codeLanguage: p.code_language,
+          projectDetails: p.project_details,
+          tags: p.tags || [],
+          likes: p.likes_count || 0,
+          comments: p.comments_count || 0,
+          time: new Date(p.created_at).toLocaleDateString(),
+          avatar: p.profiles?.avatar_url,
+          isLiked: likedPostIds.has(p.id),
+          imageUrl: p.image_url
+        })));
+      } else {
+        setPosts([]);
+      }
+    } catch (err) {
+      console.error("Critical error in fetchPosts:", err);
+    }
+  };
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+    if (data) {
+      setNotifications(data.map((n: any) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        read: n.is_read,
+        time: new Date(n.created_at).toLocaleTimeString()
+      })));
+    }
+  };
+
   const [userHistory, setUserHistory] = useState<HistoryItem[]>(() => getFromStorage("hm_history", defaultUserHistory));
   const [globalMessages, setGlobalMessages] = useState<ChatMessage[]>(() => getFromStorage("hm_messages", [
     { id: "m1", user: "System", content: "Welcome to the global hacker lounge! ðŸŒ", time: "09:00 AM", type: "system" },
@@ -920,80 +901,99 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (authUser: any, token?: string | null) => {
-    // 1. Try to fetch profile
-    let { data, error } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
+    try {
+      // 1. Try to fetch profile
+      let { data, error } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
 
-    // 2. If no profile (error), create one immediately
-    if (error || !data) {
-      console.log("Profile missing, creating new profile for:", authUser.id);
-      const newProfile = {
-        id: authUser.id,
-        email: authUser.email,
-        full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Agent',
-        avatar_url: authUser.user_metadata?.avatar_url || `https://i.pravatar.cc/150?u=${authUser.email}`,
-        primary_role: 'Full Stack Developer', // Default
-        updated_at: new Date().toISOString()
-      };
+      // 2. If no profile (error), create one immediately
+      if (error || !data) {
+        console.log("Profile missing, creating new profile for:", authUser.id);
+        const newProfile = {
+          id: authUser.id,
+          email: authUser.email,
+          full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Agent',
+          avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || `https://i.pravatar.cc/150?u=${authUser.email}`,
+          primary_role: 'Full Stack Developer',
+          updated_at: new Date().toISOString()
+        };
 
-      const { data: createdProfile, error: createError } = await supabase
-        .from('profiles')
-        .upsert(newProfile)
-        .select()
-        .single();
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .upsert(newProfile)
+          .select()
+          .single();
 
-      if (createError) {
-        handleSupabaseError(createError, "fetchProfile_create");
-        return;
+        if (createError) {
+          console.error("Failed to create profile:", createError);
+          toast.error("Could not load your profile. Please try again.");
+          return;
+        }
+        data = createdProfile;
       }
-      data = createdProfile;
-    }
 
-    if (data) {
-      const authMethods = authUser.identities?.map((id: any) => id.provider) || [];
+      if (data) {
+        const authMethods = authUser.identities?.map((id: any) => id.provider) || [];
 
-      // Auto-sync GitHub identity if present but missing in profile
-      let githubUsername = data.github_username;
-      if (authMethods.includes('github') && !githubUsername) {
-        githubUsername = authUser.user_metadata?.preferred_username ||
-          authUser.user_metadata?.user_name ||
-          authUser.identities?.find((id: any) => id.provider === 'github')?.identity_data?.user_name;
+        // Auto-sync GitHub identity if present but missing in profile
+        let githubUsername = data.github_username;
+        if (authMethods.includes('github') && !githubUsername) {
+          githubUsername = authUser.user_metadata?.preferred_username ||
+            authUser.user_metadata?.user_name ||
+            authUser.identities?.find((id: any) => id.provider === 'github')?.identity_data?.user_name;
+
+          if (githubUsername) {
+            await supabase.from('profiles').update({ github_username: githubUsername }).eq('id', data.id);
+          }
+        }
+
+        // Sync OAuth provider avatar if fresher than stored one
+        // (handles Google pic updates, new provider logins, etc.)
+        const oauthAvatarUrl = authUser.user_metadata?.avatar_url ||
+          authUser.user_metadata?.picture ||
+          authUser.identities?.find((id: any) => id.identity_data?.avatar_url)?.identity_data?.avatar_url;
+
+        let resolvedAvatarUrl = data.avatar_url;
+        if (oauthAvatarUrl && oauthAvatarUrl !== data.avatar_url) {
+          // Update DB with the latest OAuth avatar
+          await supabase.from('profiles').update({ avatar_url: oauthAvatarUrl }).eq('id', data.id);
+          resolvedAvatarUrl = oauthAvatarUrl;
+        }
+
+        const formattedUser: User = {
+          id: data.id,
+          name: data.full_name || authUser.user_metadata?.name || authUser.email,
+          email: authUser.email,
+          avatar: resolvedAvatarUrl || `https://i.pravatar.cc/150?u=${authUser.email}`,
+          role: data.primary_role,
+          bio: data.bio || "",
+          skills: data.skills || [],
+          socials: data.social_links || {},
+          reputation: data.reputation_points || 0,
+          rank: data.prestige_rank || 'Operative',
+          velocity: data.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
+          github_username: githubUsername,
+          follower_count: data.follower_count || 0,
+          following_count: data.following_count || 0,
+          preferences: data.preferences || {},
+          auth_methods: authMethods,
+          level: data.level || 1
+        };
+        setUser(formattedUser);
+        await fetchTeams(formattedUser);
+
+        trackSession();
+        fetchSessions();
 
         if (githubUsername) {
-          await supabase.from('profiles').update({ github_username: githubUsername }).eq('id', data.id);
+          fetchGitHubData(githubUsername, token || githubToken);
         }
       }
-
-      const formattedUser: User = {
-        id: data.id,
-        name: data.full_name || authUser.email,
-        email: authUser.email,
-        avatar: data.avatar_url,
-        role: data.primary_role,
-        bio: data.bio || "",
-        skills: data.skills || [],
-        socials: data.social_links || {},
-        reputation: data.reputation_points || 0,
-        rank: data.prestige_rank || 'Operative',
-        velocity: data.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
-        github_username: githubUsername,
-        follower_count: data.follower_count || 0,
-        following_count: data.following_count || 0,
-        preferences: data.preferences || {},
-        auth_methods: authMethods,
-        level: data.level || 1
-      };
-      setUser(formattedUser);
-      // Pass the user object directly to avoid state race condition
-      await fetchTeams(formattedUser);
-
-      // Track session silently
-      trackSession();
-      fetchSessions();
-
-      // Fetch GitHub data if connected
-      if (githubUsername) {
-        fetchGitHubData(githubUsername, token || githubToken);
+    } catch (networkError: any) {
+      console.error("[HackMate] Supabase connection error:", networkError);
+      if (networkError?.message?.includes('ERR_CONNECTION') || networkError?.message?.includes('Failed to fetch') || networkError?.code === 'ERR_CONNECTION_CLOSED') {
+        toast.error("⚡ Could not reach the server. Check your connection or try again.", { duration: 6000 });
       }
+      setLoading(false);
     }
   };
 
@@ -1017,13 +1017,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetUser = forcedUser || user;
     if (!targetUser) return;
 
-    try {
-      const response = await fetch(`/api/sessions?userId=${targetUser.id}`);
-      if (!response.ok) throw new Error("API [sessions] failed");
-      const data = await response.json();
+    const { data, error } = await supabase
+      .from('user_sessions')
+      .select('*')
+      .eq('user_id', targetUser.id)
+      .order('last_active', { ascending: false });
+
+    if (data) {
       setSessions(data);
-    } catch (err) {
-      handleSupabaseError(err, "fetchSessions_API");
     }
   };
 
@@ -1187,136 +1188,158 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const targetUser = currentUser || user;
     if (!targetUser) return;
 
-    try {
-      const response = await fetch(`/api/teams?userId=${targetUser.id}`);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error [teams]: ${response.status} ${response.statusText}`, errorText);
-        throw new Error("API [teams] failed");
-      }
+    // 2-Step Fetch for Robustness
+    // Step 1: Get IDs of teams I belong to
+    const { data: myMemberships, error: memError } = await supabase
+      .from('memberships')
+      .select('*') // Select all to be safe, or just team_id. If joined_at missing, it won't crash here.
+      .eq('user_id', targetUser.id);
 
-      const { teams: teamsData, memberships: myMemberships, auditLogs: auditLogsData } = await response.json();
+    if (memError) {
+      console.error("Error fetching memberships:", memError);
+      return;
+    }
 
-      if (!myMemberships || myMemberships.length === 0) {
-        setTeams([]);
-        setLoading(false);
-        return;
-      }
+    if (!myMemberships || myMemberships.length === 0) {
+      setTeams([]);
+      setLoading(false);
+      return;
+    }
 
-      const joinedAtMap = new Map(myMemberships.map((m: any) => [m.team_id, m.joined_at]));
+    const teamIds = myMemberships.map((m: any) => m.team_id);
+    const joinedAtMap = new Map(myMemberships.map((m: any) => [m.team_id, m.joined_at]));
 
+    // Step 2: Fetch full team details for these IDs
+    const { data: teamsData, error } = await supabase
+      .from('teams')
+      .select(`
+        *,
+        memberships(*, profiles(*)),
+        tasks(*, profiles:assignee_id(*))
+      `)
+      .in('id', teamIds);
 
+    if (error) {
+      console.error("Error fetching teams:", error);
+      return;
+    }
 
-      const logsByTeam = new Map();
-      if (auditLogsData) {
-        auditLogsData.forEach((log: any) => {
-          if (!logsByTeam.has(log.team_id)) logsByTeam.set(log.team_id, []);
-          logsByTeam.get(log.team_id).push({
-            id: log.id,
-            action: log.action,
-            details: log.details,
-            type: log.type === 'task' ? 'task' : log.type === 'security' ? 'security' : 'system' as any,
-            time: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            user: log.profiles?.full_name || 'System', // Use profile name or System
-            timestamp: log.created_at,
-            date: new Date(log.created_at).toLocaleDateString()
-          });
+    // Step 3: Fetch Audit Logs for these teams (Last 50 events total, or per team?)
+    // Fetching plenty to ensure each team has some.
+    const { data: auditLogsData } = await supabase
+      .from('audit_logs')
+      .select(`*, profiles(full_name)`)
+      .in('team_id', teamIds)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    const logsByTeam = new Map();
+    if (auditLogsData) {
+      auditLogsData.forEach((log: any) => {
+        if (!logsByTeam.has(log.team_id)) logsByTeam.set(log.team_id, []);
+        logsByTeam.get(log.team_id).push({
+          id: log.id,
+          action: log.action,
+          details: log.details,
+          type: log.type === 'task' ? 'task' : log.type === 'security' ? 'security' : 'system' as any,
+          time: new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          user: log.profiles?.full_name || 'System', // Use profile name or System
+          timestamp: log.created_at,
+          date: new Date(log.created_at).toLocaleDateString()
         });
-      }
+      });
+    }
 
-      // Manual Sort by joined_at if available in the data structure
-      if (teamsData) {
-        teamsData.sort((a: any, b: any) => {
-          const dateA = new Date(joinedAtMap.get(a.id) || a.created_at).getTime();
-          const dateB = new Date(joinedAtMap.get(b.id) || b.created_at).getTime();
-          return dateB - dateA;
-        });
+    // Manual Sort by joined_at if available in the data structure
+    if (teamsData) {
+      teamsData.sort((a: any, b: any) => {
+        const dateA = new Date(joinedAtMap.get(a.id) || a.created_at).getTime();
+        const dateB = new Date(joinedAtMap.get(b.id) || b.created_at).getTime();
+        return dateB - dateA;
+      });
 
-        const formattedTeams: Team[] = teamsData.map((t: any) => {
-          // Calculate Performance (Velocity: Tasks Done per Day over last 7 days)
-          const last7Days = Array.from({ length: 7 }, (_, i) => {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            return d.toISOString().split('T')[0];
-          }).reverse();
+      const formattedTeams: Team[] = teamsData.map((t: any) => {
+        // Calculate Performance (Velocity: Tasks Done per Day over last 7 days)
+        const last7Days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          return d.toISOString().split('T')[0];
+        }).reverse();
 
-          const tasks = t.tasks || [];
-          const performance: PerformanceMetric[] = last7Days.map(date => {
-            // Count tasks completed on this date (approximate using updated_at for done tasks)
-            // or created_at for activity? Let's use 'done' tasks status update if possible.
-            // Since we don't have task history here, we'll map 'created_at' as activity volume for now
-            // OR check if status is done and updated_at is this date.
-            const activityCount = tasks.filter((task: any) => {
-              const dateToUse = task.updated_at || task.created_at;
-              if (!dateToUse) return false;
-              const taskDate = dateToUse.split('T')[0];
-              return taskDate === date && (task.status === 'done' || task.status === 'in_progress');
-            }).length;
+        const tasks = t.tasks || [];
+        const performance: PerformanceMetric[] = last7Days.map(date => {
+          // Count tasks completed on this date (approximate using updated_at for done tasks)
+          // or created_at for activity? Let's use 'done' tasks status update if possible.
+          // Since we don't have task history here, we'll map 'created_at' as activity volume for now
+          // OR check if status is done and updated_at is this date.
+          const activityCount = tasks.filter((task: any) => {
+            const dateToUse = task.updated_at || task.created_at;
+            if (!dateToUse) return false;
+            const taskDate = dateToUse.split('T')[0];
+            return taskDate === date && (task.status === 'done' || task.status === 'in_progress');
+          }).length;
 
-            // Scale it 0-100 based on some target (e.g. 5 tasks = 100%)
-            return {
-              date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
-              value: Math.min(activityCount * 20, 100),
-              label: "Efficiency"
-            };
-          });
-
+          // Scale it 0-100 based on some target (e.g. 5 tasks = 100%)
           return {
-            id: t.id,
-            name: t.name,
-            description: t.description,
-            event: "Hackathon 2026",
-            type: "Project",
-            visibility: "Public",
-            status: t.status,
-            maxMembers: 5,
-            currentMembers: t.memberships.map((m: any) => ({
-              id: m.profiles.id,
-              name: m.profiles.full_name,
-              role: m.role,
-              member_role: m.member_role || m.role,
-              avatar: m.profiles.avatar_url,
-              online: true,
-              tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length
-            })),
-            tasksCount: t.tasks.length,
-            progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
-            color: "bg-hack-blue",
-            role: t.owner_id === targetUser.id ? "Leader" : (myMemberships.find((m: any) => m.team_id === t.id)?.role === 'Leader' ? "Leader" : "Member"),
-
-            tasks: tasks.map((task: any) => ({
-              id: task.id,
-              title: task.title,
-              priority: task.priority,
-              status: task.status,
-              labels: task.tags || [],
-              members: [task.assignee_id].filter(Boolean),
-              assignee_id: task.assignee_id,
-              assignee: task.profiles ? {
-                id: task.profiles.id,
-                name: task.profiles.full_name,
-                avatar: task.profiles.avatar_url
-              } : undefined,
-              deadline: task.deadline,
-              description: task.description,
-              is_critical: task.is_critical || false,
-              updated_at: task.updated_at,
-              createdAt: task.created_at
-            })),
-            mission_objective: t.mission_objective || "",
-            deadline: t.deadline || undefined,
-            invite_code: t.invite_code || undefined,
-            github_repo: t.github_repo || undefined,
-            github_repos: t.github_repos || [],
-            settings: t.settings || { allow_task_creation: true, allow_invites: true },
-            history: logsByTeam.get(t.id) || [],
-            performance: performance
+            date: new Date(date).toLocaleDateString(undefined, { weekday: 'short' }),
+            value: Math.min(activityCount * 20, 100),
+            label: "Efficiency"
           };
         });
-        setTeams(formattedTeams);
-      }
-    } catch (err: any) {
-      handleSupabaseError(err, "fetchTeams_API");
+
+        return {
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          event: "Hackathon 2026",
+          type: "Project",
+          visibility: "Public",
+          status: t.status,
+          maxMembers: 5,
+          currentMembers: t.memberships.map((m: any) => ({
+            id: m.profiles.id,
+            name: m.profiles.full_name,
+            role: m.role,
+            member_role: m.member_role || m.role,
+            avatar: m.profiles.avatar_url,
+            online: true,
+            tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length
+          })),
+          tasksCount: t.tasks.length,
+          progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
+          color: "bg-hack-blue",
+          role: t.owner_id === targetUser.id ? "Leader" : (myMemberships.find((m: any) => m.team_id === t.id)?.role === 'Leader' ? "Leader" : "Member"),
+
+          tasks: tasks.map((task: any) => ({
+            id: task.id,
+            title: task.title,
+            priority: task.priority,
+            status: task.status,
+            labels: task.tags || [],
+            members: [task.assignee_id].filter(Boolean),
+            assignee_id: task.assignee_id,
+            assignee: task.profiles ? {
+              id: task.profiles.id,
+              name: task.profiles.full_name,
+              avatar: task.profiles.avatar_url
+            } : undefined,
+            deadline: task.deadline,
+            description: task.description,
+            is_critical: task.is_critical || false,
+            updated_at: task.updated_at,
+            createdAt: task.created_at
+          })),
+          mission_objective: t.mission_objective || "",
+          deadline: t.deadline || undefined,
+          invite_code: t.invite_code || undefined,
+          github_repo: t.github_repo || undefined,
+          github_repos: t.github_repos || [],
+          settings: t.settings || { allow_task_creation: true, allow_invites: true },
+          history: logsByTeam.get(t.id) || [],
+          performance: performance
+        };
+      });
+      setTeams(formattedTeams);
     }
   };
 
@@ -1510,15 +1533,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin }
-      });
-      if (error) handleSupabaseError(error, "login");
-    } catch (err) {
-      handleSupabaseError(err, "login_critical");
-    }
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) console.error("Login error:", error);
   };
 
   const logout = async () => {
@@ -2612,6 +2631,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (activeTeamId) fetchDocuments(activeTeamId);
   };
 
+  const fetchBounties = async () => {
+    const { data, error } = await supabase
+      .from('bounties')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) console.error("Bounty fetch failed:", error);
+    else setBounties(data || []);
+  };
 
   const createBounty = async (bounty: Omit<Bounty, "id" | "created_at" | "created_by" | "status">) => {
     if (!user) return;
@@ -2840,14 +2868,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     userBadges, fetchUserBadges, awardBadge,
     getStandup, getTaskSuggestions, deleteTeam
 
-
-
   };
 
   return (
-    <AppContext.Provider value={value} >
+    <AppContext.Provider value={value}>
       {children}
-    </AppContext.Provider >
+    </AppContext.Provider>
   );
 }
 

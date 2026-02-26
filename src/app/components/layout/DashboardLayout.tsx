@@ -257,7 +257,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-black tracking-tight leading-none uppercase">{user?.name || "Alex Hacker"}</p>
                 <p className="text-[9px] text-hack-blue font-black uppercase tracking-[0.2em] mt-1 opacity-70">
-                  Lvl {user?.level || 1} {user?.rank || "Operative"}
+                  {user?.role ? user.role : `Lvl ${user?.level || 1} ${user?.rank || "Operative"}`}
                 </p>
               </div>
               <Avatar
