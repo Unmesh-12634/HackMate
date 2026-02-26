@@ -2598,15 +2598,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (activeTeamId) fetchDocuments(activeTeamId);
   };
 
-  const fetchBounties = async () => {
-    const { data, error } = await supabase
-      .from('bounties')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) console.error("Bounty fetch failed:", error);
-    else setBounties(data || []);
-  };
 
   const createBounty = async (bounty: Omit<Bounty, "id" | "created_at" | "created_by" | "status">) => {
     if (!user) return;

@@ -56,7 +56,7 @@ const TacticalBeacon: React.FC<{
    avatar?: string;
    time: string;
 }> = ({ title, type, tags, user, avatar, time }) => (
-   <div className="p-4 rounded-xl bg-slate-950/40 border border-white/[0.04] hover:border-blue-500/30 transition-all group cursor-pointer relative overflow-hidden">
+   <div className="p-4 rounded-xl bg-card/40 border border-border/40 hover:border-blue-500/30 transition-all group cursor-pointer relative overflow-hidden">
       <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/[0.02] blur-2xl group-hover:bg-blue-500/[0.05] transition-all" />
       <div className="flex items-start gap-4 relative z-10">
          <Avatar className="w-8 h-8 rounded-lg border border-white/5">
@@ -68,7 +68,7 @@ const TacticalBeacon: React.FC<{
                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest font-['Fira_Code']">{type}</span>
                <span className="text-[9px] font-bold text-slate-600 uppercase font-['Fira_Code']">{time}</span>
             </div>
-            <h4 className="text-sm font-bold text-white uppercase tracking-tight truncate group-hover:text-blue-400 transition-colors">{title}</h4>
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-tight truncate group-hover:text-blue-400 transition-colors">{title}</h4>
             <div className="flex flex-wrap gap-1.5 mt-2">
                {tags.slice(0, 2).map(tag => (
                   <span key={tag} className="px-1.5 py-0.5 rounded-sm bg-slate-900 border border-white/5 text-[8px] font-black text-slate-500 uppercase tracking-tighter">#{tag}</span>
@@ -138,7 +138,7 @@ const GlobalRelay: React.FC<{
             ))}
          </div>
 
-         <form onSubmit={handleSubmit} className="p-6 bg-slate-950/20 border-t border-white/[0.03]">
+         <form onSubmit={handleSubmit} className="p-6 bg-card/20 border-t border-border/40">
             <div className="relative group/input">
                <input
                   className="w-full bg-slate-900/30 border border-white/5 rounded-[1.5rem] py-4 pl-6 pr-14 text-xs font-medium text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-slate-800 shadow-inner"
@@ -173,12 +173,12 @@ const BountyMatrixGrid: React.FC = () => {
          {/* Holographic Scanline Overlay */}
          <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.05)_50%)] z-10 opacity-20" style={{ backgroundSize: '100% 3px' }} />
 
-         <div className="p-4 flex items-center justify-between border-b border-white/[0.03] bg-slate-950/20 relative z-20">
+         <div className="p-4 flex items-center justify-between border-b border-border/40 bg-card/20 relative z-20">
             <div className="flex items-center gap-2">
                <div className="w-1 h-3 bg-indigo-500 rounded-full animate-pulse" />
                <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Active_Matrix</div>
             </div>
-            <div className="flex gap-1 bg-slate-900/50 p-1 rounded-lg border border-white/5">
+            <div className="flex gap-1 bg-card/50 p-1 rounded-lg border border-border/50">
                {(['all', 'open', 'claimed'] as const).map((f) => (
                   <button
                      key={f}
@@ -955,7 +955,7 @@ export function CommunityView() {
    };
 
    return (
-      <div className="h-full overflow-y-auto bg-[#0F172A] scrollbar-hide font-['IBM_Plex_Sans'] selection:bg-blue-500/30 text-slate-100 relative">
+      <div className="h-full overflow-y-auto bg-background scrollbar-hide font-['IBM_Plex_Sans'] selection:bg-blue-500/30 text-foreground relative">
          <div className="max-w-[1440px] mx-auto p-6 md:p-8 space-y-8 relative z-10 transition-all">
 
             {/* TOP BAR: SEARCH & NAV */}

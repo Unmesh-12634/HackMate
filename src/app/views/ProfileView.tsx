@@ -251,7 +251,7 @@ export function ProfileView() {
                   </Avatar>
                   <div className="flex-1 text-center md:text-left">
                      <div className="flex items-center justify-center md:justify-start gap-3 mb-1">
-                        <h1 className="text-3xl font-black tracking-tight text-white">{user?.name || "Operative"}</h1>
+                        <h1 className="text-3xl font-black tracking-tight text-foreground">{user?.name || "Operative"}</h1>
                         <div className="flex items-center gap-2">
                            <Badge variant="outline" className="border-hack-blue/50 text-hack-blue bg-hack-blue/5 px-2 py-0 text-[10px] uppercase font-black tracking-widest">
                               {user?.rank || "Operative"}
@@ -262,7 +262,7 @@ export function ProfileView() {
                         </div>
                      </div>
                      <p className="text-muted-foreground font-medium flex items-center justify-center md:justify-start gap-2">
-                        {user?.role} <span className="w-1 h-1 rounded-full bg-slate-600" /> {user?.email}
+                        {user?.role} <span className="w-1 h-1 rounded-full bg-border" /> {user?.email}
                      </p>
                   </div>
                   <div className="flex gap-3 pb-2">
@@ -314,7 +314,7 @@ export function ProfileView() {
                            <stat.icon className={cn("w-3 h-3", (stat as any).isSocial && "group-hover:text-blue-400")} /> {stat.label}
                         </p>
                         <p className={cn(
-                           "text-2xl font-black text-white font-['JetBrains_Mono']",
+                           "text-2xl font-black text-foreground font-['JetBrains_Mono']",
                            (stat as any).isSocial && "group-hover:text-blue-400"
                         )}>
                            {stat.label === "Reputation" ? new Intl.NumberFormat('en-US').format(user?.reputation || 0) : stat.value}

@@ -1436,9 +1436,9 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="flex items-center gap-6 px-6 py-3 bg-slate-950/40 border-b border-white/5 backdrop-blur-xl relative z-30 min-h-[64px]">
+        <div className="flex items-center gap-6 px-6 py-3 bg-card/40 border-b border-border/50 backdrop-blur-xl relative z-30 min-h-[64px]">
             {/* Real-time Clock */}
-            <div className="flex flex-col border-r border-white/10 pr-6">
+            <div className="flex flex-col border-r border-border pr-6">
                 <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-0.5">System Time</span>
                 <span className="text-sm font-mono font-bold text-emerald-400 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
@@ -1682,10 +1682,10 @@ export const WorkspaceView: React.FC = () => {
     ];
 
     return (
-        <div className="flex h-screen bg-[#020617] overflow-hidden">
+        <div className="flex h-screen bg-background overflow-hidden relative">
             {/* Workspace Sidebar */}
-            <aside className="w-64 border-r border-white/5 bg-slate-950/50 backdrop-blur-xl flex flex-col">
-                <div className="p-4 border-b border-white/5">
+            <aside className="w-64 border-r border-border/50 bg-card/50 backdrop-blur-xl flex flex-col">
+                <div className="p-4 border-b border-border/50">
                     <button
                         onClick={() => navigate("/workspace")}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group"
@@ -1701,7 +1701,7 @@ export const WorkspaceView: React.FC = () => {
                             <Zap className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-sm font-black text-white uppercase tracking-tighter truncate w-32">
+                            <h1 className="text-sm font-black text-foreground uppercase tracking-tighter truncate w-32">
                                 {team.name}
                             </h1>
                             <div className="flex items-center gap-1.5 mt-0.5">
@@ -1721,7 +1721,7 @@ export const WorkspaceView: React.FC = () => {
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 group ${isActive
                                         ? "bg-blue-600/10 text-blue-400"
-                                        : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-card/50"
                                         }`}
                                 >
                                     <Icon className={`w-4 h-4 ${isActive ? tab.color : "text-slate-500 group-hover:text-slate-300"}`} />

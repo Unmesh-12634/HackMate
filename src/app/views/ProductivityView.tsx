@@ -78,19 +78,19 @@ const KPICard: React.FC<{
    color: string;
    data: { val: number }[]
 }> = ({ title, value, change, icon: Icon, color, data }) => (
-   <div className="p-6 rounded-2xl bg-slate-900/40 border border-white/[0.03] backdrop-blur-3xl relative overflow-hidden group hover:border-white/10 hover:bg-slate-900/60 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+   <div className="p-6 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-3xl relative overflow-hidden group hover:border-border/60 hover:bg-card/60 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
       {/* Focal Glow */}
       <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.03] blur-3xl group-hover:opacity-10 transition-opacity duration-500 pointer-events-none" style={{ color: color.includes('blue') ? '#3B82F6' : color.includes('emerald') ? '#10B981' : '#F97316' }} />
 
       <div className="flex items-start justify-between relative z-10 mb-4">
          <div>
-            <p className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.3em] mb-1 font-['Fira_Code']">{title}</p>
-            <h3 className="text-4xl font-black text-white tracking-tighter drop-shadow-lg">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-1 font-['Fira_Code']">{title}</p>
+            <h3 className="text-4xl font-black text-foreground tracking-tighter drop-shadow-lg">
                <RollingValue value={value} />
             </h3>
             {change && <span className="text-[10px] font-black text-emerald-500/80 uppercase mt-2 inline-block tracking-widest">{change}</span>}
          </div>
-         <div className={cn("p-3 rounded-xl bg-slate-950 border border-white/5 shadow-2xl transition-transform duration-500 group-hover:scale-110", color)}>
+         <div className={cn("p-3 rounded-xl bg-secondary border border-border shadow-2xl transition-transform duration-500 group-hover:scale-110", color)}>
             <Icon className="w-5 h-5" />
          </div>
       </div>
@@ -123,18 +123,18 @@ const ActivityHeatmap: React.FC<{ history: any[] }> = ({ history }) => {
    }, [history]);
 
    return (
-      <div className="p-8 rounded-2xl bg-slate-900/40 border border-white/[0.03] backdrop-blur-3xl relative overflow-hidden group h-full hover:border-white/10 transition-all duration-300">
+      <div className="p-8 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-3xl relative overflow-hidden group h-full hover:border-border/60 transition-all duration-300">
          <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
                <Terminal className="w-4 h-4 text-blue-500" />
-               <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Operational Pulse</h3>
+               <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">Operational Pulse</h3>
             </div>
             <div className="flex items-center gap-1.5 font-['Fira_Code'] text-[9px] text-slate-500">
                <span>LOW</span>
                {[0, 1, 2, 3, 4].map(l => (
                   <div key={l} className={cn(
-                     "w-2.5 h-2.5 rounded-sm border border-white/[0.05]",
-                     l === 0 ? "bg-slate-800" :
+                     "w-2.5 h-2.5 rounded-sm border border-border/50",
+                     l === 0 ? "bg-muted" :
                         l === 1 ? "bg-blue-900/50" :
                            l === 2 ? "bg-blue-700/50" :
                               l === 3 ? "bg-blue-500/50" : "bg-blue-400"
@@ -225,7 +225,7 @@ export function ProductivityView() {
    };
 
    return (
-      <div className="h-full overflow-y-auto bg-[#020617] scrollbar-hide font-['Fira_Sans'] selection:bg-blue-500/30 text-slate-400">
+      <div className="h-full overflow-y-auto bg-background scrollbar-hide font-['Fira_Sans'] selection:bg-blue-500/30 text-muted-foreground">
          {/* Intel Grid Overlay */}
          <div className="fixed inset-0 pointer-events-none opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
          <div className="fixed inset-0 pointer-events-none bg-gradient-to-tr from-blue-600/[0.03] via-transparent to-orange-600/[0.03]" />
@@ -241,15 +241,15 @@ export function ProductivityView() {
                      </div>
                      <div className="text-[10px] font-bold text-slate-700 uppercase tracking-widest font-['Fira_Code']">NODE_ID: {user?.id.split('-')[0]}</div>
                   </div>
-                  <h1 className="text-7xl font-black text-white uppercase tracking-[calc(-0.05em)] leading-none italic">
+                  <h1 className="text-7xl font-black text-foreground uppercase tracking-[calc(-0.05em)] leading-none italic">
                      INTEL_<span className="text-blue-500 not-italic">PRO</span>
                   </h1>
-                  <p className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.3em] max-w-xl font-['Fira_Code']">EXECUTIVE ANALYSIS // TACTICAL TELEMETRY STREAM // V.4.0.2</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] max-w-xl font-['Fira_Code']">EXECUTIVE ANALYSIS // TACTICAL TELEMETRY STREAM // V.4.0.2</p>
                </div>
-               <div className="flex items-center gap-12 bg-slate-900/40 p-8 rounded-2xl border border-white/[0.04] backdrop-blur-xl">
+               <div className="flex items-center gap-12 bg-card/40 p-8 rounded-2xl border border-border/40 backdrop-blur-xl">
                   <div className="text-right">
                      <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] mb-2 font-['Fira_Code']">PRESTIGE_RANK</div>
-                     <div className="text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-4 justify-end">
+                     <div className="text-4xl font-black text-foreground uppercase tracking-tighter flex items-center gap-4 justify-end">
                         <RollingValue value={user?.rank || ""} />
                         <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-lg">
                            <Trophy className="w-6 h-6 text-orange-500" />
@@ -259,7 +259,7 @@ export function ProductivityView() {
                   <div className="h-14 w-[1px] bg-white/[0.08]" />
                   <div className="text-right">
                      <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] mb-2 font-['Fira_Code']">REPUTATION_AGGREGATE</div>
-                     <div className="text-4xl font-black text-white tracking-tighter shadow-orange-500/20">
+                     <div className="text-4xl font-black text-foreground tracking-tighter shadow-orange-500/20">
                         <RollingValue value={user?.reputation?.toLocaleString() || 0} /> <span className="text-blue-500 text-sm ml-1 font-['Fira_Code']">RP</span>
                      </div>
                   </div>
@@ -286,10 +286,10 @@ export function ProductivityView() {
                </div>
 
                {/* RADAR DOSSIER */}
-               <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 row-span-2 p-10 rounded-2xl bg-slate-900/50 border border-white/[0.04] backdrop-blur-3xl group hover:border-blue-500/20 transition-all duration-500">
+               <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 row-span-2 p-10 rounded-2xl bg-card/50 border border-border/40 backdrop-blur-3xl group hover:border-blue-500/20 transition-all duration-500">
                   <div className="flex items-center justify-between mb-10">
                      <div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-[0.3em]">EXPERT_SPECTRUM</h3>
+                        <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">EXPERT_SPECTRUM</h3>
                         <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-1 font-['Fira_Code']">QUALITATIVE ANALYSIS</p>
                      </div>
                      <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
