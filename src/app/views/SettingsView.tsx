@@ -30,237 +30,8 @@ import { cn } from "../components/ui/button";
 import { toast } from "sonner";
 import { Badge } from "../components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { RoleSelector } from "../components/RoleSelector";
 
-// ------------------------------------
-// ROLE DEFINITIONS (Technical + Non-technical)
-// ------------------------------------
-const ROLE_GROUPS = [
-   {
-      group: "🛠️ Engineering & Dev",
-      roles: [
-         "Frontend Developer",
-         "Backend Developer",
-         "Full Stack Developer",
-         "Mobile Developer (iOS)",
-         "Mobile Developer (Android)",
-         "Mobile Developer (React Native)",
-         "Mobile Developer (Flutter)",
-         "Systems Programmer",
-         "Embedded Systems Engineer",
-         "Game Developer",
-         "Blockchain Developer",
-         "Smart Contract Developer",
-         "WebAssembly Engineer",
-         "API Engineer",
-         "SDK Engineer",
-      ],
-   },
-   {
-      group: "🤖 AI & Data",
-      roles: [
-         "AI/ML Engineer",
-         "Deep Learning Researcher",
-         "NLP Engineer",
-         "Computer Vision Engineer",
-         "AI Agent Developer",
-         "LLM Fine-tuner",
-         "Data Scientist",
-         "Data Analyst",
-         "Data Engineer",
-         "MLOps Engineer",
-         "Research Scientist",
-         "Prompt Engineer",
-      ],
-   },
-   {
-      group: "☁️ Infrastructure & Platform",
-      roles: [
-         "DevOps Engineer",
-         "Cloud Architect",
-         "Site Reliability Engineer (SRE)",
-         "Platform Engineer",
-         "Database Administrator",
-         "Network Engineer",
-         "Infrastructure Engineer",
-         "Kubernetes Administrator",
-      ],
-   },
-   {
-      group: "🔐 Security",
-      roles: [
-         "Security Engineer",
-         "Security Analyst",
-         "Penetration Tester",
-         "Red Team Operator",
-         "Bug Bounty Hunter",
-         "Cryptography Engineer",
-         "GRC Analyst",
-      ],
-   },
-   {
-      group: "🎨 Design & UX",
-      roles: [
-         "UI Designer",
-         "UX Designer",
-         "Product Designer",
-         "Motion Designer",
-         "Brand Designer",
-         "3D Artist",
-         "Graphic Designer",
-      ],
-   },
-   {
-      group: "📦 Product & Strategy",
-      roles: [
-         "Product Manager",
-         "Technical Product Manager",
-         "Product Strategist",
-         "Growth Hacker",
-         "Business Analyst",
-         "Solutions Architect",
-      ],
-   },
-   {
-      group: "📣 Marketing & Community",
-      roles: [
-         "Marketing Strategist",
-         "Content Creator",
-         "Community Manager",
-         "Developer Advocate",
-         "SEO Specialist",
-         "Social Media Manager",
-         "Brand Strategist",
-      ],
-   },
-   {
-      group: "🏗️ Management & Leadership",
-      roles: [
-         "Engineering Manager",
-         "CTO",
-         "Founder / Co-Founder",
-         "Project Manager",
-         "Scrum Master",
-         "Team Lead",
-         "Technical Lead",
-      ],
-   },
-   {
-      group: "📝 Writing & Docs",
-      roles: [
-         "Technical Writer",
-         "Documentation Engineer",
-         "Developer Relations (DevRel)",
-         "Content Strategist",
-      ],
-   },
-   {
-      group: "🎓 Other",
-      roles: [
-         "Student / Learner",
-         "Open Source Contributor",
-         "Indie Hacker",
-         "Hobbyist",
-         "Consultant",
-         "Freelancer",
-      ],
-   },
-];
-
-// ------------------------------------
-// ROLE PICKER COMPONENT
-// ------------------------------------
-function RolePicker({ value, onChange }: { value: string; onChange: (role: string) => void }) {
-   const [open, setOpen] = useState(false);
-   const [search, setSearch] = useState("");
-   const ref = useRef<HTMLDivElement>(null);
-
-   useEffect(() => {
-      const handler = (e: MouseEvent) => {
-         if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-      };
-      document.addEventListener("mousedown", handler);
-      return () => document.removeEventListener("mousedown", handler);
-   }, []);
-
-   const filtered = ROLE_GROUPS
-      .map(g => ({
-         ...g,
-         roles: g.roles.filter(r => r.toLowerCase().includes(search.toLowerCase())),
-      }))
-      .filter(g => g.roles.length > 0);
-
-   const handleSelect = (role: string) => {
-      onChange(role);
-      setOpen(false);
-      setSearch("");
-   };
-
-   return (
-      <div ref={ref} className="relative">
-         <button
-            type="button"
-            onClick={() => setOpen(!open)}
-            className="w-full flex items-center justify-between gap-3 h-11 px-4 bg-background border border-input rounded-xl text-sm font-medium text-foreground hover:border-hack-blue/50 focus:outline-none focus:ring-2 focus:ring-hack-blue/20 transition-all"
-         >
-            <span className="flex items-center gap-2 truncate">
-               <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
-               {value ? value : <span className="text-muted-foreground font-normal">Select your primary role...</span>}
-            </span>
-            <ChevronDown className={cn("w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200", open && "rotate-180")} />
-         </button>
-
-         {open && (
-            <div className="absolute z-[100] top-full mt-2 left-0 w-full max-h-72 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-               {/* Search */}
-               <div className="p-3 border-b border-border bg-card">
-                  <div className="relative">
-                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                     <input
-                        autoFocus
-                        value={search}
-                        onChange={e => setSearch(e.target.value)}
-                        placeholder="Search roles..."
-                        className="w-full h-8 pl-9 pr-3 text-xs font-medium bg-secondary/40 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-hack-blue/20 text-foreground placeholder:text-muted-foreground"
-                     />
-                  </div>
-               </div>
-               {/* List */}
-               <div className="overflow-y-auto flex-1 p-2 space-y-3">
-                  {filtered.length === 0 ? (
-                     <p className="text-center py-6 text-xs text-muted-foreground">No roles found</p>
-                  ) : (
-                     filtered.map(g => (
-                        <div key={g.group}>
-                           <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-2 py-1.5">
-                              {g.group}
-                           </p>
-                           <div className="space-y-0.5">
-                              {g.roles.map(role => (
-                                 <button
-                                    key={role}
-                                    type="button"
-                                    onClick={() => handleSelect(role)}
-                                    className={cn(
-                                       "w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                                       value === role
-                                          ? "bg-hack-blue/10 text-hack-blue font-bold"
-                                          : "text-foreground hover:bg-secondary/80"
-                                    )}
-                                 >
-                                    {value === role && <CheckCircle2 className="w-3 h-3 inline mr-2 text-hack-blue" />}
-                                    {role}
-                                 </button>
-                              ))}
-                           </div>
-                        </div>
-                     ))
-                  )}
-               </div>
-            </div>
-         )}
-      </div>
-   );
-}
 
 // ------------------------------------
 // SETTINGS VIEW
@@ -282,17 +53,17 @@ export function SettingsView() {
    }, []);
 
    return (
-      <div className="max-w-5xl mx-auto space-y-8 pb-20">
-         <div className="flex items-center justify-between mb-8">
+      <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 pb-20 px-4 md:px-0 mt-4 md:mt-0">
+         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-8 pb-4 border-b border-border/20 md:border-none">
             <div>
-               <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-               <p className="text-muted-foreground mt-1">Manage your account preferences and team configurations.</p>
+               <h1 className="text-2xl md:text-3xl font-black tracking-tighter uppercase text-foreground">Command <span className="text-hack-blue">Protocols</span></h1>
+               <p className="text-[10px] md:text-sm font-bold text-muted-foreground mt-1 uppercase tracking-widest opacity-60">Neural identity & security configurations.</p>
             </div>
          </div>
 
-         <div className="grid md:grid-cols-4 gap-8">
-            {/* Sidebar Navigation */}
-            <div className="md:col-span-1 space-y-2">
+         <div className="flex flex-col md:grid md:grid-cols-4 gap-6 md:gap-8">
+            {/* Sidebar Navigation -> Horizontal Scroll on Mobile */}
+            <div className="flex md:flex-col gap-2 overflow-x-auto no-scrollbar scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 sticky top-0 md:static bg-background/50 backdrop-blur-md md:bg-transparent z-40 py-2 md:py-0">
                {[
                   { label: "Account", icon: User },
                   { label: "Security", icon: Shield },
@@ -305,20 +76,20 @@ export function SettingsView() {
                      key={item.label}
                      onClick={() => setActiveTab(item.label as Tab)}
                      className={cn(
-                        "w-full flex items-center gap-3 p-3 rounded-xl text-sm font-medium transition-all duration-300",
+                        "flex items-center gap-3 p-3 md:p-4 rounded-xl md:rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-widest transition-all duration-300 shrink-0 border border-transparent",
                         activeTab === item.label
-                           ? "bg-hack-blue text-white shadow-[0_0_15px_rgba(0,119,255,0.4)]"
-                           : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+                           ? "bg-hack-blue text-white shadow-lg shadow-hack-blue/30 border-hack-blue/20"
+                           : "text-muted-foreground hover:bg-secondary/50"
                      )}
                   >
-                     <item.icon className="w-4 h-4" />
+                     <item.icon className="w-3.5 h-3.5 md:w-4 md:h-4" />
                      {item.label}
                   </button>
                ))}
             </div>
 
             {/* Content Area */}
-            <div className="md:col-span-3 space-y-6">
+            <div className="flex-1 md:col-span-3 space-y-6 md:space-y-8">
                {activeTab === "Account" && <AccountTab />}
                {activeTab === "Security" && <SecurityTab />}
                {activeTab === "Notifications" && <NotificationsTab />}
@@ -402,8 +173,8 @@ function AccountTab() {
                <CardTitle>Profile Information</CardTitle>
                <CardDescription>Update your public identity on HackMate.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-               <div className="grid grid-cols-2 gap-4">
+            <CardContent className="p-6 md:p-8 space-y-5 md:space-y-6">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-2">
                      <label className="text-xs font-bold uppercase text-muted-foreground">Full Name</label>
                      <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
@@ -438,7 +209,7 @@ function AccountTab() {
                   <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
                      <Briefcase className="w-3 h-3" /> Primary Role
                   </label>
-                  <RolePicker value={selectedRole} onChange={setSelectedRole} />
+                  <RoleSelector value={selectedRole} onChange={setSelectedRole} />
                   <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                      Shown on your profile, in the global workspace sidebar, and across the platform in real-time.
                   </p>

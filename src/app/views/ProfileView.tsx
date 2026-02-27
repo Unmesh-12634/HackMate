@@ -234,18 +234,18 @@ export function ProfileView() {
    };
 
    return (
-      <div className="max-w-5xl mx-auto space-y-8 pb-20">
+      <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 pb-20 px-4 md:px-0">
          {/* Profile Header */}
-         <Card className="relative overflow-hidden border-none shadow-xl">
-            <div className="h-40 bg-gradient-to-r from-hack-blue via-hack-purple to-hack-neon" />
-            <div className="absolute top-4 right-4">
-               <Button variant="secondary" size="sm" className="gap-2 bg-background/50 backdrop-blur-md border border-border/50 text-foreground" onClick={() => navigate("/settings")}>
+         <Card className="relative overflow-hidden border-border/40 shadow-xl rounded-[24px] md:rounded-[32px] bg-card/50">
+            <div className="h-32 md:h-48 bg-gradient-to-r from-hack-blue via-indigo-600 to-indigo-900" />
+            <div className="absolute top-4 right-4 z-20">
+               <Button variant="secondary" size="sm" className="gap-2 bg-background/50 backdrop-blur-md border border-border/50 text-foreground hover:bg-background/80" onClick={() => navigate("/settings")}>
                   <Github className="w-4 h-4" /> Connect GitHub
                </Button>
             </div>
-            <CardContent className="pt-0 relative px-8 pb-8">
-               <div className="flex flex-col md:flex-row items-end gap-6 -mt-12 mb-6">
-                  <Avatar className="w-32 h-32 border-4 border-background ring-4 ring-hack-blue ring-offset-4 ring-offset-background">
+            <CardContent className="pt-0 relative px-8 pb-20">
+               <div className="flex flex-col md:flex-row items-center md:items-end gap-4 md:gap-8 -mt-16 md:-mt-20 mb-6 md:mb-10 text-center md:text-left z-10 relative">
+                  <Avatar className="w-32 h-32 md:w-40 md:h-40 border-4 border-background ring-4 ring-hack-blue/20 shadow-2xl">
                      <AvatarImage src={user?.avatar} />
                      <AvatarFallback>AX</AvatarFallback>
                   </Avatar>
@@ -257,7 +257,7 @@ export function ProfileView() {
                               {user?.rank || "Operative"}
                            </Badge>
                            <div className="bg-hack-neon/10 border border-hack-neon/20 px-2 py-0.5 rounded text-[10px] font-black text-hack-neon uppercase">
-                              Lvl {user?.level || 1}
+                              Lvl {Math.floor((user?.reputation || 0) / 100) + 1}
                            </div>
                         </div>
                      </div>
@@ -293,7 +293,7 @@ export function ProfileView() {
                   </div>
                </div>
 
-               <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pt-6 border-t border-border">
+               <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pt-6 border-t border-border/40">
                   {[
                      { label: "Teams Led", value: teamsLed, icon: Users },
                      { label: "Projects Joined", value: projectsJoined, icon: Star },
@@ -323,17 +323,35 @@ export function ProfileView() {
                   ))}
                </div>
             </CardContent>
-            {/* XP PROGRESS BAR */}
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-secondary/50">
-               <div
-                  className="h-full bg-gradient-to-r from-hack-blue to-hack-neon transition-all duration-1000"
-                  style={{ width: `${Math.min(100, (reputation % 1000) / 10)}%` }}
-               />
+            {/* ENHANCED XP PROGRESS BAR */}
+            <div className="absolute bottom-0 left-0 w-full bg-black/40 backdrop-blur-md border-t border-white/5 px-8 flex items-center gap-4 h-12">
+               <div className="flex items-center gap-2 w-16 shrink-0">
+                  <Star className="w-4 h-4 text-hack-neon" />
+                  <span className="text-[11px] font-black text-hack-neon uppercase tracking-widest">
+                     LVL {Math.floor(reputation / 100) + 1}
+                  </span>
+               </div>
+
+               <div className="flex-1 relative h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                  <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+                  <div
+                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-hack-blue via-indigo-500 to-hack-neon transition-all duration-1000 ease-out relative"
+                     style={{ width: `${reputation % 100}%` }}
+                  >
+                     {/* Glow effect on the leading edge */}
+                     <div className="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-[2px]" />
+                  </div>
+               </div>
+
+               <div className="text-[10px] font-black uppercase text-right w-32 shrink-0 tracking-widest flex flex-col justify-center leading-none">
+                  <span className="text-foreground">{reputation} XP</span>
+                  <span className="text-muted-foreground/60 text-[8px] mt-0.5">/ {(Math.floor(reputation / 100) + 1) * 100} NEXT LEVEL</span>
+               </div>
             </div>
          </Card>
 
-         <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 space-y-8">
+         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1 space-y-6 md:space-y-8 order-2 lg:order-1">
                <Card>
                   <CardHeader><CardTitle className="text-sm uppercase tracking-wider">About Me</CardTitle></CardHeader>
                   <CardContent>
@@ -401,7 +419,7 @@ export function ProfileView() {
                </Card>
             </div>
 
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 md:space-y-8 order-1 lg:order-2">
                {/* Real-Time Activity Graph */}
                <Card className="border border-border/50 shadow-lg relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-hack-neon/5 via-transparent to-transparent pointer-events-none" />

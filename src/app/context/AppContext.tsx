@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { supabase } from "../../lib/supabase";
 import { aiSquadService } from "../../lib/ai_squad";
+import { Zap, AlertTriangle, Trophy, Target, CheckCircle2, Clock } from "lucide-react";
 
 export type Theme = "light" | "dark";
 
@@ -175,6 +176,7 @@ export interface TeamDocument {
   content: string;
   type: string;
   url?: string;
+  created_by: string;
   lastEditedBy: string;
   updatedAt: string;
 }
@@ -207,6 +209,10 @@ export interface Team {
   performance: PerformanceMetric[];
   invite_code?: string;
   mission_objective?: string;
+  mission_goal?: string;
+  current_mission_name?: string;
+  completed_at?: string;
+  createdAt?: string;
   settings?: {
     allow_task_creation: boolean;
     allow_invites: boolean;
@@ -242,10 +248,14 @@ export interface ChatMessage {
   id: string;
   user: string;
   user_id?: string;
+  author_id?: string;
   content: string;
   time: string;
   type: "text" | "ai" | "system";
   avatar?: string;
+  message_type?: "text" | "code";
+  language?: string;
+  reactions?: { emoji: string; count: number; reacted: boolean }[];
 }
 
 export interface DirectMessage {
@@ -292,17 +302,24 @@ interface AppContextType {
   updateTeamDeadline: (teamId: string, deadline: string | null) => Promise<void>;
   joinTeam: (code: string) => Promise<boolean>;
   removeMember: (teamId: string, userId: string) => Promise<void>;
-  updateTaskStatus: (taskId: string, status: Task["status"]) => void;
+  updateTaskStatus: (taskId: string, status: Task["status"], force?: boolean) => void;
   addTask: (teamId: string, task: Omit<Task, "id" | "createdAt">) => void;
+  updateTask: (taskId: string, updates: Partial<Task>) => Promise<boolean>;
   deleteTask: (taskId: string) => void;
+  sendTaskForReview: (taskId: string, reviewerId: string) => Promise<boolean>;
+  updateSubtask: (taskId: string, subtaskId: string, done: boolean) => Promise<void>;
   setMissionObjective: (teamId: string, objective: string) => Promise<void>;
   assignMemberRole: (teamId: string, userId: string, role: string) => Promise<void>;
   toggleCritical: (taskId: string, isCritical: boolean) => Promise<void>;
   syncGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
   disconnectGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
+  calculateMissionXP: (teamId: string) => Promise<{ totalXP: number, memberStats: any[] }>;
+  completeMission: (teamId: string, summary: string) => Promise<boolean>;
+  redeploySquad: (teamId: string, missionName: string, missionGoal: string, deadline: string) => Promise<boolean>;
 
   // Community & Chat State
   posts: Post[];
+  fetchPosts: () => Promise<void>;
   addPost: (post: Omit<Post, "id" | "likes" | "comments" | "time" | "handle" | "user" | "avatar">) => void;
   deletePost: (postId: string) => Promise<void>;
   likePost: (postId: string) => void;
@@ -313,6 +330,9 @@ interface AppContextType {
   followingIds: string[];
   globalMessages: ChatMessage[];
   sendGlobalMessage: (content: string) => void;
+  addReaction: (messageId: string, emoji: string) => Promise<void>;
+  removeReaction: (messageId: string, emoji: string) => Promise<void>;
+  sendTypingIndicator: (teamId: string) => void;
 
   // Direct Messaging
   directMessages: DirectMessage[];
@@ -339,8 +359,9 @@ interface AppContextType {
 
   // Documentation
   documents: TeamDocument[];
-  addDocument: (doc: Omit<TeamDocument, "id" | "updatedAt" | "lastEditedBy" | "team_id">, file?: File) => void;
+  addDocument: (doc: Omit<TeamDocument, "id" | "updatedAt" | "lastEditedBy" | "team_id" | "created_by">, file?: File) => void;
   updateDocument: (id: string, content: string) => void;
+  deleteDocument: (id: string) => Promise<void>;
 
   // Personal Productivity
   personalNotes: PersonalNote[];
@@ -360,7 +381,7 @@ interface AppContextType {
   // Realtime Chat
   teamMessages: ChatMessage[];
   fetchTeamMessages: (teamId: string) => void;
-  sendTeamMessage: (teamId: string, content: string) => void;
+  sendTeamMessage: (teamId: string, content: string, messageType?: "text" | "code", language?: string) => void;
 
   // GitHub Integration
   githubData: any | null;
@@ -413,6 +434,12 @@ interface AppContextType {
   getStandup: (teamId: string) => Promise<any>;
   getTaskSuggestions: (query: string) => Promise<string[]>;
   deleteTeam: (teamId: string) => Promise<boolean>;
+  globalOnlineUsers: User[];
+  hudEvent: { type: string; payload: any } | null;
+  broadcastTeamAction: (teamId: string, type: string, payload: any) => void;
+  setHudEvent: (event: { type: string; payload: any } | null) => void;
+  pinnedTasks: Record<string, string | null>;
+  pinTask: (teamId: string, taskId: string | null) => void;
 }
 
 
@@ -548,6 +575,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [followingCount, setFollowingCount] = useState(0);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
+  const [globalOnlineUsers, setGlobalOnlineUsers] = useState<User[]>([]);
+  const [hudEvent, setHudEvent] = useState<{ type: string; payload: any } | null>(null);
+  const [pinnedTasks, setPinnedTasks] = useState<Record<string, string | null>>({});
 
 
   // User Management & Reputation
@@ -624,7 +654,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Set up Realtime Subscriptions for Community Grid
     const socialChannel = supabase
       .channel('social_matrix')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => fetchPosts())
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, () => fetchPosts())
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, () => fetchPosts())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'post_likes' }, () => fetchPosts())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, () => fetchPosts())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'followers' }, () => fetchSocialStats())
@@ -644,12 +675,249 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           } : null);
         }
       })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user?.id}`
+      }, (payload) => {
+        const newNotif = payload.new as Notification;
+        setNotifications(prev => [newNotif, ...prev]);
+        toast(newNotif.title, {
+          description: newNotif.message,
+          icon: <Zap className="w-4 h-4 text-hack-blue" />,
+        });
+      })
       .subscribe();
+
+    // Global Presence Channel
+    const globalPresenceChannel = supabase
+      .channel('global_presence')
+      .on('presence', { event: 'sync' }, () => {
+        const state = globalPresenceChannel.presenceState();
+        const users: User[] = [];
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.user && !users.some(u => u.id === p.user.id)) {
+              users.push(p.user);
+            }
+          });
+        });
+        setGlobalOnlineUsers(users);
+      });
+
+    if (user) {
+      globalPresenceChannel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await globalPresenceChannel.track({
+            user: {
+              id: user.id,
+              name: user.name,
+              avatar: user.avatar,
+              role: user.role,
+              rank: user.rank,
+              level: user.level
+            },
+            online_at: new Date().toISOString()
+          });
+        }
+      });
+    }
 
     return () => {
       supabase.removeChannel(socialChannel);
+      supabase.removeChannel(globalPresenceChannel);
     };
   }, [user]);
+
+  // Team Command Broadcasts
+  useEffect(() => {
+    if (!user || teams.length === 0) return;
+
+    const channels = teams.map(team => {
+      const channel = supabase.channel(`team_commands_${team.id}`)
+        .on('broadcast', { event: 'tactical_action' }, (payload) => {
+          console.log('Tactical Broadcast Received:', payload);
+          const { type, data, senderId } = payload.payload;
+
+          if (senderId === user.id) return; // Prevent loopback
+
+          if (type === 'TASK_PINNED') {
+            setPinnedTasks(prev => ({ ...prev, [team.id]: data.taskId }));
+          } else if (type === 'ROLE_UPGRADE') {
+            setTeams(prev => prev.map(t => {
+              if (t.id !== team.id) return t;
+              return {
+                ...t,
+                currentMembers: t.currentMembers.map(m =>
+                  m.id === data.userId ? { ...m, member_role: data.role } : m
+                )
+              };
+            }));
+            setHudEvent({ type, payload: data });
+          } else if (type === 'MEMBER_REMOVED') {
+            setTeams(prev => prev.map(t => {
+              if (t.id !== team.id) return t;
+              return {
+                ...t,
+                currentMembers: t.currentMembers.filter(m => m.id !== data.userId)
+              };
+            }));
+            setHudEvent({ type, payload: data });
+          } else if (type === 'PROTOCOL_UPDATE') {
+            setTeams(prev => prev.map(t =>
+              t.id === team.id ? { ...t, settings: { ...t.settings, ...data.settings } } : t
+            ));
+            setHudEvent({ type, payload: data });
+          } else {
+            setHudEvent({ type, payload: data });
+          }
+        })
+        .subscribe();
+      return channel;
+    });
+
+    return () => {
+      channels.forEach(ch => supabase.removeChannel(ch));
+    };
+  }, [user, teams.length]);
+
+  const broadcastTeamAction = (teamId: string, type: string, data: any) => {
+    const channel = supabase.channel(`team_commands_${teamId}`);
+    channel.send({
+      type: 'broadcast',
+      event: 'tactical_action',
+      payload: { type, data, senderId: user?.id }
+    });
+  };
+
+  const pinTask = (teamId: string, taskId: string | null) => {
+    setPinnedTasks(prev => ({ ...prev, [teamId]: taskId }));
+    broadcastTeamAction(teamId, 'TASK_PINNED', { taskId });
+  };
+
+  const calculateMissionXP = async (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return { totalXP: 0, memberStats: [] };
+
+    const { data: teamTasks } = await supabase.from('tasks').select('*').eq('team_id', teamId);
+    if (!teamTasks) return { totalXP: 0, memberStats: [] };
+
+    // 1. Calculate Time Weight
+    const now = new Date();
+    const deadline = team.deadline ? new Date(team.deadline) : null;
+    let timeBonus = 1.0;
+
+    if (deadline && now < deadline) {
+      const remaining = deadline.getTime() - now.getTime();
+      const duration = deadline.getTime() - new Date(team.createdAt || Date.now()).getTime();
+      timeBonus += Math.min(0.5, (remaining / duration)); // Max 50% bonus
+    } else if (deadline && now > deadline) {
+      timeBonus = 0.8; // 20% penalty for being late
+    }
+
+    // 2. Base XP for the mission
+    const baseXP = 500;
+
+    // 3. Calculate Member Shares
+    const memberStats = team.currentMembers.map(member => {
+      const done = teamTasks.filter(t => t.assignee_id === member.id && t.status === 'done').length;
+      const total = teamTasks.filter(t => t.assignee_id === member.id).length;
+
+      const performanceRatio = total > 0 ? (done / total) : 0.5;
+      const individualXP = Math.round(baseXP * timeBonus * (performanceRatio + 0.5));
+
+      return {
+        id: member.id,
+        name: member.name,
+        tasksDone: done,
+        performance: Math.round(performanceRatio * 100),
+        xpEarned: individualXP
+      };
+    });
+
+    return { totalXP: baseXP, memberStats };
+  };
+
+  const completeMission = async (teamId: string, summary: string) => {
+    const { totalXP, memberStats } = await calculateMissionXP(teamId);
+
+    // 1. Archive Mission (RPC call from migration)
+    const { error: archiveError } = await supabase.rpc('finalize_team_mission', {
+      t_id: teamId,
+      m_name: teams.find(t => t.id === teamId)?.current_mission_name || 'Operation Alpha',
+      m_goal: teams.find(t => t.id === teamId)?.mission_goal || 'Mission Goal',
+      m_stats: { memberStats, totalXP },
+      l_summary: summary
+    });
+
+    if (archiveError) {
+      toast.error("Failed to archive mission protocols.");
+      return false;
+    }
+
+    // 2. Distribute XP to all members
+    for (const member of memberStats) {
+      const { data: profile } = await supabase.from('profiles').select('total_xp').eq('id', member.id).single();
+      if (profile) {
+        await supabase.from('profiles').update({
+          total_xp: (profile.total_xp || 0) + member.xpEarned
+        }).eq('id', member.id);
+      }
+
+      // Add notification for member
+      await supabase.from('notifications').insert({
+        user_id: member.id,
+        title: "MISSION DEBRIEF COMPLETE",
+        message: `You earned ${member.xpEarned} XP for ${teams.find(t => t.id === teamId)?.name}. Performance: ${member.performance}%`,
+        type: 'success'
+      });
+    }
+
+    toast.success("MISSION COMPLETE: Data archived and XP distributed.", {
+      icon: <Trophy className="w-5 h-5 text-hack-blue" />
+    });
+
+    broadcastTeamAction(teamId, 'MISSION_COMPLETED', { totalXP, memberStats });
+    return true;
+  };
+
+  const redeploySquad = async (teamId: string, missionName: string, missionGoal: string, deadline: string) => {
+    // 1. Archive old tasks by moving them to a 'completed_mission' status or just deleting/archiving
+    // For simplicity with the current view, we delete old tasks after archiving them in the mission stats
+    await supabase.from('tasks').delete().eq('team_id', teamId);
+
+    // 2. Update team for new mission
+    const { error } = await supabase.from('teams').update({
+      status: 'Building',
+      current_mission_name: missionName,
+      mission_goal: missionGoal,
+      deadline,
+      completed_at: null
+    }).eq('id', teamId);
+
+    if (error) {
+      toast.error("Redeploy failed: Signal interference.");
+      return false;
+    }
+
+    // 3. Notify all team members
+    const team = teams.find(t => t.id === teamId);
+    if (team) {
+      for (const member of team.currentMembers) {
+        await supabase.from('notifications').insert({
+          user_id: member.id,
+          title: "NEW MISSION DEPLOYED",
+          message: `Target acquired: ${missionName}. Objective: ${missionGoal}`,
+          type: 'info'
+        });
+      }
+    }
+
+    toast.success("SQUAD REDEPLOYED: New mission operational.");
+    broadcastTeamAction(teamId, 'SQUAD_REDEPLOYED', { missionName, deadline });
+    return true;
+  };
 
   const fetchSocialStats = async () => {
     if (!user) return;
@@ -1168,7 +1436,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 
   const fetchDocuments = async (teamId: string) => {
-    const { data } = await supabase.from('documents').select('*, profiles(full_name)').eq('team_id', teamId);
+    const { data } = await supabase.from('documents').select('*').eq('team_id', teamId);
     if (data) {
       setDocuments(data.map((d: any) => ({
         id: d.id,
@@ -1177,8 +1445,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         content: d.content,
         type: d.type,
         url: d.url,
+        created_by: d.last_edited_by || '',
         updatedAt: new Date(d.updated_at).toLocaleDateString(),
-        lastEditedBy: d.profiles?.full_name || 'Unknown'
+        lastEditedBy: d.last_edited_by || 'Unknown'
       })));
     }
   };
@@ -1303,7 +1572,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             member_role: m.member_role || m.role,
             avatar: m.profiles.avatar_url,
             online: true,
-            tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length
+            tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length,
+            // Gamification Fields
+            xp: m.xp || 0,
+            tasks_completed: m.tasks_completed || 0,
+            badges: m.badges || []
           })),
           tasksCount: t.tasks.length,
           progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
@@ -1385,30 +1658,93 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Team Chat Logic
   const fetchTeamMessages = async (teamId: string) => {
     const { data } = await supabase.from('messages')
-      .select('*, profiles(*)')
+      .select('*, profiles(*), message_reactions(*)')
       .eq('team_id', teamId)
       .order('created_at', { ascending: true });
 
     if (data) {
-      setTeamMessages(data.map((m: any) => ({
-        id: m.id,
-        user: m.profiles?.full_name || "Anon",
-        content: m.content,
-        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        type: "text",
-        avatar: m.profiles?.avatar_url
-      })));
+      setTeamMessages(data.map((m: any) => {
+        // Build reaction summary
+        const reactionMap: Record<string, { count: number; reacted: boolean }> = {};
+        (m.message_reactions || []).forEach((r: any) => {
+          if (!reactionMap[r.emoji]) reactionMap[r.emoji] = { count: 0, reacted: false };
+          reactionMap[r.emoji].count++;
+          if (r.user_id === user?.id) reactionMap[r.emoji].reacted = true;
+        });
+        const reactions = Object.entries(reactionMap).map(([emoji, v]) => ({ emoji, ...v }));
+        return {
+          id: m.id,
+          user: m.profiles?.full_name || "Anon",
+          author_id: m.author_id,
+          content: m.content,
+          time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: "text" as const,
+          avatar: m.profiles?.avatar_url,
+          message_type: (m.message_type || "text") as "text" | "code",
+          language: m.language,
+          reactions,
+        };
+      }));
     }
   };
 
-  const sendTeamMessage = async (teamId: string, content: string) => {
+  const sendTeamMessage = async (teamId: string, content: string, messageType: "text" | "code" = "text", language?: string) => {
     if (!user) return;
     await supabase.from('messages').insert({
       content,
       author_id: user.id,
-      team_id: teamId
+      team_id: teamId,
+      message_type: messageType,
+      ...(language ? { language } : {}),
     });
     recordActivity("team_chat", `Sent message in team chat: ${content.substring(0, 50)}...`, 1, "team", teamId);
+  };
+
+  // Reactions
+  const addReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    await supabase.from('message_reactions').upsert(
+      { message_id: messageId, user_id: user.id, emoji },
+      { onConflict: 'message_id,user_id,emoji' }
+    );
+    // Optimistic local update
+    setTeamMessages(prev => prev.map(m => {
+      if (m.id !== messageId) return m;
+      const existing = m.reactions?.find(r => r.emoji === emoji);
+      if (existing) {
+        return { ...m, reactions: m.reactions?.map(r => r.emoji === emoji ? { ...r, count: r.count + 1, reacted: true } : r) };
+      }
+      return { ...m, reactions: [...(m.reactions || []), { emoji, count: 1, reacted: true }] };
+    }));
+  };
+
+  const removeReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    await supabase.from('message_reactions')
+      .delete()
+      .eq('message_id', messageId)
+      .eq('user_id', user.id)
+      .eq('emoji', emoji);
+    // Optimistic local update
+    setTeamMessages(prev => prev.map(m => {
+      if (m.id !== messageId) return m;
+      return {
+        ...m,
+        reactions: m.reactions
+          ?.map(r => r.emoji === emoji ? { ...r, count: Math.max(0, r.count - 1), reacted: false } : r)
+          .filter(r => r.count > 0),
+      };
+    }));
+  };
+
+  // Typing indicator (broadcast, no DB)
+  const sendTypingIndicator = (teamId: string) => {
+    if (!user) return;
+    supabase.channel(`typing:${teamId}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: user.id, name: user.name || 'Someone', avatar: user.avatar },
+    });
   };
 
   useEffect(() => {
@@ -1496,6 +1832,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
             setTeams(prev => prev.map(team => {
               if (team.id === activeTeamId) {
+                const existingTask = team.tasks.find(t => t.id === formatted.id);
+
+                // Show toast if status changed or it's a critical update
+                if (existingTask) {
+                  if (existingTask.status !== formatted.status) {
+                    toast.info(`Task Protocol Updated: [${formatted.title}] ➡️ ${formatted.status.toUpperCase()}`, {
+                      description: `Synchronized by teammate action`,
+                      icon: <Zap className="w-4 h-4 text-blue-400" />
+                    });
+                  } else if (!existingTask.is_critical && formatted.is_critical) {
+                    toast.error(`CRITICAL ALERT: [${formatted.title}]`, {
+                      description: `Marked as high-priority objective`,
+                      icon: <AlertTriangle className="w-4 h-4 text-rose-500" />
+                    });
+                  }
+                }
+
                 return {
                   ...team,
                   tasks: team.tasks.map(t => t.id === formatted.id ? formatted : t)
@@ -1734,6 +2087,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       toast.success("Protocols Updated");
       recordActivity("team_settings_update", "Updated team protocols", 5, "team", teamId);
+      broadcastTeamAction(teamId, 'PROTOCOL_UPDATE', { settings });
     }
   };
 
@@ -1767,6 +2121,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sendNotification(userId, "Neural Link Terminated", `You have been removed from squadron: ${team?.name || 'Unknown'}`, "warning");
 
       recordActivity("team_member_removal", `Removed operative ${member?.name || userId} from team`, -10, "team", teamId);
+      broadcastTeamAction(teamId, 'MEMBER_REMOVED', { userId, memberName: member?.name });
     }
   };
 
@@ -1833,7 +2188,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fetchTeams();
     } else {
       toast.success(`Role Updated: ${role}`);
+      const team = teams.find(t => t.id === teamId);
       recordActivity("team_role_assignment", `Assigned role "${role}" to operative ${userId}`, 5, "team", teamId);
+      broadcastTeamAction(teamId, 'ROLE_UPGRADE', { userId, role, memberName: team?.currentMembers.find((m: any) => m.id === userId)?.name });
     }
   };
 
@@ -1853,13 +2210,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateTaskStatus = async (taskId: string, status: Task["status"]) => {
-    // Find task to check assignee and current status
+  const updateTaskStatus = async (taskId: string, status: Task["status"], force?: boolean) => {
+    // ─── Permission Guard ──────────────────────────────────────────────────
     let taskToUpdate: Task | undefined;
+    let owningTeam: any;
     teams.forEach(t => {
       const found = t.tasks.find(tk => tk.id === taskId);
-      if (found) taskToUpdate = found;
+      if (found) { taskToUpdate = found; owningTeam = t; }
     });
+
+    if (!force && taskToUpdate && user) {
+      const isLeader = owningTeam?.currentMembers?.some((m: any) => m.id === user.id && m.role === 'Leader');
+      const isAssignee = taskToUpdate.assignee_id === user.id;
+      if (!isLeader && !isAssignee) {
+        toast.error("Access Denied: Only the assigned operative or leader can move this task.", {
+          style: { background: '#1c1c1e', border: '1px solid #ef4444', color: '#fca5a5' }
+        });
+        return;
+      }
+    }
 
     // Optimistic Update
     setTeams(prev => prev.map(team => {
@@ -1875,38 +2244,132 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.from('tasks').update({ status }).eq('id', taskId);
 
     if (!error && status === 'done' && taskToUpdate && taskToUpdate.status !== 'done') {
-      // Award reputation if the current user is the assignee
       if (user && taskToUpdate.assignee_id === user.id) {
-        let xpReward = 25; // Base points
+        let xpReward = 25;
         if (taskToUpdate.priority === 'urgent') xpReward = 100;
         else if (taskToUpdate.priority === 'high') xpReward = 50;
         else if (taskToUpdate.priority === 'low') xpReward = 10;
 
-        // Deadline Check
         const isOverdue = taskToUpdate.deadline && new Date().getTime() > new Date(taskToUpdate.deadline).getTime();
         if (isOverdue) {
-          xpReward = Math.floor(xpReward * 0.5); // 50% penalty for late completion
+          xpReward = Math.floor(xpReward * 0.5);
           toast.warning(`OPERATIONAL DELAY: Mission deadline exceeded. XP reward halved.`, {
             style: { background: '#7f1d1d', color: '#fca5a5', border: '1px solid #991b1b' }
           });
         }
 
+        // Gamification Engine: Fetch current stats, update, and evaluate badges
+        const currentUserStats = owningTeam?.currentMembers?.find((m: any) => m.id === user.id);
+        if (currentUserStats) {
+          const newTasksCompleted = (currentUserStats.tasks_completed || 0) + 1;
+          const newXp = (currentUserStats.xp || 0) + xpReward;
+
+          // Evaluate Badges
+          const currentBadges = Array.isArray(currentUserStats.badges) ? [...currentUserStats.badges] : [];
+          let earnedNewBadge = false;
+          let badgeName = "";
+
+          if (newTasksCompleted === 1 && !currentBadges.includes("First Blood")) {
+            currentBadges.push("First Blood");
+            earnedNewBadge = true;
+            badgeName = "First Blood";
+          } else if (newTasksCompleted === 5 && !currentBadges.includes("The Cleaner")) {
+            currentBadges.push("The Cleaner");
+            earnedNewBadge = true;
+            badgeName = "The Cleaner";
+          } else if (newTasksCompleted === 10 && !currentBadges.includes("Apex Operator")) {
+            currentBadges.push("Apex Operator");
+            earnedNewBadge = true;
+            badgeName = "Apex Operator";
+          }
+
+          // Async write to Supabase
+          await supabase.from('memberships').update({
+            xp: newXp,
+            tasks_completed: newTasksCompleted,
+            badges: currentBadges
+          }).eq('team_id', owningTeam.id).eq('user_id', user.id);
+
+          if (earnedNewBadge) {
+            toast.success(`🏆 ACHIEVEMENT UNLOCKED: ${badgeName}`, {
+              style: { background: '#020617', border: '1px solid #fbbf24', color: '#fbbf24' }
+            });
+          }
+        }
+
         await recordActivity(
           "task_reward",
-          `Completed ${taskToUpdate.priority} priority protocol: ${taskToUpdate.title}${isOverdue ? ' (DELAYED)' : ''}`,
-          xpReward,
-          "task",
-          taskId
+          `Completed ${taskToUpdate.priority} priority protocol: ${taskToUpdate.title}${isOverdue ? ' (DELAYED)' : ''} [XP +${xpReward}]`,
+          xpReward, "task", taskId
         );
       }
     } else if (!error && status !== 'done' && taskToUpdate && taskToUpdate.status === 'done') {
-      // If task was done and now changed to not done, deduct points
       if (user && taskToUpdate.assignee_id === user.id) {
-        let penalty = -15; // Standard penalty for task reopening
-        await recordActivity("task_reopened", `Reopened Protocol: ${taskToUpdate.title}`, penalty, "task", taskId);
+        await recordActivity("task_reopened", `Reopened Protocol: ${taskToUpdate.title}`, -15, "task", taskId);
       }
     }
   };
+
+  // ─── Update any task field ──────────────────────────────────────────────────
+  const updateTask = async (taskId: string, updates: Partial<Task>): Promise<boolean> => {
+    // Map frontend Task fields to DB column names
+    const dbUpdates: Record<string, any> = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.priority !== undefined) dbUpdates.priority = updates.priority;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.deadline !== undefined) dbUpdates.deadline = updates.deadline;
+    if (updates.assignee_id !== undefined) dbUpdates.assignee_id = updates.assignee_id || null;
+    if ((updates as any).subtasks !== undefined) dbUpdates.subtasks = (updates as any).subtasks;
+    if ((updates as any).estimated_hours !== undefined) dbUpdates.estimated_hours = (updates as any).estimated_hours;
+
+    const { error } = await supabase.from('tasks').update(dbUpdates).eq('id', taskId);
+    if (error) { toast.error('Failed to update task.'); return false; }
+
+    // Optimistic local update
+    setTeams(prev => prev.map(team => ({
+      ...team,
+      tasks: team.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t)
+    })));
+    return true;
+  };
+
+  // ─── Send task for review ───────────────────────────────────────────────────
+  const sendTaskForReview = async (taskId: string, reviewerId: string): Promise<boolean> => {
+    const { error } = await supabase.from('tasks').update({
+      status: 'review',
+      review_assignee_id: reviewerId
+    }).eq('id', taskId);
+
+    if (error) { toast.error('Failed to send task for review.'); return false; }
+
+    // Notify reviewer
+    const taskTitle = teams.flatMap(t => t.tasks).find(t => t.id === taskId)?.title || 'Task';
+    await supabase.from('notifications').insert({
+      user_id: reviewerId,
+      title: 'REVIEW REQUESTED',
+      message: `You have been asked to review: "${taskTitle}"`,
+      type: 'info'
+    });
+
+    // Optimistic update
+    setTeams(prev => prev.map(team => ({
+      ...team,
+      tasks: team.tasks.map(t => t.id === taskId ? { ...t, status: 'review', review_assignee_id: reviewerId } : t)
+    })));
+    toast.success('Task sent for review. Reviewer notified!');
+    return true;
+  };
+
+  // ─── Toggle individual sub-task ─────────────────────────────────────────────
+  const updateSubtask = async (taskId: string, subtaskId: string, done: boolean): Promise<void> => {
+    const task = teams.flatMap(t => t.tasks).find(t => t.id === taskId);
+    if (!task) return;
+    const currentSubtasks: any[] = (task as any).subtasks || [];
+    const updated = currentSubtasks.map((s: any) => s.id === subtaskId ? { ...s, done } : s);
+    await updateTask(taskId, { subtasks: updated } as any);
+  };
+
 
   const addTask = async (teamId: string, task: Omit<Task, "id" | "createdAt">) => {
     if (!user) {
@@ -2591,7 +3054,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return data.publicUrl;
   };
 
-  const addDocument = async (doc: Omit<TeamDocument, "id" | "updatedAt" | "lastEditedBy" | "team_id">, file?: File) => {
+  const addDocument = async (doc: Omit<TeamDocument, "id" | "updatedAt" | "lastEditedBy" | "team_id" | "created_by">, file?: File) => {
     if (!activeTeamId || !user) return;
 
     let fileUrl = doc.url;
@@ -2629,6 +3092,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updated_at: new Date().toISOString()
     }).eq('id', id);
     if (activeTeamId) fetchDocuments(activeTeamId);
+  };
+
+  const deleteDocument = async (id: string) => {
+    const doc = documents.find(d => d.id === id);
+    if (!doc) return;
+
+    // Remove file from storage if it was an uploaded asset
+    if (doc.url && activeTeamId) {
+      try {
+        // Extract file path from URL
+        const urlParts = doc.url.split(`${activeTeamId}/`);
+        if (urlParts.length > 1) {
+          const filePath = `${activeTeamId}/${urlParts[1].split('?')[0]}`;
+          await supabase.storage.from('documents').remove([filePath]);
+        }
+      } catch (e) {
+        // Non-fatal: storage file may not exist
+        console.warn('Storage file removal failed:', e);
+      }
+    }
+
+    const { error } = await supabase.from('documents').delete().eq('id', id);
+    if (error) {
+      toast.error('Failed to delete document.');
+    } else {
+      toast.success('Document deleted.');
+      if (activeTeamId) fetchDocuments(activeTeamId);
+    }
   };
 
   const fetchBounties = async () => {
@@ -2819,9 +3310,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     theme, toggleTheme, user, updateProfile, login, logout,
-    teams, addTeam, updateTeam, activeTeamId, setActiveTeamId, updateTaskStatus, addTask, deleteTask, joinTeam, updateTeamSettings, updateTeamDeadline, removeMember,
+    teams, addTeam, updateTeam, activeTeamId, setActiveTeamId, updateTaskStatus, addTask, updateTask, deleteTask, sendTaskForReview, updateSubtask, joinTeam, updateTeamSettings, updateTeamDeadline, removeMember,
     setMissionObjective, assignMemberRole, toggleCritical, syncGitHubRepo, disconnectGitHubRepo,
     posts,
+    fetchPosts,
     addPost,
     deletePost,
     likePost,
@@ -2843,8 +3335,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     addNotification,
     userHistory,
     userPerformance,
-    documents, addDocument, updateDocument,
-    teamMessages, fetchTeamMessages, sendTeamMessage,
+    documents, addDocument, updateDocument, deleteDocument,
+    teamMessages, fetchTeamMessages, sendTeamMessage, addReaction, removeReaction, sendTypingIndicator,
     personalNotes, personalReminders, milestones, professionalHistory,
     addPersonalNote, updatePersonalNote, deletePersonalNote,
     addPersonalReminder, toggleReminder, deleteReminder,
@@ -2866,8 +3358,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     bounties, fetchBounties, createBounty, claimBounty, completeBounty,
     userBadges, fetchUserBadges, awardBadge,
-    getStandup, getTaskSuggestions, deleteTeam
-
+    getStandup,
+    getTaskSuggestions,
+    deleteTeam,
+    globalOnlineUsers,
+    hudEvent,
+    broadcastTeamAction,
+    setHudEvent,
+    pinnedTasks,
+    pinTask,
+    calculateMissionXP,
+    completeMission,
+    redeploySquad
   };
 
   return (

@@ -1,5 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
+
 import { AppProvider, useAppContext } from "./context/AppContext";
 import { LandingView } from "./views/LandingView";
 import { AuthView } from "./views/AuthView";
@@ -12,6 +14,9 @@ import { ProductivityView } from "./views/ProductivityView";
 import AchievementsView from "./views/AchievementsView";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { Toaster } from "sonner";
+import { CommandPalette } from "./components/CommandPalette";
+import { HUDLayer } from "./components/HUDLayer";
+import { cn } from "./components/ui/utils";
 
 /**
  * ProtectedLayout wrapper to enforce authentication.
@@ -36,70 +41,94 @@ function ProtectedLayout() {
 }
 
 /**
+ * Component to wrap pages with transitions
+ */
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.2, ease: "easeOut" }}
+    className="h-full w-full"
+  >
+    {children}
+  </motion.div>
+);
+
+/**
  * Main App Component with Routing
  */
 function AppContent() {
   const { theme } = useAppContext();
+  const location = useLocation();
+
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-blue-500/30 selection:text-foreground transition-colors duration-300 overflow-hidden font-sans">
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingView />} />
-        <Route path="/login" element={<AuthView />} />
-        <Route path="/signup" element={<AuthView />} />
+    <div className={cn(
+      "min-h-screen bg-background text-foreground selection:bg-blue-500/30 selection:text-foreground transition-colors duration-300 font-sans",
+      theme
+    )}>
+      <CommandPalette />
+      <HUDLayer />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* Public Routes */}
+          <Route path="/" element={<PageWrapper><LandingView /></PageWrapper>} />
+          <Route path="/login" element={<PageWrapper><AuthView /></PageWrapper>} />
+          <Route path="/signup" element={<PageWrapper><AuthView /></PageWrapper>} />
 
-        {/* Protected Routes */}
-        <Route element={<ProtectedLayout />}>
-          <Route path="/workspace" element={
-            <DashboardLayout>
-              <DashboardView />
-            </DashboardLayout>
-          } />
-          {/* Legacy redirect */}
-          <Route path="/dashboard" element={<Navigate to="/workspace" replace />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedLayout />}>
+            <Route path="/workspace" element={
+              <DashboardLayout>
+                <PageWrapper><DashboardView /></PageWrapper>
+              </DashboardLayout>
+            } />
+            {/* Legacy redirect */}
+            <Route path="/dashboard" element={<Navigate to="/workspace" replace />} />
 
-          <Route path="/team/:teamId" element={<WorkspaceView />} />
+            <Route path="/team/:teamId" element={<PageWrapper><WorkspaceView /></PageWrapper>} />
 
-          <Route path="/community" element={
-            <DashboardLayout>
-              <CommunityView />
-            </DashboardLayout>
-          } />
+            <Route path="/community" element={
+              <DashboardLayout>
+                <PageWrapper><CommunityView /></PageWrapper>
+              </DashboardLayout>
+            } />
 
-          <Route path="/profile" element={
-            <DashboardLayout>
-              <ProfileView />
-            </DashboardLayout>
-          } />
+            <Route path="/profile" element={
+              <DashboardLayout>
+                <PageWrapper><ProfileView /></PageWrapper>
+              </DashboardLayout>
+            } />
 
-          <Route path="/u/:userId" element={
-            <DashboardLayout>
-              <ProfileView />
-            </DashboardLayout>
-          } />
+            <Route path="/u/:userId" element={
+              <DashboardLayout>
+                <PageWrapper><ProfileView /></PageWrapper>
+              </DashboardLayout>
+            } />
 
-          <Route path="/settings" element={
-            <DashboardLayout>
-              <SettingsView />
-            </DashboardLayout>
-          } />
+            <Route path="/settings" element={
+              <DashboardLayout>
+                <PageWrapper><SettingsView /></PageWrapper>
+              </DashboardLayout>
+            } />
 
-          <Route path="/productivity" element={
-            <DashboardLayout>
-              <ProductivityView />
-            </DashboardLayout>
-          } />
+            <Route path="/productivity" element={
+              <DashboardLayout>
+                <PageWrapper><ProductivityView /></PageWrapper>
+              </DashboardLayout>
+            } />
 
-          <Route path="/achievements" element={
-            <DashboardLayout>
-              <AchievementsView />
-            </DashboardLayout>
-          } />
-        </Route>
+            <Route path="/achievements" element={
+              <DashboardLayout>
+                <PageWrapper><AchievementsView /></PageWrapper>
+              </DashboardLayout>
+            } />
+          </Route>
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AnimatePresence>
 
       <Toaster
         position="bottom-right"

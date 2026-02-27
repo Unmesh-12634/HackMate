@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppContext, Notification } from "../../context/AppContext";
+import { RoleSelector } from "../RoleSelector";
+import { MobileNav } from "./MobileNav";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
 import { Badge } from "../ui/card";
 import {
@@ -28,13 +30,27 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button, cn } from "../ui/button";
+import { toast } from "sonner";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme, user, logout, setActiveTeamId, notifications, markAsRead, markAllNotificationsAsRead } = useAppContext();
+  const {
+    theme,
+    toggleTheme,
+    user,
+    logout,
+    setActiveTeamId,
+    notifications,
+    markAsRead,
+    markAllNotificationsAsRead,
+    globalOnlineUsers,
+    updateProfile
+  } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showPresence, setShowPresence] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -52,7 +68,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "bg-card border-r border-border h-full z-50 flex flex-col shrink-0 transition-all duration-300",
+          "bg-card border-r border-border h-full z-50 hidden md:flex flex-col shrink-0 transition-all duration-300",
           isSidebarOpen ? "w-[280px]" : "w-[80px] items-center"
         )}
       >
@@ -129,12 +145,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-background relative">
         {/* Global Header */}
-        <header className="h-20 border-b border-border bg-card/40 backdrop-blur-xl flex items-center justify-between px-8 z-30 shrink-0">
-          <div className="flex items-center gap-6 flex-1 max-w-2xl">
-            <button className="lg:hidden p-2" onClick={() => setIsSidebarOpen(true)}>
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="relative w-full group">
+        <header className="h-20 border-b border-border bg-card/40 backdrop-blur-xl flex items-center justify-between px-4 md:px-8 z-30 shrink-0">
+          <div className="flex items-center gap-4 md:gap-6 flex-1 max-w-2xl">
+            {/* Mobile Actions Overlay Trigger */}
+            <div className="flex items-center gap-3 md:hidden">
+              <button
+                onClick={() => setIsMobileDrawerOpen(true)}
+                className="w-10 h-10 flex items-center justify-center bg-secondary/50 rounded-xl border border-border/50 text-foreground"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2" onClick={() => navigate("/workspace")}>
+                <div className="w-8 h-8 bg-hack-blue rounded-lg flex items-center justify-center shrink-0">
+                  <Zap className="text-white w-4 h-4 fill-white" />
+                </div>
+                <span className="text-sm font-black tracking-tighter uppercase">HM</span>
+              </div>
+            </div>
+
+            <div className="relative w-full group hidden sm:block">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-hack-blue transition-colors" />
               <input
                 type="text"
@@ -156,12 +185,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Neural Link Stable</span>
             </div>
 
-            {/* Notification Trigger */}
+            {/* Tactical Specialization (Primary Role) Selector */}
+            <RoleSelector
+              value={user?.role || ""}
+              onChange={(role) => {
+                updateProfile({ role });
+                toast.success(`Specialization updated: ${role}`);
+              }}
+              variant="minimal"
+            />
+
+            {/* Notification Trigger & Panel */}
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
@@ -178,7 +217,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 )}
               </button>
 
-              {/* Notification Panel */}
               <AnimatePresence>
                 {showNotifications && (
                   <>
@@ -208,7 +246,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                       <div className="max-h-[450px] overflow-y-auto custom-scrollbar p-2">
                         {notifications.length > 0 ? (
-                          notifications.map((n) => (
+                          notifications.map((n: Notification) => (
                             <div
                               key={n.id}
                               onClick={() => markAsRead(n.id)}
@@ -273,11 +311,186 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
         {/* Content Container */}
         <div className={cn(
-          "flex-1 overflow-hidden h-full p-8 custom-scrollbar overflow-y-auto"
+          "flex-1 overflow-hidden h-full p-4 md:p-8 custom-scrollbar overflow-y-auto pb-24 md:pb-8"
         )}>
           {children}
         </div>
       </main>
+
+      <MobileNav />
+
+      {/* Global Presence Sidebar (Right) */}
+      <AnimatePresence>
+        {showPresence && (
+          <motion.aside
+            initial={{ x: 350 }}
+            animate={{ x: 0 }}
+            exit={{ x: 350 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed right-0 top-0 bottom-0 w-[350px] bg-card border-l border-border z-[100] shadow-2xl flex flex-col"
+          >
+            <div className="p-8 border-b border-border flex items-center justify-between bg-secondary/10">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)] animate-pulse" />
+                  <span className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em]">Neural Network Active</span>
+                </div>
+                <h3 className="text-xl font-black text-foreground uppercase tracking-tighter">Who's Online</h3>
+              </div>
+              <button onClick={() => setShowPresence(false)} className="p-3 rounded-2xl hover:bg-secondary transition-all">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              {globalOnlineUsers?.length > 0 ? (
+                globalOnlineUsers.map((onlineUser: any) => (
+                  <div
+                    key={onlineUser.id}
+                    className="flex items-center gap-4 p-4 rounded-2xl hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
+                  >
+                    <div className="relative">
+                      <Avatar className="h-12 w-12 rounded-xl border border-border shadow-md transition-transform group-hover:scale-105">
+                        <AvatarImage src={onlineUser.avatar} />
+                        <AvatarFallback className="bg-hack-blue/10 text-hack-blue text-[10px] font-black">
+                          {onlineUser.name?.[0]?.toUpperCase() || 'OP'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-card rounded-full shadow-[0_0_10px_rgba(34,197,94,0.4)]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-xs font-black uppercase text-foreground leading-none truncate">{onlineUser.name}</span>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase bg-secondary/50 px-1.5 py-0.5 rounded-md">
+                          Lvl {onlineUser.level || 1}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider truncate opacity-60">
+                        {onlineUser.role || onlineUser.rank || "Operative"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/profile/${onlineUser.id}`)}
+                      className="p-2.5 rounded-xl bg-hack-blue/5 text-hack-blue opacity-0 group-hover:opacity-100 transition-all hover:bg-hack-blue hover:text-white"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-20 flex flex-col items-center justify-center opacity-20 text-center px-8">
+                  <div className="w-16 h-16 rounded-full border border-dashed border-border/50 flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest">Scanning for signals... No other pulses detected.</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-border bg-secondary/5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Global Status</span>
+                <Badge className="bg-green-500/10 text-green-500 border-none text-[8px] px-2 uppercase font-black tracking-widest">
+                  {globalOnlineUsers?.length || 0} Operatives Active
+                </Badge>
+              </div>
+              <p className="text-[9px] text-muted-foreground leading-relaxed font-bold uppercase tracking-tight italic opacity-40">
+                Data stream encrypted via Tactical Neural Link v2.0. Presence tracking respects all stealth protocols.
+              </p>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+      {/* Mobile Drawer (Slide-out Side Nav) */}
+      <AnimatePresence>
+        {isMobileDrawerOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileDrawerOpen(false)}
+              className="fixed inset-0 bg-background/80 backdrop-blur-md z-[100] md:hidden"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-[85%] max-w-[320px] bg-card border-r border-border z-[101] md:hidden flex flex-col"
+            >
+              <div className="p-8 border-b border-border flex items-center justify-between bg-secondary/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-hack-blue rounded-xl flex items-center justify-center shadow-lg shadow-hack-blue/30">
+                    <Zap className="text-white w-6 h-6 fill-white" />
+                  </div>
+                  <span className="text-xl font-black tracking-tight uppercase">HackMate</span>
+                </div>
+                <button
+                  onClick={() => setIsMobileDrawerOpen(false)}
+                  className="p-3 rounded-2xl hover:bg-secondary transition-all"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-2">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-4 ml-2">Navigation</p>
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.path || (item.path !== "/workspace" && location.pathname.startsWith(item.path));
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        navigate(item.path);
+                        setIsMobileDrawerOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center w-full gap-4 p-4 rounded-2xl transition-all group relative overflow-hidden",
+                        isActive
+                          ? "bg-hack-blue text-white shadow-lg shadow-hack-blue/20"
+                          : "text-muted-foreground hover:bg-secondary"
+                      )}
+                    >
+                      <item.icon className="w-5 h-5 shrink-0" />
+                      <span className="text-xs uppercase font-black tracking-widest">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="p-6 border-t border-border bg-secondary/5 space-y-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={toggleTheme}
+                    className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl bg-secondary/50 text-muted-foreground hover:bg-secondary transition-all"
+                  >
+                    {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                    <span className="text-[10px] font-black uppercase tracking-widest">Theme</span>
+                  </button>
+                  <button
+                    onClick={logout}
+                    className="w-16 flex items-center justify-center p-4 rounded-2xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4 p-2">
+                  <Avatar className="h-10 w-10 rounded-xl border-2 border-background shadow-lg ring-2 ring-hack-blue/10">
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback className="bg-hack-blue text-white font-black text-[10px]">A</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-black uppercase tracking-tight truncate">{user?.name || "Operative"}</p>
+                    <p className="text-[8px] text-hack-blue font-black uppercase tracking-[0.2em] opacity-60">Control Access Level: {user?.level || 1}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

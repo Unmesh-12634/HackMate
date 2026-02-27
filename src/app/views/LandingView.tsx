@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { Button, cn } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -29,24 +29,95 @@ import {
   ChevronRight
 } from "lucide-react";
 
+// ─── Hide Unicorn Studio watermark globally ───────────────────────────────────
+const HIDE_BADGE_CSS = `
+  [data-us-badge],
+  a[href*="unicorn.studio"],
+  div[style*="unicorn"] a {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+  }
+`;
+
+// ─── Unicorn Studio WebGL Scene ───────────────────────────────────────────────
+const UNICORN_SDK_URL = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.0.5/dist/unicornStudio.umd.js";
+
+function UnicornHero() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<any>(null);
+
+  useEffect(() => {
+    let loaded = false;
+
+    const initScene = async () => {
+      if (loaded || !containerRef.current) return;
+      const win = window as any;
+
+      const run = async () => {
+        try {
+          sceneRef.current = await win.UnicornStudio.addScene({
+            elementId: "unicorn-hero-bg",
+            projectId: "tOpwBilsEt2cAhMzxI6h",
+            scale: 1,
+            dpi: 1.5,
+            fps: 60,
+            lazyLoad: false,
+            production: false,
+          });
+          loaded = true;
+        } catch (e) {
+          console.warn("[UnicornStudio] Scene init failed:", e);
+        }
+      };
+
+      if (win.UnicornStudio?.addScene) {
+        await run();
+      } else {
+        const existing = document.querySelector(`script[src="${UNICORN_SDK_URL}"]`);
+        if (!existing) {
+          const script = document.createElement("script");
+          script.src = UNICORN_SDK_URL;
+          script.async = true;
+          script.onload = run;
+          document.head.appendChild(script);
+        } else {
+          existing.addEventListener("load", run);
+        }
+      }
+    };
+
+    initScene();
+
+    return () => {
+      sceneRef.current?.destroy?.();
+    };
+  }, []);
+
+  return (
+    <>
+      {/* Suppress the SDK-injected watermark badge */}
+      <style>{HIDE_BADGE_CSS}</style>
+      <div
+        id="unicorn-hero-bg"
+        ref={containerRef}
+        className="absolute inset-0 w-full h-full"
+        aria-hidden="true"
+      />
+    </>
+  );
+}
+
 export function LandingView() {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30 overflow-x-hidden font-sans scroll-smooth">
-      {/* Background Layer: Tactical Grid & Depth */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] brightness-125" />
-        <div className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] bg-blue-600/10 rounded-full blur-[150px] opacity-20" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-[150px] opacity-20" />
-        {/* Subtle HUD Grid */}
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, #3b82f6 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-      </div>
 
-      {/* Floating Navigation */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-16 border border-white/[0.05] bg-[#020617]/40 backdrop-blur-2xl px-6 rounded-2xl flex items-center justify-between shadow-2xl">
+      {/* ─── Floating Navigation ──────────────────────────────────────────── */}
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-16 border border-white/[0.06] bg-[#020617]/50 backdrop-blur-2xl px-6 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/30">
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
             <Zap className="text-white w-4 h-4 fill-white" />
           </div>
           <span className="text-sm font-black tracking-tighter uppercase text-white">HackMate</span>
@@ -62,81 +133,112 @@ export function LandingView() {
 
         <div className="flex items-center gap-4">
           <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Sign In</button>
-          <Button onClick={() => navigate("/signup")} className="h-9 px-6 rounded-lg font-bold uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/20 group transition-all duration-300">
+          <Button onClick={() => navigate("/signup")} className="h-9 px-6 rounded-lg font-bold uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/25 group transition-all duration-300">
             Initialize <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </div>
       </nav>
 
-      {/* Hero Section: Typrographic Focus */}
-      <section className="relative z-10 pt-48 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center space-y-8"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 backdrop-blur-md">
-            <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-blue-400">Tactical OS v2.0 Live</span>
-          </div>
+      {/* ─── HERO: Full-screen WebGL Scene ─────────────────────────────── */}
+      <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
+        {/* WebGL Background */}
+        <UnicornHero />
 
-          <h1 className="text-6xl md:text-[7rem] font-black tracking-tight uppercase leading-[0.85] text-white">
-            Command Your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-blue-600">Innovation.</span>
-          </h1>
+        {/* Dark overlay gradient so text remains readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/60 via-[#020617]/30 to-[#020617] pointer-events-none z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#020617]/40 via-transparent to-[#020617]/40 pointer-events-none z-[1]" />
 
-          <p className="max-w-xl mx-auto text-sm md:text-base text-slate-400 font-medium leading-relaxed uppercase tracking-wider">
-            The high-precision workspace for elite development squads.
-            Built to scale, engineered for speed, designed for impact.
-          </p>
+        <div className="relative z-10 flex flex-col items-center text-center px-6 pt-28 pb-24 max-w-6xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
+          >
+            {/* Status pill */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 backdrop-blur-md"
+            >
+              <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-blue-400">Tactical OS v2.0 · Live</span>
+            </motion.div>
 
-          <div className="pt-4 flex flex-wrap justify-center gap-4">
-            <Button onClick={() => navigate("/signup")} className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 hover:scale-[1.02] transition-all duration-300">
-              Launch Mission
-            </Button>
-            <Button variant="outline" className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] border-white/10 bg-white/5 backdrop-blur-xl hover:bg-white/10 transition-all">
-              Read Briefing
-            </Button>
-          </div>
-        </motion.div>
+            {/* Main headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="text-6xl md:text-[8rem] font-black tracking-tight uppercase leading-[0.85] text-white drop-shadow-[0_4px_32px_rgba(0,0,0,0.5)]"
+            >
+              Command Your <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-blue-400 to-blue-600">
+                Innovation.
+              </span>
+            </motion.h1>
 
-        {/* 3D Hero Visual Plate */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 40 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-20 relative w-full aspect-[21/9] rounded-[2rem] overflow-hidden group shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] border border-white/5"
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent z-10" />
-          <img
-            src="/assets/hero_3d.png"
-            alt="HackMate Tactical Console"
-            className="w-full h-full object-cover transform scale-100 group-hover:scale-[1.02] transition-transform duration-[3s] ease-out"
-          />
+            {/* Subheadline */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="max-w-xl mx-auto text-sm md:text-base text-slate-300/80 font-medium leading-relaxed uppercase tracking-wider"
+            >
+              The high-precision workspace for elite development squads.
+              Built to scale, engineered for speed, designed for impact.
+            </motion.p>
 
-          {/* Internal HUD Elements overlay */}
-          <div className="absolute top-10 right-10 z-20 hidden md:block">
-            <div className="p-4 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                <span className="text-[8px] font-bold uppercase tracking-widest text-slate-300">System Nominal</span>
-              </div>
-              <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: "85%" }}
-                  transition={{ duration: 2, delay: 1 }}
-                  className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
-                />
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            {/* CTAs */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, duration: 0.8 }}
+              className="pt-4 flex flex-wrap justify-center gap-4"
+            >
+              <Button
+                onClick={() => navigate("/signup")}
+                className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/30 hover:scale-[1.02] hover:shadow-blue-500/40 transition-all duration-300"
+              >
+                Launch Mission
+              </Button>
+              <Button
+                variant="outline"
+                className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] border-white/15 bg-white/[0.06] backdrop-blur-xl hover:bg-white/[0.12] hover:border-white/25 transition-all"
+              >
+                Read Briefing
+              </Button>
+            </motion.div>
+
+            {/* Live stats strip */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
+              className="flex flex-wrap justify-center gap-8 pt-10 border-t border-white/[0.06] mt-10"
+            >
+              {[
+                { label: "Active Squads", val: "12,400+" },
+                { label: "Tasks Completed", val: "2.8M" },
+                { label: "Avg. Ship Speed", val: "+2.4×" },
+                { label: "Uptime", val: "99.98%" },
+              ].map(st => (
+                <div key={st.label} className="text-center">
+                  <div className="text-2xl md:text-3xl font-black text-white">{st.val}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.25em] text-slate-500 mt-1">{st.label}</div>
+                </div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </div>
+
+        {/* Bottom fade to next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#020617] to-transparent pointer-events-none z-[2]" />
       </section>
 
-      {/* Feature Command Center */}
-      <section id="features" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
+      {/* ─── Feature Command Center ───────────────────────────────────────── */}
+      <section id="arsenal" className="relative z-10 py-32 px-6 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
           <div className="space-y-4">
             <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Weaponry</h2>
@@ -174,7 +276,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* AI Product Showcase */}
+      {/* ─── AI Product Showcase ──────────────────────────────────────────── */}
       <section className="relative z-10 py-32 px-6 bg-blue-600/[0.02] border-y border-white/[0.03]">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
           <div className="order-2 lg:order-1 relative h-[600px] rounded-[3rem] overflow-hidden border border-white/10 group bg-[#020617]">
@@ -187,16 +289,8 @@ export function LandingView() {
                 </div>
               </div>
             </div>
-            {/* Dynamic scan line effect */}
             <div className="absolute top-0 left-0 w-full h-[2px] bg-blue-500/50 blur-[2px] animate-[scan_4s_linear_infinite]" />
-
-            <style dangerouslySetInnerHTML={{
-              __html: `
-                @keyframes scan {
-                  0% { top: 0% }
-                  100% { top: 100% }
-                }
-             `}} />
+            <style dangerouslySetInnerHTML={{ __html: `@keyframes scan { 0% { top: 0% } 100% { top: 100% } }` }} />
           </div>
 
           <div className="order-1 lg:order-2 space-y-10">
@@ -209,10 +303,7 @@ export function LandingView() {
             </p>
 
             <div className="grid grid-cols-2 gap-8 py-4">
-              {[
-                { label: "Predictive", val: "94%" },
-                { label: "Efficiency", val: "2.4x" },
-              ].map(stat => (
+              {[{ label: "Predictive", val: "94%" }, { label: "Efficiency", val: "2.4x" }].map(stat => (
                 <div key={stat.label} className="space-y-1">
                   <div className="text-3xl font-black text-white">{stat.val}</div>
                   <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
@@ -227,7 +318,7 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* Social Proof */}
+      {/* ─── Social Proof ─────────────────────────────────────────────────── */}
       <section className="py-24 border-b border-white/[0.03]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col items-center gap-12">
           <span className="text-[9px] font-bold uppercase tracking-[0.5em] text-slate-500">Verified and Utilized By Elite Teams At:</span>
@@ -239,17 +330,18 @@ export function LandingView() {
         </div>
       </section>
 
-      {/* High Command CTA */}
+      {/* ─── CTA Section ──────────────────────────────────────────────────── */}
       <section className="relative py-48 px-6 text-center overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-600/5 rounded-full blur-[120px]" />
 
         <motion.div
           whileInView={{ opacity: 1, scale: 1 }}
           initial={{ opacity: 0, scale: 0.95 }}
+          viewport={{ once: true }}
           className="relative z-10 max-w-4xl mx-auto space-y-12"
         >
           <h2 className="text-6xl md:text-[8rem] font-black uppercase tracking-tight text-white leading-[0.8]">
-            Claim Your <br /> <span className="text-blue-500 shadow-blue-500/50">Station.</span>
+            Claim Your <br /> <span className="text-blue-500">Station.</span>
           </h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
             <Button onClick={() => navigate("/signup")} className="h-20 px-16 rounded-2xl text-[12px] font-black uppercase tracking-[0.5em] bg-blue-600 hover:bg-blue-500 shadow-2xl shadow-blue-600/30 transition-all hover:scale-[1.05] active:scale-95">
@@ -262,7 +354,7 @@ export function LandingView() {
         </motion.div>
       </section>
 
-      {/* Footer */}
+      {/* ─── Footer ───────────────────────────────────────────────────────── */}
       <footer className="relative z-10 py-32 px-6 border-t border-white/[0.03] bg-[#010409]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20 md:gap-12">
           <div className="space-y-8">

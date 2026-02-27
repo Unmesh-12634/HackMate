@@ -34,6 +34,7 @@ import { useAppContext, Post, ChatMessage, Team, DirectMessage, PostComment, Use
 import { PostCard } from "../components/PostCard";
 import { PostDetailModal } from "../components/PostDetailModal";
 import { SocialListModal } from "../components/SocialListModal";
+import { supabase } from "../../lib/supabase";
 
 // --- Types ---
 interface SystemEvent {
@@ -820,6 +821,7 @@ const StatusBeacons: React.FC<{ teams: Team[], onShare: (team: Team) => void }> 
 export function CommunityView() {
    const {
       posts,
+      fetchPosts,
       addPost,
       likePost,
       user,
@@ -859,8 +861,33 @@ export function CommunityView() {
    const [socialListType, setSocialListType] = useState<"followers" | "following" | null>(null);
    const [socialListUsers, setSocialListUsers] = useState<User[]>([]);
    const [isSocialListLoading, setIsSocialListLoading] = useState(false);
+   const [newPostCount, setNewPostCount] = useState(0);
 
    const leadTeams = useMemo(() => teams.filter(t => t.role === "Leader"), [teams]);
+
+   useEffect(() => {
+      const channel = supabase
+         .channel('community_updates')
+         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, (payload: any) => {
+            // Only show banner if it's not our own post
+            if (payload.new.author_id !== user?.id) {
+               setNewPostCount(prev => prev + 1);
+            }
+         })
+         .subscribe();
+
+      return () => {
+         supabase.removeChannel(channel);
+      };
+   }, [user?.id]);
+
+   const handleReloadPosts = async () => {
+      await fetchPosts();
+      setNewPostCount(0);
+      // Scroll to top of feed
+      const feedElement = document.getElementById('community-feed-top');
+      if (feedElement) feedElement.scrollIntoView({ behavior: 'smooth' });
+   };
 
    useEffect(() => {
       if (location.state?.mode === 'intel' && location.state?.targetId) {
@@ -959,11 +986,12 @@ export function CommunityView() {
          <div className="max-w-[1440px] mx-auto p-6 md:p-8 space-y-8 relative z-10 transition-all">
 
             {/* TOP BAR: SEARCH & NAV */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/25 pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 border-b border-border/25 pb-4 md:pb-6">
                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-3 text-foreground">
-                     <Shield className="w-6 h-6 text-blue-500" />
-                     <h1 className="text-2xl font-bold tracking-tight">HackMate <span className="text-blue-500">Explore</span></h1>
+                  <div className="flex items-center gap-2 md:gap-3 text-foreground mb-1">
+                     <Shield className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
+                     <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase whitespace-nowrap">Explore <span className="text-blue-500">Grid</span></h1>
+                     <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[8px] font-black uppercase md:hidden ml-auto">Live</Badge>
                   </div>
                </div>
 
@@ -1128,7 +1156,7 @@ export function CommunityView() {
                </div>
 
                {/* CENTER: FEED */}
-               <div className="lg:col-span-1 md:col-span-2 col-span-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide pb-20">
+               <div className="lg:col-span-1 md:col-span-2 col-span-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide pb-20 px-0 md:px-0">
                   {/* Post Composer */}
                   {user && (
                      <div className="bg-card rounded-xl border border-border p-4 shadow-sm flex flex-col gap-3">
@@ -1139,7 +1167,7 @@ export function CommunityView() {
                            </Avatar>
                            <button
                               onClick={() => setShowBroadcastModal(true)}
-                              className="w-full text-left bg-card border border-border hover:bg-muted/80 hover:border-border/70 transition-colors rounded-full px-5 py-3 text-sm text-muted-foreground font-medium"
+                              className="flex-1 text-left bg-card border border-border hover:bg-muted/80 hover:border-border/70 transition-colors rounded-2xl px-5 py-3 text-xs md:text-sm text-muted-foreground font-medium"
                            >
                               Start a post, share a snippet...
                            </button>
@@ -1160,17 +1188,45 @@ export function CommunityView() {
                      </div>
                   )}
 
-                  <div className="flex items-center gap-2 border-b border-border pb-2 overflow-x-auto scrollbar-hide">
+                  <div className="flex items-center gap-2 border-b border-border pb-1 overflow-x-auto scrollbar-hide no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 mt-2">
                      {["all", "PROJECTS", "CODE_SNIPPETS", "DISCUSSIONS"].map(filter => (
-                        <button key={filter} onClick={() => setBeaconFilter(filter)} className={cn("px-4 py-3 text-[11px] font-black uppercase tracking-widest transition-all relative shrink-0", beaconFilter === filter ? "text-blue-500 bg-blue-500/5" : "text-muted-foreground hover:text-foreground/80 hover:bg-muted/50")}>
+                        <button
+                           key={filter}
+                           onClick={() => setBeaconFilter(filter)}
+                           className={cn(
+                              "px-3 py-3 text-[9px] md:text-[11px] font-black uppercase tracking-widest transition-all relative shrink-0",
+                              beaconFilter === filter ? "text-blue-500 bg-blue-500/5" : "text-muted-foreground hover:text-foreground/80"
+                           )}
+                        >
                            {filter === 'all' ? 'All Activity' : filter.replace('_', ' ')}
-                           {beaconFilter === filter && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 rounded-t-sm shadow-[0_0_10px_rgba(59,130,246,0.5)]" />}
+                           {beaconFilter === filter && <div className="absolute bottom-0 left-0 w-full h-[2px] bg-blue-500 rounded-t-sm" />}
                         </button>
                      ))}
                   </div>
 
                   {/* Feed */}
-                  <div className="space-y-4">
+                  <div className="space-y-4 relative">
+                     <div id="community-feed-top" className="absolute -top-32" />
+
+                     <AnimatePresence>
+                        {newPostCount > 0 && (
+                           <motion.div
+                              initial={{ opacity: 0, y: -20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              className="sticky top-4 z-40 flex justify-center"
+                           >
+                              <button
+                                 onClick={handleReloadPosts}
+                                 className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-full shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition-all font-black text-[10px] uppercase tracking-widest border border-blue-400/30 active:scale-95"
+                              >
+                                 <ArrowUpRight className="w-3.5 h-3.5 rotate-[-90deg]" />
+                                 {newPostCount} {newPostCount === 1 ? 'New Post' : 'New Posts'} Available
+                              </button>
+                           </motion.div>
+                        )}
+                     </AnimatePresence>
+
                      <AnimatePresence mode="popLayout">
                         {filteredPosts.length > 0 ? (
                            filteredPosts.map(post => (

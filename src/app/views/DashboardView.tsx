@@ -69,6 +69,48 @@ const MiniCountdown: React.FC<{ deadline: string | null; currentTime: Date }> = 
   );
 };
 
+const HackOMeter = () => {
+  const { globalOnlineUsers, teams } = useAppContext();
+
+  const allTasks = teams.flatMap(t => t.tasks || []);
+  const completedTasks = allTasks.filter(t => t.status === 'done').length;
+  const criticalTasks = allTasks.filter(t => t.is_critical).length;
+
+  const stats = [
+    { label: 'Operatives Online', value: globalOnlineUsers.length, icon: Users, color: 'text-blue-400' },
+    { label: 'Strategic Units', value: teams.length, icon: Zap, color: 'text-hack-blue' },
+    { label: 'Objectives Secured', value: completedTasks, icon: Target, color: 'text-emerald-400' },
+    { label: 'Critical Missions', value: criticalTasks, icon: Flame, color: 'text-rose-500' },
+    { label: 'System Uptime', value: '99.9%', icon: Activity, color: 'text-indigo-400' },
+    { label: 'Neural Link', value: 'Stable', icon: Zap, color: 'text-blue-500' },
+  ];
+
+  return (
+    <div className="w-full bg-card/30 border-y border-border/40 py-4 overflow-hidden relative group">
+      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-background to-transparent z-10" />
+      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-background to-transparent z-10" />
+
+      <motion.div
+        animate={{ x: [0, -1000] }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="flex whitespace-nowrap gap-24 items-center"
+      >
+        {[...stats, ...stats, ...stats].map((stat, i) => (
+          <div key={i} className="flex items-center gap-4 group/item cursor-default">
+            <div className={cn("p-2 rounded-lg bg-secondary/50 border border-border/50 transition-all group-hover/item:scale-110", stat.color)}>
+              <stat.icon className="w-3 h-3" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.2em]">{stat.label}</span>
+              <span className="text-xs font-black text-foreground uppercase tracking-tighter">{stat.value}</span>
+            </div>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+};
+
 export function DashboardView() {
   const { teams, addTeam, setActiveTeamId, user, joinTeam } = useAppContext();
   const navigate = useNavigate();
@@ -149,41 +191,55 @@ export function DashboardView() {
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-16 animate-in fade-in slide-in-from-bottom-6 duration-1000 font-sans pb-24">
-      {/* Immersive Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 pb-16 border-b border-border/40 relative overflow-hidden">
-        <div className="space-y-6 relative z-10">
-          <div className="flex items-center gap-4">
-            <Badge className="bg-hack-blue/10 text-hack-blue border-hack-blue/20 px-4 py-1.5 rounded-xl font-black text-[10px] uppercase tracking-[0.3em]">Operational Status: Active</Badge>
-            <div className="flex items-center gap-2 px-3 py-1 bg-secondary/50 rounded-lg border border-border/50">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Link Stable</span>
+      {/* Hack-o-Meter Activity Ticker */}
+      <HackOMeter />
+
+      {/* Immersive Responsive Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-8 md:pb-16 border-b border-border/40 relative overflow-hidden px-4 md:px-8">
+        <div className="space-y-4 md:space-y-6 relative z-10">
+          <div className="flex items-center gap-3">
+            <Badge className="bg-hack-blue/10 text-hack-blue border-hack-blue/20 px-3 md:px-4 py-1.5 rounded-xl font-black text-[8px] md:text-[10px] uppercase tracking-[0.3em]">Operational Status: Active</Badge>
+            <div className="flex items-center gap-2 px-2 py-0.5 md:px-3 md:py-1 bg-secondary/50 rounded-lg border border-border/50">
+              <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[8px] md:text-[9px] font-black text-muted-foreground uppercase tracking-widest">Link Stable</span>
             </div>
           </div>
-          <h1 className="text-6xl font-black tracking-tighter leading-none uppercase text-foreground font-mono">
+          <h1 className="text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase text-foreground font-mono">
             Mission <span className="text-hack-blue">Control</span>.
           </h1>
-          <p className="text-sm text-muted-foreground font-medium max-w-xl leading-relaxed uppercase tracking-[0.1em]">
-            Operative <span className="text-foreground font-black">{user?.name?.split(' ')[0] || "Alex"}</span>, you are currently managing <span className="text-foreground font-black">{teams.length} Strategic Units</span> with active objectives pending across multiple sectors.
+          <p className="text-[10px] md:text-sm text-muted-foreground font-medium max-w-xl leading-relaxed uppercase tracking-[0.1em]">
+            Operative <span className="text-foreground font-black">{user?.name?.split(' ')[0] || "Alex"}</span>, managing <span className="text-foreground font-black">{teams.length} Strategic Units</span> with active objectives pending.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 relative z-10">
-          <Button variant="outline" className="h-16 px-10 rounded-2xl gap-4 font-black text-[10px] uppercase tracking-[0.3em] border-border/50 bg-secondary/30 hover:bg-secondary/50 transition-all shadow-2xl text-muted-foreground hover:text-foreground" onClick={() => setShowJoinModal(true)}>
-            <Users className="w-4 h-4 text-hack-blue" /> Join Squad
+        {/* Action Buttons (Restacked for Mobile) */}
+        <div className="grid grid-cols-2 md:flex md:items-center gap-3 md:gap-4 relative z-10">
+          <Button
+            variant="outline"
+            className="h-14 md:h-16 px-4 md:px-10 rounded-2xl gap-2 md:gap-4 font-black text-[8px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] border-border/50 bg-secondary/30 text-muted-foreground"
+            onClick={() => setShowJoinModal(true)}
+          >
+            <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-hack-blue" /> Join Squad
           </Button>
-          <Button variant="outline" className="h-16 px-10 rounded-2xl gap-4 font-black text-[10px] uppercase tracking-[0.3em] border-border/50 bg-secondary/30 hover:bg-secondary/50 transition-all shadow-2xl text-muted-foreground hover:text-foreground" onClick={() => navigate("/community")}>
-            <Globe className="w-4 h-4 text-hack-blue" /> Intelligence Hub
+          <Button
+            variant="outline"
+            className="h-14 md:h-16 px-4 md:px-10 rounded-2xl gap-2 md:gap-4 font-black text-[8px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] border-border/50 bg-secondary/30 text-muted-foreground hidden sm:flex"
+            onClick={() => navigate("/community")}
+          >
+            <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-hack-blue" /> Intel
           </Button>
-          <Button className="h-16 px-10 rounded-2xl gap-4 shadow-[0_25px_50px_-12px_rgba(37,99,235,0.3)] font-black text-[10px] uppercase tracking-[0.3em] group bg-hack-blue hover:bg-hack-blue/90 text-white" onClick={() => setShowCreateModal(true)}>
-            <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" /> Deploy New Unit
+          <Button
+            className="col-span-2 md:col-span-1 h-14 md:h-16 px-6 md:px-10 rounded-2xl gap-3 md:gap-4 shadow-xl shadow-hack-blue/20 font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] md:tracking-[0.3em] bg-hack-blue text-white"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus className="w-4 h-4 md:w-5 md:h-5" /> Deploy Unit
           </Button>
         </div>
 
-        {/* Background Highlight */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-hack-blue/5 rounded-full blur-[120px] -mr-48 -mt-48 opacity-40 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-hack-blue/5 rounded-full blur-[80px] md:blur-[120px] -mr-32 -mt-32 opacity-40 pointer-events-none" />
       </div>
 
-      <div className="grid grid-cols-12 gap-12">
+      <div className="flex flex-col xl:grid xl:grid-cols-12 gap-8 md:gap-12 px-4 md:px-8">
         {/* Main Sector: Active Units & Tasks */}
         <div className="col-span-12 xl:col-span-8 space-y-16">
 
@@ -336,36 +392,36 @@ export function DashboardView() {
               <div className="w-8 h-8 rounded-xl bg-secondary/50 border border-border/50 flex items-center justify-center"><TrophyIcon className="w-4 h-4 text-orange-500" /></div>
               Personnel Meta-Data
             </h2>
-            <Card className="bg-gradient-to-br from-card via-background to-indigo-950/20 text-foreground border-border/50 rounded-[56px] shadow-2xl shadow-hack-blue/5 overflow-hidden relative group">
+            <Card className="bg-gradient-to-br from-card via-background to-indigo-950/20 text-foreground border-border/50 rounded-[32px] md:rounded-[56px] shadow-2xl shadow-hack-blue/5 overflow-hidden relative group">
               <div className="absolute top-0 right-0 w-64 h-64 bg-hack-blue/10 rounded-full blur-[120px] -mr-32 -mt-32 group-hover:scale-150 transition-transform duration-1000" />
-              <CardHeader className="p-12 relative z-10">
-                <div className="flex justify-between items-center mb-10">
-                  <div className="w-14 h-14 bg-background/50 rounded-2xl flex items-center justify-center border border-border/50 backdrop-blur-md shadow-2xl">
-                    <Flame className="w-7 h-7 text-orange-500 fill-orange-500" />
+              <CardHeader className="p-8 md:p-12 relative z-10">
+                <div className="flex justify-between items-center mb-6 md:mb-10">
+                  <div className="w-10 h-10 md:w-14 md:h-14 bg-background/50 rounded-xl md:rounded-2xl flex items-center justify-center border border-border/50 backdrop-blur-md shadow-2xl">
+                    <Flame className="w-5 h-5 md:w-7 md:h-7 text-orange-500 fill-orange-500" />
                   </div>
-                  <Badge className="bg-background/80 text-foreground border-border text-[10px] font-black uppercase px-4 py-1.5 rounded-xl tracking-widest">{userRankText}</Badge>
+                  <Badge className="bg-background/80 text-foreground border-border text-[8px] md:text-[10px] font-black uppercase px-3 md:px-4 py-1 md:py-1.5 rounded-xl tracking-widest">{userRankText}</Badge>
                 </div>
-                <CardTitle className="text-foreground text-4xl font-black uppercase tracking-tight font-mono">{userAuthorityText}</CardTitle>
+                <CardTitle className="text-foreground text-2xl md:text-4xl font-black uppercase tracking-tight font-mono">{userAuthorityText}</CardTitle>
               </CardHeader>
-              <CardContent className="p-12 pt-0 relative z-10 space-y-12">
-                <div className="grid grid-cols-2 gap-10">
+              <CardContent className="p-8 md:p-12 pt-0 relative z-10 space-y-8 md:space-y-12">
+                <div className="grid grid-cols-2 gap-6 md:gap-10">
                   <div>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-3">Deployments</p>
-                    <p className="text-5xl font-black text-foreground">{deploymentsCount.toString().padStart(2, '0')}</p>
+                    <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Deployments</p>
+                    <p className="text-3xl md:text-5xl font-black text-foreground">{deploymentsCount.toString().padStart(2, '0')}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-3">Victories</p>
-                    <p className="text-5xl font-black text-foreground">{completedTasksCount.toString().padStart(2, '0')}</p>
+                    <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Victories</p>
+                    <p className="text-3xl md:text-5xl font-black text-foreground">{completedTasksCount.toString().padStart(2, '0')}</p>
                   </div>
                 </div>
-                <div className="pt-12 border-t border-border/20 flex items-center justify-between">
-                  <div className="space-y-3">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Global Rep</p>
-                    <p className="text-2xl font-black text-hack-blue flex items-center gap-3">{formattedReputation} <Sparkles className="w-5 h-5" /></p>
+                <div className="pt-8 md:pt-12 border-t border-border/20 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Global Rep</p>
+                    <p className="text-lg md:text-2xl font-black text-hack-blue flex items-center gap-2">{formattedReputation} <Sparkles className="w-4 h-4" /></p>
                   </div>
-                  <div className="space-y-3 text-right">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Efficiency</p>
-                    <p className="text-2xl font-black text-emerald-400">{efficiencyPercentage}%</p>
+                  <div className="space-y-2 text-right">
+                    <p className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Efficiency</p>
+                    <p className="text-lg md:text-2xl font-black text-emerald-400">{efficiencyPercentage}%</p>
                   </div>
                 </div>
               </CardContent>

@@ -141,54 +141,77 @@ export default function AchievementsView() {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 md:gap-8">
                 {filteredBadges.map((badge) => {
                     const isUnlocked = unlockedIds.has(badge.id);
                     return (
                         <motion.div
                             layout
                             key={badge.id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ y: -8 }}
                             className="group"
                         >
                             <Card className={cn(
-                                "h-full bg-card/40 backdrop-blur-xl border-border/50 transition-all duration-500 overflow-hidden relative group-hover:border-hack-blue/30 group-hover:shadow-2xl group-hover:shadow-hack-blue/10",
-                                !isUnlocked && "opacity-80"
+                                "h-full bg-card/30 backdrop-blur-xl border-border/40 transition-all duration-700 overflow-hidden relative rounded-[32px]",
+                                "hover:bg-card/50 hover:border-hack-blue/30 hover:shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(59,130,246,0.1)]",
+                                !isUnlocked && "grayscale-[0.5] opacity-90"
                             )}>
-                                <CardContent className="p-8 flex flex-col items-center gap-6">
-                                    <PremiumBadge
-                                        badge={badge}
-                                        locked={!isUnlocked}
-                                        size="lg"
-                                        showLabel={false}
-                                    />
+                                {/* Mouse Spotlight Effect (Simplified CSS Version) */}
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[radial-gradient(circle_at_var(--mouse-x,50%)_var(--mouse-y,50%),rgba(59,130,246,0.1)_0%,transparent_70%)] transition-opacity duration-500 pointer-events-none" />
 
-                                    <div className="text-center space-y-2">
+                                <CardContent
+                                    className="p-8 flex flex-col items-center gap-8 relative z-10"
+                                    onMouseMove={(e) => {
+                                        const rect = e.currentTarget.getBoundingClientRect();
+                                        const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                        const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                        e.currentTarget.style.setProperty('--mouse-x', `${x}%`);
+                                        e.currentTarget.style.setProperty('--mouse-y', `${y}%`);
+                                    }}
+                                >
+                                    <div className="relative">
+                                        {isUnlocked && (
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                                className="absolute -inset-6 bg-[conic-gradient(from_0deg,transparent,rgba(59,130,246,0.2),transparent)] rounded-full blur-xl"
+                                            />
+                                        )}
+                                        <PremiumBadge
+                                            badge={badge}
+                                            locked={!isUnlocked}
+                                            size="lg"
+                                            showLabel={false}
+                                        />
+                                    </div>
+
+                                    <div className="text-center space-y-3">
                                         <h3 className={cn(
-                                            "text-sm font-black uppercase tracking-tight leading-none",
-                                            isUnlocked ? "text-foreground" : "text-muted-foreground"
+                                            "text-xs font-black uppercase tracking-[0.2em] leading-tight",
+                                            isUnlocked ? "text-foreground" : "text-muted-foreground/60"
                                         )}>
                                             {badge.name}
                                         </h3>
-                                        <p className="text-[10px] text-muted-foreground font-medium leading-relaxed uppercase tracking-wider line-clamp-2 min-h-[30px]">
+                                        <p className="text-[10px] text-muted-foreground/80 font-bold leading-relaxed uppercase tracking-wider line-clamp-2 min-h-[30px] opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                                             {badge.description}
                                         </p>
                                     </div>
 
                                     {!isUnlocked ? (
-                                        <div className="w-full pt-4 border-t border-border/30 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase italic px-3 py-1 bg-secondary/50 rounded-lg">
-                                                <Lock className="w-3 h-3" />
-                                                <span>Locked</span>
+                                        <div className="w-full pt-6 border-t border-border/20 flex flex-col items-center gap-3">
+                                            <div className="flex items-center gap-2 text-[8px] font-black text-muted-foreground uppercase tracking-widest px-4 py-1.5 bg-secondary/30 rounded-full border border-border/20">
+                                                <Lock className="w-2.5 h-2.5" />
+                                                <span>Restricted Access</span>
                                             </div>
-                                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest italic">{badge.criteria}</span>
+                                            <span className="text-[7px] font-black text-muted-foreground/50 uppercase tracking-[0.3em] font-mono italic">REQ: {badge.criteria}</span>
                                         </div>
                                     ) : (
-                                        <div className="w-full pt-4 border-t border-border/30 flex items-center justify-center">
-                                            <div className="flex items-center gap-2 px-3 py-1 bg-hack-blue/10 rounded-lg text-hack-blue">
-                                                <CheckCircle2 className="w-3 h-3" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">Secured</span>
+                                        <div className="w-full pt-6 border-t border-border/20 flex items-center justify-center">
+                                            <div className="flex items-center gap-2 px-4 py-1.5 bg-hack-blue/10 rounded-full text-hack-blue border border-hack-blue/20">
+                                                <CheckCircle2 className="w-2.5 h-2.5" />
+                                                <span className="text-[8px] font-black uppercase tracking-widest">Mastered</span>
                                             </div>
                                         </div>
                                     )}
