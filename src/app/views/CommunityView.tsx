@@ -27,7 +27,9 @@ import {
    MoreHorizontal,
    Mail,
    Clock,
-   ShieldCheck
+   ShieldCheck,
+   Edit3,
+   Trash2
 } from "lucide-react";
 import { cn } from "../components/ui/utils";
 import { useAppContext, Post, ChatMessage, Team, DirectMessage, PostComment, User, Bounty } from "../context/AppContext";
@@ -409,231 +411,393 @@ const CommunicationMatrix: React.FC<{
    globalMessages: ChatMessage[];
    directMessages: DirectMessage[];
    onSendGlobal: (content: string) => void;
-   onSendDirect: (receiverId: string, content: string) => void;
+   onSendDirect: (receiverId: string, content: string, replyToId?: string) => void;
+   editDirectMessage: (messageId: string, newContent: string) => Promise<void>;
+   deleteDirectMessage: (messageId: string) => Promise<void>;
+   reactToDirectMessage: (messageId: string, emoji: string) => Promise<void>;
    currentUser: User;
    allProfiles: User[];
    searchUsers: (query: string) => Promise<User[]>;
    initialMode?: "global" | "intel" | "operatives" | "bounties";
    initialTargetUserId?: string | null;
    onMarkAllRead?: () => Promise<void>;
-}> = ({ globalMessages, directMessages, onSendGlobal, onSendDirect, currentUser, allProfiles, searchUsers, initialMode = "global", initialTargetUserId = null, onMarkAllRead }) => {
-   const navigate = useNavigate();
-   const [mode, setMode] = useState<"global" | "intel" | "operatives" | "bounties">(initialMode);
-   const [selectedThread, setSelectedThread] = useState<string | null>(initialTargetUserId);
-   const [searchQuery, setSearchQuery] = useState("");
-   const [searchResults, setSearchResults] = useState<User[]>([]);
+}> = ({
+   globalMessages,
+   directMessages,
+   onSendGlobal,
+   onSendDirect,
+   editDirectMessage,
+   deleteDirectMessage,
+   reactToDirectMessage,
+   currentUser,
+   allProfiles,
+   searchUsers,
+   initialMode = "global",
+   initialTargetUserId = null,
+   onMarkAllRead
+}) => {
+      const navigate = useNavigate();
+      const [mode, setMode] = useState<"global" | "intel" | "operatives" | "bounties">(initialMode);
+      const [selectedThread, setSelectedThread] = useState<string | null>(initialTargetUserId);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [searchResults, setSearchResults] = useState<User[]>([]);
+      const [replyingTo, setReplyingTo] = useState<DirectMessage | null>(null);
+      const [editingMessage, setEditingMessage] = useState<DirectMessage | null>(null);
+      const [chatInput, setChatInput] = useState("");
 
-   useEffect(() => {
-      setMode(initialMode);
-   }, [initialMode]);
+      useEffect(() => {
+         setMode(initialMode);
+      }, [initialMode]);
 
-   useEffect(() => {
-      if (initialTargetUserId) {
-         setSelectedThread(initialTargetUserId);
-      }
-   }, [initialTargetUserId]);
+      useEffect(() => {
+         if (initialTargetUserId) {
+            setSelectedThread(initialTargetUserId);
+         }
+      }, [initialTargetUserId]);
 
-   const threads = useMemo(() => {
-      const threadMap: Record<string, DirectMessage[]> = {};
-      directMessages.forEach(m => {
-         const partnerId = m.sender_id === currentUser.id ? m.receiver_id : m.sender_id;
-         if (!threadMap[partnerId]) threadMap[partnerId] = [];
-         threadMap[partnerId].push(m);
-      });
-      return threadMap;
-   }, [directMessages, currentUser.id]);
+      const threads = useMemo(() => {
+         const threadMap: Record<string, DirectMessage[]> = {};
+         directMessages.forEach(m => {
+            const partnerId = m.sender_id === currentUser.id ? m.receiver_id : m.sender_id;
+            if (!threadMap[partnerId]) threadMap[partnerId] = [];
+            threadMap[partnerId].push(m);
+         });
+         return threadMap;
+      }, [directMessages, currentUser.id]);
 
-   useEffect(() => {
-      if (searchQuery.trim().length > 1) {
-         searchUsers(searchQuery).then(setSearchResults);
-      } else {
-         setSearchResults([]);
-      }
-   }, [searchQuery]);
+      useEffect(() => {
+         if (searchQuery.trim().length > 1) {
+            searchUsers(searchQuery).then(setSearchResults);
+         } else {
+            setSearchResults([]);
+         }
+      }, [searchQuery]);
 
-   return (
-      <div className="flex flex-col h-full bg-slate-900/5 border border-border/15 rounded-[2.5rem] overflow-hidden shadow-2xl">
-         {/* Switcher Header */}
-         <div className="p-3 bg-card/40 border-b border-border/15 flex items-center gap-1.5">
-            <button
-               onClick={() => setMode("global")}
-               className={cn(
-                  "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "global" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
-               )}
-            >
-               <Globe className="w-3 h-3" /> Global
-            </button>
-            <button
-               onClick={() => setMode("intel")}
-               className={cn(
-                  "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "intel" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
-               )}
-            >
-               <Shield className="w-3 h-3" /> Intel
-            </button>
-            <button
-               onClick={() => setMode("bounties")}
-               className={cn(
-                  "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
-                  mode === "bounties" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
-               )}
-            >
-               <Target className="w-3 h-3" /> Bounty
-            </button>
-         </div>
-
-         {mode === "global" ? (
-            <GlobalRelay messages={globalMessages} onSend={onSendGlobal} user={currentUser} />
-         ) : mode === "bounties" ? (
-            <BountyMatrixGrid />
-         ) : mode === "operatives" ? (
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
-               <div className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em] mb-4 text-center">Network_Operatives</div>
-               {allProfiles.filter(p => p.id !== currentUser.id).map(u => (
-                  <div
-                     key={u.id}
-                     className="flex items-center gap-3 p-3 rounded-xl bg-card/40 border border-white/[0.02] hover:border-indigo-500/20 transition-all group"
-                  >
-                     <Avatar
-                        className="w-10 h-10 rounded-xl group-hover:scale-105 transition-transform cursor-pointer"
-                        onClick={() => navigate(`/u/${u.id}`)}
-                     >
-                        <AvatarImage src={u.avatar} />
-                        <AvatarFallback>{u.name[0]}</AvatarFallback>
-                     </Avatar>
-                     <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
-                        <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
-                        <div className="text-[8px] font-bold text-muted-foreground/70 uppercase mt-0.5">{u.role}</div>
-                     </div>
-                     <button
-                        onClick={() => { setMode("intel"); setSelectedThread(u.id); }}
-                        className="p-2 hover:bg-muted/50 rounded-lg text-muted-foreground/50 hover:text-indigo-400 transition-colors"
-                        title="Send Intel Packet"
-                     >
-                        <Mail className="w-3.5 h-3.5" />
-                     </button>
-                  </div>
-               ))}
+      return (
+         <div className="flex flex-col h-full bg-slate-900/5 border border-border/15 rounded-[2.5rem] overflow-hidden shadow-2xl">
+            {/* Switcher Header */}
+            <div className="p-3 bg-card/40 border-b border-border/15 flex items-center gap-1.5">
+               <button
+                  onClick={() => setMode("global")}
+                  className={cn(
+                     "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
+                     mode === "global" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
+                  )}
+               >
+                  <Globe className="w-3 h-3" /> Global
+               </button>
+               <button
+                  onClick={() => setMode("intel")}
+                  className={cn(
+                     "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
+                     mode === "intel" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
+                  )}
+               >
+                  <Shield className="w-3 h-3" /> Intel
+               </button>
+               <button
+                  onClick={() => setMode("bounties")}
+                  className={cn(
+                     "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex flex-col items-center gap-1",
+                     mode === "bounties" ? "bg-indigo-600 text-foreground shadow-lg shadow-indigo-600/20" : "text-muted-foreground/70 hover:text-foreground/80"
+                  )}
+               >
+                  <Target className="w-3 h-3" /> Bounty
+               </button>
             </div>
-         ) : (
-            <div className="flex-1 flex flex-col overflow-hidden">
-               {!selectedThread ? (
-                  <div className="flex-1 flex flex-col p-4 overflow-hidden">
-                     {/* User Search for DMs */}
-                     <div className="relative mb-4">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/50" />
-                        <input
-                           className="w-full h-8 bg-card/60 border border-border/30 rounded-lg pl-8 pr-4 text-[9px] font-bold text-foreground uppercase outline-none focus:border-indigo-500/30 transition-all placeholder:text-muted-foreground/30"
-                           placeholder="FIND_OPERATIVE..."
-                           value={searchQuery}
-                           onChange={e => setSearchQuery(e.target.value)}
-                        />
-                     </div>
 
-                     <div className="flex-1 overflow-y-auto space-y-2 scrollbar-hide">
-                        {searchQuery.trim().length > 1 ? (
-                           searchResults.map(u => (
-                              <div
-                                 key={u.id}
-                                 className="flex items-center gap-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 hover:border-indigo-500/30 transition-all group"
-                              >
-                                 <Avatar
-                                    className="w-8 h-8 rounded-lg cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-indigo-500/10"
-                                    onClick={() => navigate(`/u/${u.id}`)}
-                                 >
-                                    <AvatarImage src={u.avatar} />
-                                    <AvatarFallback>{u.name[0]}</AvatarFallback>
-                                 </Avatar>
-                                 <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
-                                    <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
-                                    <div className="text-[8px] font-bold text-indigo-500/60 uppercase">{u.rank}</div>
-                                 </div>
-                                 <button
-                                    onClick={() => setSelectedThread(u.id)}
-                                    className="p-1.5 hover:bg-indigo-500/20 rounded-lg text-indigo-500/40 hover:text-indigo-500 transition-all"
-                                    title="Initialize Connection"
-                                 >
-                                    <ArrowUpRight className="w-3.5 h-3.5" />
-                                 </button>
-                              </div>
-                           ))
-                        ) : Object.entries(threads).map(([partnerId, thread]) => {
-                           const lastMsg = thread[thread.length - 1];
-                           const partnerName = lastMsg.sender_id === partnerId ? lastMsg.sender_name : lastMsg.receiver_name;
-                           const partnerAvatar = lastMsg.sender_id === partnerId ? lastMsg.sender_avatar : lastMsg.receiver_avatar;
-
-                           return (
-                              <div
-                                 key={partnerId}
-                                 onClick={() => setSelectedThread(partnerId)}
-                                 className="flex items-center gap-3 p-3 rounded-xl bg-card/40 border border-white/[0.02] hover:border-indigo-500/20 cursor-pointer transition-all"
-                              >
-                                 <Avatar className="w-8 h-8 rounded-lg">
-                                    <AvatarImage src={partnerAvatar} />
-                                    <AvatarFallback>{partnerName[0]}</AvatarFallback>
-                                 </Avatar>
-                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center justify-between mb-0.5">
-                                       <span className="text-[10px] font-black text-foreground truncate">{partnerName}</span>
-                                       <span className="text-[7px] font-bold text-muted-foreground/50">{new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    <p className="text-[9px] font-medium text-muted-foreground truncate">{lastMsg.content}</p>
-                                 </div>
-                              </div>
-                           );
-                        })}
-                     </div>
-                  </div>
-               ) : (
-                  <div className="flex-1 flex flex-col overflow-hidden">
-                     <button
-                        onClick={() => setSelectedThread(null)}
-                        className="p-3 bg-card/40 border-b border-border/15 text-[9px] font-black text-indigo-500 hover:text-indigo-400 uppercase tracking-widest flex items-center gap-2"
+            {mode === "global" ? (
+               <GlobalRelay messages={globalMessages} onSend={onSendGlobal} user={currentUser} />
+            ) : mode === "bounties" ? (
+               <BountyMatrixGrid />
+            ) : mode === "operatives" ? (
+               <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
+                  <div className="text-[10px] font-black text-muted-foreground/50 uppercase tracking-[0.2em] mb-4 text-center">Network_Operatives</div>
+                  {allProfiles.filter(p => p.id !== currentUser.id).map(u => (
+                     <div
+                        key={u.id}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-card/40 border border-white/[0.02] hover:border-indigo-500/20 transition-all group"
                      >
-                        <ArrowUpRight className="w-3 h-3 rotate-180" /> BACK_TO_INTEL
-                     </button>
-                     <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
-                        {threads[selectedThread]?.map(msg => (
-                           <div key={msg.id} className={cn("flex flex-col", msg.sender_id === currentUser.id ? "items-end" : "items-start")}>
-                              <div className={cn(
-                                 "max-w-[85%] rounded-[1rem] px-4 py-2 text-[10px] font-medium leading-relaxed shadow-lg",
-                                 msg.sender_id === currentUser.id ? "bg-indigo-600 text-foreground rounded-br-none" : "bg-card/60 text-foreground/80 border border-border/30 rounded-bl-none"
-                              )}>
-                                 {msg.content}
+                        <Avatar
+                           className="w-10 h-10 rounded-xl group-hover:scale-105 transition-transform cursor-pointer"
+                           onClick={() => navigate(`/u/${u.id}`)}
+                        >
+                           <AvatarImage src={u.avatar} />
+                           <AvatarFallback>{u.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
+                           <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
+                           <div className="text-[8px] font-bold text-muted-foreground/70 uppercase mt-0.5">{u.role}</div>
+                        </div>
+                        <button
+                           onClick={() => { setMode("intel"); setSelectedThread(u.id); }}
+                           className="p-2 hover:bg-muted/50 rounded-lg text-muted-foreground/50 hover:text-indigo-400 transition-colors"
+                           title="Send Intel Packet"
+                        >
+                           <Mail className="w-3.5 h-3.5" />
+                        </button>
+                     </div>
+                  ))}
+               </div>
+            ) : (
+               <div className="flex-1 flex flex-col overflow-hidden">
+                  {!selectedThread ? (
+                     <div className="flex-1 flex flex-col p-4 overflow-hidden">
+                        {/* User Search for DMs */}
+                        <div className="relative mb-4">
+                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground/50" />
+                           <input
+                              className="w-full h-8 bg-card/60 border border-border/30 rounded-lg pl-8 pr-4 text-[9px] font-bold text-foreground uppercase outline-none focus:border-indigo-500/30 transition-all placeholder:text-muted-foreground/30"
+                              placeholder="FIND_OPERATIVE..."
+                              value={searchQuery}
+                              onChange={e => setSearchQuery(e.target.value)}
+                           />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-2 scrollbar-hide">
+                           {searchQuery.trim().length > 1 ? (
+                              searchResults.map(u => (
+                                 <div
+                                    key={u.id}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 hover:border-indigo-500/30 transition-all group"
+                                 >
+                                    <Avatar
+                                       className="w-8 h-8 rounded-lg cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-indigo-500/10"
+                                       onClick={() => navigate(`/u/${u.id}`)}
+                                    >
+                                       <AvatarImage src={u.avatar} />
+                                       <AvatarFallback>{u.name[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1 cursor-pointer" onClick={() => navigate(`/u/${u.id}`)}>
+                                       <div className="text-[10px] font-black text-foreground truncate">{u.name}</div>
+                                       <div className="text-[8px] font-bold text-indigo-500/60 uppercase">{u.rank}</div>
+                                    </div>
+                                    <button
+                                       onClick={() => setSelectedThread(u.id)}
+                                       className="p-1.5 hover:bg-indigo-500/20 rounded-lg text-indigo-500/40 hover:text-indigo-500 transition-all"
+                                       title="Initialize Connection"
+                                    >
+                                       <ArrowUpRight className="w-3.5 h-3.5" />
+                                    </button>
+                                 </div>
+                              ))
+                           ) : Object.entries(threads).map(([partnerId, thread]) => {
+                              const lastMsg = thread[thread.length - 1];
+                              const partnerName = lastMsg.sender_id === partnerId ? lastMsg.sender_name : lastMsg.receiver_name;
+                              const partnerAvatar = lastMsg.sender_id === partnerId ? lastMsg.sender_avatar : lastMsg.receiver_avatar;
+
+                              return (
+                                 <div
+                                    key={partnerId}
+                                    onClick={() => setSelectedThread(partnerId)}
+                                    className="flex items-center gap-3 p-3 rounded-xl bg-card/40 border border-white/[0.02] hover:border-indigo-500/20 cursor-pointer transition-all"
+                                 >
+                                    <Avatar className="w-8 h-8 rounded-lg">
+                                       <AvatarImage src={partnerAvatar} />
+                                       <AvatarFallback>{partnerName[0]}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                       <div className="flex items-center justify-between mb-0.5">
+                                          <span className="text-[10px] font-black text-foreground truncate">{partnerName}</span>
+                                          <span className="text-[7px] font-bold text-muted-foreground/50">{new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                       </div>
+                                       <p className="text-[9px] font-medium text-muted-foreground truncate">{lastMsg.content}</p>
+                                    </div>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     </div>
+                  ) : (
+                     <div className="flex-1 flex flex-col overflow-hidden">
+                        <div className="p-3 bg-card/40 border-b border-border/15 flex items-center gap-3">
+                           <button
+                              onClick={() => setSelectedThread(null)}
+                              className="p-1.5 hover:bg-indigo-500/10 rounded-lg text-indigo-500 transition-colors shrink-0"
+                              title="Back to Intel"
+                           >
+                              <ArrowUpRight className="w-4 h-4 rotate-180" />
+                           </button>
+                           <div className="flex items-center gap-2 flex-1 cursor-pointer" onClick={() => navigate(`/u/${selectedThread}`)}>
+                              <Avatar className="w-7 h-7 rounded-md border border-border/50">
+                                 <AvatarImage src={allProfiles.find(p => p.id === selectedThread)?.avatar} />
+                                 <AvatarFallback>{allProfiles.find(p => p.id === selectedThread)?.name?.[0] || '?'}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex flex-col">
+                                 <span className="text-[11px] font-black uppercase tracking-widest text-foreground font-['JetBrains_Mono'] leading-none">
+                                    {allProfiles.find(p => p.id === selectedThread)?.name || 'Unknown Operative'}
+                                 </span>
+                                 <span className="text-[8px] font-bold text-muted-foreground uppercase mt-0.5">Secure Channel Active</span>
                               </div>
                            </div>
-                        ))}
-                     </div>
-                     <form
-                        onSubmit={(e) => {
-                           e.preventDefault();
-                           const input = (e.target as any).elements.msg.value;
-                           if (!input.trim() || !selectedThread) return;
-                           onSendDirect(selectedThread, input);
-                           (e.target as any).reset();
-                        }}
-                        className="p-3 bg-card/70 border-t border-border/20"
-                     >
-                        <div className="relative">
-                           <input
-                              name="msg"
-                              className="w-full bg-card/30 border border-border/30 rounded-full py-2 pl-4 pr-10 text-[10px] font-medium text-foreground outline-none focus:border-indigo-500/50 transition-all placeholder:text-muted-foreground/30"
-                              placeholder="TRANSMIT_DATA..."
-                           />
-                           <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-indigo-600 text-foreground rounded-lg hover:bg-indigo-500 transition-all">
-                              <Send className="w-3 h-3" />
-                           </button>
                         </div>
-                     </form>
-                  </div>
-               )}
-            </div>
-         )}
-      </div>
-   );
-};
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide">
+                           {threads[selectedThread]?.map(msg => {
+                              const isMe = msg.sender_id === currentUser.id;
+                              const repliedMsg = msg.reply_to_id ? threads[selectedThread]?.find(m => m.id === msg.reply_to_id) : null;
+
+                              return (
+                                 <div key={msg.id} className={cn("flex flex-col group/msg", isMe ? "items-end" : "items-start")}>
+                                    {/* Reply Preview */}
+                                    {repliedMsg && (
+                                       <div className={cn("flex items-center gap-1.5 mb-1 px-2 opacity-60 hover:opacity-100 transition-opacity cursor-pointer max-w-[70%]", isMe ? "flex-row-reverse text-right" : "text-left")}>
+                                          <ArrowUpRight className={cn("w-2.5 h-2.5", isMe ? "-scale-x-100" : "")} />
+                                          <span className="text-[8px] font-bold uppercase truncate">
+                                             Replying to {repliedMsg.sender_id === currentUser.id ? "yourself" : repliedMsg.sender_name}
+                                          </span>
+                                       </div>
+                                    )}
+
+                                    <div className="relative flex items-center gap-2 max-w-full">
+                                       {/* Toolbar (Hover Only) */}
+                                       <div className={cn(
+                                          "absolute -top-8 flex gap-1 bg-card/90 border border-border/40 p-1 rounded-lg opacity-0 group-hover/msg:opacity-100 transition-all z-10 backdrop-blur-sm shadow-xl",
+                                          isMe ? "right-0" : "left-0"
+                                       )}>
+                                          <button
+                                             onClick={() => setReplyingTo(msg)}
+                                             className="p-1 hover:bg-indigo-500/20 rounded text-muted-foreground hover:text-indigo-400 transition-colors"
+                                             title="Reply"
+                                          >
+                                             <MessageSquare className="w-3 h-3" />
+                                          </button>
+                                          <button
+                                             onClick={() => {
+                                                const emoji = ["👍", "❤️", "🚀", "🔥"][Math.floor(Math.random() * 4)];
+                                                reactToDirectMessage(msg.id, emoji);
+                                             }}
+                                             className="p-1 hover:bg-yellow-500/20 rounded text-muted-foreground hover:text-yellow-500 transition-colors"
+                                             title="React"
+                                          >
+                                             <Zap className="w-3 h-3" />
+                                          </button>
+                                          {isMe && !msg.is_deleted && (
+                                             <>
+                                                <button
+                                                   onClick={() => {
+                                                      setEditingMessage(msg);
+                                                      setChatInput(msg.content);
+                                                   }}
+                                                   className="p-1 hover:bg-blue-500/20 rounded text-muted-foreground hover:text-blue-400 transition-colors"
+                                                   title="Edit"
+                                                >
+                                                   <Edit3 className="w-3 h-3" />
+                                                </button>
+                                                <button
+                                                   onClick={() => deleteDirectMessage(msg.id)}
+                                                   className="p-1 hover:bg-destructive/20 rounded text-muted-foreground hover:text-destructive transition-colors"
+                                                   title="Delete"
+                                                >
+                                                   <Trash2 className="w-3 h-3" />
+                                                </button>
+                                             </>
+                                          )}
+                                       </div>
+
+                                       <div className={cn(
+                                          "rounded-[1rem] px-4 py-2 text-[10px] font-medium leading-relaxed shadow-lg relative group overflow-hidden",
+                                          isMe ? "bg-indigo-600 text-foreground rounded-br-none" : "bg-card/60 text-foreground/80 border border-border/30 rounded-bl-none",
+                                          msg.is_deleted && "opacity-50 italic font-normal"
+                                       )}>
+                                          {/* Highlight for edited */}
+                                          {isMe && !msg.is_deleted && (
+                                             <div className="absolute top-0 right-0 w-8 h-8 bg-white/5 blur-xl -rotate-45" />
+                                          )}
+
+                                          <p className="relative z-10 break-words">
+                                             {msg.is_deleted ? "Intel purged by operative." : msg.content}
+                                             {msg.is_edited && !msg.is_deleted && (
+                                                <span className="ml-1 opacity-40 text-[7px] uppercase font-black tracking-tighter">(Edited)</span>
+                                             )}
+                                          </p>
+                                       </div>
+                                    </div>
+
+                                    {/* Reactions Display */}
+                                    {Object.keys(msg.reactions || {}).length > 0 && (
+                                       <div className={cn("flex flex-wrap gap-1 mt-1", isMe ? "justify-end" : "justify-start")}>
+                                          {Object.entries(msg.reactions || {}).map(([emoji, users]) => (
+                                             <button
+                                                key={emoji}
+                                                onClick={() => reactToDirectMessage(msg.id, emoji)}
+                                                className={cn(
+                                                   "flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[8px] font-bold transition-all",
+                                                   Array.isArray(users) && (users as string[]).includes(currentUser.id)
+                                                      ? "bg-indigo-500/20 border-indigo-500/40 text-indigo-400"
+                                                      : "bg-card/40 border-border/20 text-muted-foreground hover:border-border/40"
+                                                )}
+                                             >
+                                                <span>{emoji}</span>
+                                                <span>{Array.isArray(users) ? (users as string[]).length : 0}</span>
+                                             </button>
+                                          ))}
+                                       </div>
+                                    )}
+                                 </div>
+                              );
+                           })}
+                        </div>
+                        {/* Composer State Indicators */}
+                        {(replyingTo || editingMessage) && (
+                           <div className="px-4 py-2 bg-indigo-500/10 border-t border-border/15 flex items-center justify-between animate-in slide-in-from-bottom-2">
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                 <div className="p-1.5 bg-indigo-500/20 rounded text-indigo-400">
+                                    {replyingTo ? <MessageSquare className="w-3 h-3" /> : <Edit3 className="w-3 h-3" />}
+                                 </div>
+                                 <div className="min-w-0">
+                                    <p className="text-[8px] font-black uppercase text-indigo-400 tracking-widest">
+                                       {replyingTo ? `Replying to ${replyingTo.sender_name}` : "Editing Payload"}
+                                    </p>
+                                    <p className="text-[9px] text-muted-foreground truncate italic">
+                                       {replyingTo ? replyingTo.content : editingMessage?.content}
+                                    </p>
+                                 </div>
+                              </div>
+                              <button
+                                 onClick={() => { setReplyingTo(null); setEditingMessage(null); setChatInput(""); }}
+                                 className="p-1 hover:bg-card rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                 <X className="w-3 h-3" />
+                              </button>
+                           </div>
+                        )}
+
+                        <form
+                           onSubmit={(e) => {
+                              e.preventDefault();
+                              if (!chatInput.trim() || !selectedThread) return;
+
+                              if (editingMessage) {
+                                 editDirectMessage(editingMessage.id, chatInput);
+                                 setEditingMessage(null);
+                              } else {
+                                 onSendDirect(selectedThread, chatInput, replyingTo?.id);
+                                 setReplyingTo(null);
+                              }
+                              setChatInput("");
+                           }}
+                           className="p-3 bg-card/70 border-t border-border/20"
+                        >
+                           <div className="relative">
+                              <input
+                                 value={chatInput}
+                                 onChange={(e) => setChatInput(e.target.value)}
+                                 autoFocus
+                                 className="w-full bg-card/30 border border-border/30 rounded-full py-2 pl-4 pr-10 text-[10px] font-medium text-foreground outline-none focus:border-indigo-500/50 transition-all placeholder:text-muted-foreground/30"
+                                 placeholder={editingMessage ? "SAVE_CHANGES..." : "TRANSMIT_DATA..."}
+                              />
+                              <button className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 bg-indigo-600 text-foreground rounded-lg hover:bg-indigo-500 transition-all">
+                                 <Send className="w-3 h-3" />
+                              </button>
+                           </div>
+                        </form>
+                     </div>
+                  )}
+               </div>
+            )}
+         </div>
+      );
+   };
 
 const PostShareWidget: React.FC<{
    user: User;
@@ -830,6 +994,9 @@ export function CommunityView() {
       teams,
       directMessages,
       sendDirectMessage,
+      editDirectMessage,
+      deleteDirectMessage,
+      reactToDirectMessage,
       searchUsers,
       allProfiles,
       followingIds,
@@ -1481,6 +1648,9 @@ export function CommunityView() {
                               directMessages={directMessages}
                               onSendGlobal={sendGlobalMessage}
                               onSendDirect={sendDirectMessage}
+                              editDirectMessage={editDirectMessage}
+                              deleteDirectMessage={deleteDirectMessage}
+                              reactToDirectMessage={reactToDirectMessage}
                               currentUser={user!}
                               allProfiles={allProfiles}
                               searchUsers={searchUsers}

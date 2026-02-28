@@ -269,6 +269,10 @@ export interface DirectMessage {
   sender_avatar?: string;
   receiver_name: string;
   receiver_avatar?: string;
+  reply_to_id?: string;
+  reactions?: Record<string, string[]>;
+  is_edited?: boolean;
+  is_deleted?: boolean;
 }
 
 export interface PostComment {
@@ -336,7 +340,10 @@ interface AppContextType {
 
   // Direct Messaging
   directMessages: DirectMessage[];
-  sendDirectMessage: (receiverId: string, content: string) => Promise<void>;
+  sendDirectMessage: (receiverId: string, content: string, replyToId?: string) => Promise<void>;
+  editDirectMessage: (messageId: string, newContent: string) => Promise<void>;
+  deleteDirectMessage: (messageId: string) => Promise<void>;
+  reactToDirectMessage: (messageId: string, emoji: string) => Promise<void>;
   fetchDirectMessages: () => void;
   markDMAsRead: (messageId: string) => Promise<void>;
   markAllDMsAsRead: () => Promise<void>;
@@ -2608,22 +2615,87 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         sender_name: m.sender?.full_name || "Unknown",
         sender_avatar: m.sender?.avatar_url,
         receiver_name: m.receiver?.full_name || "Unknown",
-        receiver_avatar: m.receiver?.avatar_url
+        receiver_avatar: m.receiver?.avatar_url,
+        reply_to_id: m.reply_to_id,
+        reactions: m.reactions || {},
+        is_edited: m.is_edited || false,
+        is_deleted: m.is_deleted || false
       })));
     }
   };
 
-  const sendDirectMessage = async (receiverId: string, content: string) => {
+  const sendDirectMessage = async (receiverId: string, content: string, replyToId?: string) => {
     if (!user) return;
     const { error } = await supabase.from('direct_messages').insert({
       sender_id: user.id,
       receiver_id: receiverId,
-      content
+      content,
+      reply_to_id: replyToId
     });
     if (error) toast.error("Failed to route intel packet.");
     else {
       fetchDirectMessages();
       recordActivity("direct_message", `Sent direct message to ${receiverId}: ${content.substring(0, 50)}...`, 1, "user", receiverId);
+    }
+  };
+
+  const editDirectMessage = async (messageId: string, newContent: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('direct_messages')
+      .update({
+        content: newContent,
+        is_edited: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', messageId)
+      .eq('sender_id', user.id); // Guard: only sender can edit
+
+    if (error) {
+      toast.error("Failed to reconfigure intel packet.");
+    } else {
+      fetchDirectMessages();
+      toast.success("Intel packet reconfigured.");
+      recordActivity("dm_edit", `Edited direct message: ${newContent.substring(0, 50)}...`, 0, "message", messageId);
+    }
+  };
+
+  const deleteDirectMessage = async (messageId: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('direct_messages')
+      .update({
+        content: "Intel purged by operative.",
+        is_deleted: true,
+        is_edited: false // Explicitly clear edited flag on delete
+      })
+      .eq('id', messageId)
+      .eq('sender_id', user.id);
+
+    if (error) {
+      toast.error("Failed to purge intel packet.");
+    } else {
+      fetchDirectMessages();
+      toast.success("Intel packet purged.");
+      recordActivity("dm_delete", `Purged direct message`, -1, "message", messageId);
+    }
+  };
+
+  const reactToDirectMessage = async (messageId: string, emoji: string) => {
+    if (!user) return;
+
+    const { error } = await supabase.rpc('toggle_direct_message_reaction', {
+      msg_id: messageId,
+      emoji: emoji,
+      reactor_id: user.id
+    });
+
+    if (error) {
+      console.error("Reaction failed:", error);
+      toast.error("Reaction sequence failed.");
+    } else {
+      // Optimistic reactivity is hard with RPC + Postgres changes, so we just refetch
+      fetchDirectMessages();
     }
   };
 
@@ -3326,6 +3398,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     followingIds,
     directMessages,
     sendDirectMessage,
+    editDirectMessage,
+    deleteDirectMessage,
+    reactToDirectMessage,
     fetchDirectMessages,
     markDMAsRead,
     markAllDMsAsRead,
