@@ -117,8 +117,8 @@ export function LandingView() {
       {/* ─── Floating Navigation ──────────────────────────────────────────── */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-16 border border-white/[0.06] bg-[#020617]/50 backdrop-blur-2xl px-6 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/30">
         <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform duration-300">
-            <Zap className="text-white w-4 h-4 fill-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+            <img src="/assets/logo.png" className="w-5 h-5 object-contain" alt="HackMate" />
           </div>
           <span className="text-sm font-black tracking-tighter uppercase text-white">HackMate</span>
         </div>
@@ -359,8 +359,8 @@ export function LandingView() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-20 md:gap-12">
           <div className="space-y-8">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center shadow-lg shadow-blue-600/30">
-                <Zap className="text-white w-4 h-4 fill-white" />
+              <div className="w-7 h-7 rounded flex items-center justify-center">
+                <img src="/assets/logo.png" className="w-5 h-5 object-contain" alt="HackMate" />
               </div>
               <span className="text-lg font-black tracking-tighter uppercase text-white">HackMate</span>
             </div>
