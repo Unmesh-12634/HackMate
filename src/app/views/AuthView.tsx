@@ -144,8 +144,8 @@ export function AuthView() {
             </div>
 
             <div className="flex flex-col items-center mb-12 relative z-10">
-              <div className="w-20 h-20 rounded-[24px] flex items-center justify-center mb-6">
-                <img src="/assets/logo.png" className="w-12 h-12 object-contain" alt="HackMate" />
+              <div className="w-24 h-24 rounded-[32px] flex items-center justify-center mb-6">
+                <img src="/assets/logo.png" className="w-16 h-16 object-contain" alt="HackMate" />
               </div>
               <h1 className="text-3xl font-black tracking-tighter uppercase text-white font-mono mb-2">HackMate<span className="text-blue-500">.sys</span></h1>
               <div className="flex items-center gap-3">

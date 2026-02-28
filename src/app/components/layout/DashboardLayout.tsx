@@ -74,14 +74,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       >
         <div className="p-6 flex items-center justify-between mb-8">
           <div className={cn("flex items-center gap-3 overflow-hidden whitespace-nowrap", !isSidebarOpen && "hidden")}>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-              <img src="/assets/logo.png" className="w-6 h-6 object-contain" alt="HackMate" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+              <img src="/assets/logo.png" className="w-8 h-8 object-contain" alt="HackMate" />
             </div>
             <span className="text-lg font-black tracking-tight uppercase">HackMate</span>
           </div>
           {!isSidebarOpen && (
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => navigate("/workspace")}>
-              <img src="/assets/logo.png" className="w-7 h-7 object-contain" alt="HackMate" />
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => navigate("/workspace")}>
+              <img src="/assets/logo.png" className="w-10 h-10 object-contain" alt="HackMate" />
             </div>
           )}
           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-secondary rounded-lg lg:flex hidden">
@@ -156,8 +156,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <Menu className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-2" onClick={() => navigate("/workspace")}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0">
-                  <img src="/assets/logo.png" className="w-5 h-5 object-contain" alt="HackMate" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0">
+                  <img src="/assets/logo.png" className="w-7 h-7 object-contain" alt="HackMate" />
                 </div>
                 <span className="text-sm font-black tracking-tighter uppercase">HM</span>
               </div>
@@ -421,8 +421,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             >
               <div className="p-8 border-b border-border flex items-center justify-between bg-secondary/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                    <img src="/assets/logo.png" className="w-8 h-8 object-contain" alt="HackMate" />
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center">
+                    <img src="/assets/logo.png" className="w-12 h-12 object-contain" alt="HackMate" />
                   </div>
                   <span className="text-xl font-black tracking-tight uppercase">HackMate</span>
                 </div>
