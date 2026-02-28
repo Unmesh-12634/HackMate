@@ -11,6 +11,7 @@ import {
   Settings,
   Search,
   Bell,
+  Download,
   Menu,
   LogOut,
   Moon,
@@ -48,6 +49,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPresence, setShowPresence] = useState(false);
@@ -116,30 +137,46 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="p-4 space-y-4">
-          <button
-            onClick={toggleTheme}
-            className={cn(
-              "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-secondary text-muted-foreground transition-all",
-              !isSidebarOpen && "justify-center"
-            )}
-          >
-            {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>
-              {theme === "light" ? "Night Mode" : "Day Mode"}
-            </span>
-          </button>
+          {installPrompt && (
+            <button
+              onClick={handleInstall}
+              className={cn(
+                "flex items-center w-full gap-4 p-3 rounded-2xl bg-hack-blue/10 text-hack-blue border border-hack-blue/20 hover:bg-hack-blue/20 transition-all group",
+                !isSidebarOpen && "justify-center"
+              )}
+            >
+              <Download className="w-5 h-5 shrink-0 group-hover:bounce" />
+              <span className={cn("text-[10px] font-black uppercase tracking-widest text-left", !isSidebarOpen && "hidden")}>
+                Download App
+              </span>
+            </button>
+          )}
 
-          <button
-            onClick={logout}
-            className={cn(
-              "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-destructive/10 text-destructive transition-all",
-              !isSidebarOpen && "justify-center"
-            )}
-          >
-            <LogOut className="w-5 h-5" />
-            <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>Sign Out</span>
-          </button>
-        </div>
+          <div className="p-4 space-y-4">
+            <button
+              onClick={toggleTheme}
+              className={cn(
+                "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-secondary text-muted-foreground transition-all",
+                !isSidebarOpen && "justify-center"
+              )}
+            >
+              {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>
+                {theme === "light" ? "Night Mode" : "Day Mode"}
+              </span>
+            </button>
+
+            <button
+              onClick={logout}
+              className={cn(
+                "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-destructive/10 text-destructive transition-all",
+                !isSidebarOpen && "justify-center"
+              )}
+            >
+              <LogOut className="w-5 h-5" />
+              <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>Sign Out</span>
+            </button>
+          </div>
       </aside>
 
       {/* Main Content Area */}
@@ -460,6 +497,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="p-6 border-t border-border bg-secondary/5 space-y-4">
+                {installPrompt && (
+                  <button
+                    onClick={() => {
+                      handleInstall();
+                      setIsMobileDrawerOpen(false);
+                    }}
+                    className="w-full flex items-center justify-center gap-3 p-4 rounded-2xl bg-hack-blue text-white shadow-lg shadow-hack-blue/20 font-black uppercase text-[10px] tracking-widest"
+                  >
+                    <Download className="w-5 h-5" />
+                    Install App
+                  </button>
+                )}
                 <div className="flex gap-2">
                   <button
                     onClick={toggleTheme}
