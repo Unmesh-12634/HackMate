@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppContext, Notification } from "../../context/AppContext";
 import { RoleSelector } from "../RoleSelector";
@@ -152,31 +152,30 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </button>
           )}
 
-          <div className="p-4 space-y-4">
-            <button
-              onClick={toggleTheme}
-              className={cn(
-                "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-secondary text-muted-foreground transition-all",
-                !isSidebarOpen && "justify-center"
-              )}
-            >
-              {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-              <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>
-                {theme === "light" ? "Night Mode" : "Day Mode"}
-              </span>
-            </button>
+          <button
+            onClick={toggleTheme}
+            className={cn(
+              "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-secondary text-muted-foreground transition-all",
+              !isSidebarOpen && "justify-center"
+            )}
+          >
+            {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>
+              {theme === "light" ? "Night Mode" : "Day Mode"}
+            </span>
+          </button>
 
-            <button
-              onClick={logout}
-              className={cn(
-                "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-destructive/10 text-destructive transition-all",
-                !isSidebarOpen && "justify-center"
-              )}
-            >
-              <LogOut className="w-5 h-5" />
-              <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>Sign Out</span>
-            </button>
-          </div>
+          <button
+            onClick={logout}
+            className={cn(
+              "flex items-center w-full gap-4 p-3 rounded-2xl hover:bg-destructive/10 text-destructive transition-all",
+              !isSidebarOpen && "justify-center"
+            )}
+          >
+            <LogOut className="w-5 h-5" />
+            <span className={cn("text-[10px] font-black uppercase tracking-widest", !isSidebarOpen && "hidden")}>Sign Out</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
