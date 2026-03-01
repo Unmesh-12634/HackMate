@@ -63,13 +63,27 @@ export interface GitHubCommit {
     html_url: string;
 }
 
+// Simple in-memory cache to prevent redundant requests and 403s
+const githubCache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_TTL = 60 * 1000; // 1 minute
+
 /**
  * Helper to perform GitHub API requests with automatic retry on 401 (Unauthorized)
  * by stripping the token. This handles cases where a non-GitHub token is sent.
  */
 async function safeFetch(url: string, token?: string): Promise<Response> {
+    // Check cache first (only for GET requests, which fetch is by default here)
+    const cached = githubCache.get(url);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return new Response(JSON.stringify(cached.data), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
     const headers: HeadersInit = {
-        'Accept': 'application/vnd.github.v3+json'
+        'Accept': 'application/vnd.github.v3+json',
+        'User-Agent': 'HackMate-App'
     };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -78,8 +92,22 @@ async function safeFetch(url: string, token?: string): Promise<Response> {
     // If 401 and we used a token, retry once without it for public data
     if (response.status === 401 && token) {
         console.warn(`GitHub API 401: Invalid token at ${url}. Retrying unauthenticated...`);
-        const publicHeaders: HeadersInit = { 'Accept': 'application/vnd.github.v3+json' };
+        const publicHeaders: HeadersInit = {
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'HackMate-App'
+        };
         response = await fetch(url, { headers: publicHeaders });
+    }
+
+    // Cache successful responses
+    if (response.ok) {
+        const clonedResponse = response.clone();
+        try {
+            const data = await clonedResponse.json();
+            githubCache.set(url, { data, timestamp: Date.now() });
+        } catch (e) {
+            // Ignore non-json responses for caching
+        }
     }
 
     return response;

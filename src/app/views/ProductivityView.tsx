@@ -1,463 +1,719 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
    Zap,
    Shield,
    Target,
-   History,
+   History as LucideHistory,
    Award,
    Activity,
-   Cpu,
-   Star,
    CheckCircle2,
-   Lock,
    TrendingUp,
-   Bookmark,
+   Flame,
+   Trophy,
+   Star,
+   Crown,
+   ChevronRight,
+   Search,
+   Filter,
+   Bell,
+   Clock,
    Plus,
    Trash2,
-   ChevronRight,
-   LucideIcon,
-   Bell,
-   Layers,
-   Hexagon,
-   Milestone,
-   Crown,
-   Trophy,
-   Terminal,
-   Map,
-   BarChart3,
-   Activity as ActivityIcon
+   Layout,
+   Globe,
+   Cpu,
+   Database,
+   ShieldAlert,
+   Play,
+   Pause,
+   RotateCcw,
+   Gamepad2,
+   Binary
 } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
-import { Badge } from "../components/ui/card";
 import { useAppContext } from "../context/AppContext";
-import {
-   ResponsiveContainer,
-   AreaChart,
-   Area,
-   XAxis,
-   YAxis,
-   Tooltip,
-   RadarChart,
-   PolarGrid,
-   PolarAngleAxis,
-   Radar
-} from "recharts";
 import { cn } from "../components/ui/utils";
-import { toast } from "sonner";
 
-// --- Types ---
-interface Achievement {
-   id: string;
-   title: string;
-   description: string;
-   icon: LucideIcon;
-   unlocked: boolean;
-   requirement?: string;
-}
+// --- Sub-components ---
 
-// --- Sub-components (Intelligence Pro) ---
-
-const RollingValue: React.FC<{ value: string | number }> = ({ value }) => (
-   <motion.span
-      key={value}
-      initial={{ opacity: 0, y: 10 }}
+const StatCard: React.FC<{
+   label: string,
+   value: string | number,
+   icon: any,
+   color: string,
+   delay: number
+}> = ({ label, value, icon: Icon, color, delay }) => (
+   <motion.div
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="inline-block"
+      transition={{ delay }}
+      className="p-6 rounded-[2.5rem] bg-card/60 border border-border/40 backdrop-blur-xl flex flex-col justify-between group hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5"
    >
-      {value}
-   </motion.span>
+      <div className={`p-4 rounded-2xl bg-secondary w-fit border border-border/30 ${color} group-hover:scale-110 transition-transform duration-500`}>
+         <Icon className="w-6 h-6" />
+      </div>
+      <div>
+         <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">{label}</div>
+         <div className="text-2xl font-black text-foreground uppercase tracking-tighter font-mono">{value}</div>
+      </div>
+   </motion.div>
 );
-
-const KPICard: React.FC<{
-   title: string;
-   value: string | number;
-   change?: string;
-   icon: LucideIcon;
-   color: string;
-   data: { val: number }[]
-}> = ({ title, value, change, icon: Icon, color, data }) => (
-   <div className="p-6 rounded-2xl bg-card border border-border backdrop-blur-3xl relative overflow-hidden group hover:border-border hover:bg-card/80 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl">
-      {/* Focal Glow */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-current opacity-[0.03] blur-3xl group-hover:opacity-[0.07] transition-opacity duration-500 pointer-events-none" style={{ color: color.includes('blue') ? '#3B82F6' : color.includes('emerald') ? '#10B981' : '#F97316' }} />
-
-      <div className="flex items-start justify-between relative z-10 mb-4">
-         <div>
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-1 font-['Fira_Code']">{title}</p>
-            <h3 className="text-4xl font-black text-foreground tracking-tighter drop-shadow-sm">
-               <RollingValue value={value} />
-            </h3>
-            {change && <span className="text-[10px] font-black text-emerald-500/80 uppercase mt-2 inline-block tracking-widest">{change}</span>}
-         </div>
-         <div className={cn("p-3 rounded-xl bg-muted border border-border shadow-md transition-transform duration-500 group-hover:scale-110", color)}>
-            <Icon className="w-5 h-5" />
-         </div>
-      </div>
-      <div className="h-12 w-full relative z-10 mt-auto">
-         <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
-               <Area type="monotone" dataKey="val" stroke="currentColor" fill="none" strokeWidth={2.5} className={color} />
-            </AreaChart>
-         </ResponsiveContainer>
-      </div>
-   </div>
-);
-
-const ActivityHeatmap: React.FC<{ history: any[] }> = ({ history }) => {
-   const days = 70; // 10 weeks
-   const data = useMemo(() => {
-      const counts: Record<string, number> = {};
-      history?.forEach(h => {
-         const date = new Date(h.created_at).toLocaleDateString();
-         counts[date] = (counts[date] || 0) + 1;
-      });
-
-      return Array.from({ length: days }).map((_, i) => {
-         const d = new Date();
-         d.setDate(d.getDate() - (days - 1 - i));
-         const dateStr = d.toLocaleDateString();
-         const level = counts[dateStr] ? Math.min(counts[dateStr], 4) : 0;
-         return { level, date: dateStr };
-      });
-   }, [history]);
-
-   return (
-      <div className="p-8 rounded-2xl bg-card border border-border backdrop-blur-3xl relative overflow-hidden group h-full hover:border-border/80 transition-all duration-300">
-         <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-               <Terminal className="w-4 h-4 text-blue-500" />
-               <h3 className="text-sm font-black text-foreground uppercase tracking-[0.2em]">Operational Pulse</h3>
-            </div>
-            <div className="flex items-center gap-1.5 font-['Fira_Code'] text-[9px] text-muted-foreground">
-               <span>LOW</span>
-               {[0, 1, 2, 3, 4].map(l => (
-                  <div key={l} className={cn(
-                     "w-2.5 h-2.5 rounded-sm border border-border",
-                     l === 0 ? "bg-muted" :
-                        l === 1 ? "bg-blue-900/50 dark:bg-blue-900/50 bg-blue-200/50" :
-                           l === 2 ? "bg-blue-700/50" :
-                              l === 3 ? "bg-blue-500/60" : "bg-blue-500"
-                  )} />
-               ))}
-               <span>HIGH</span>
-            </div>
-         </div>
-         <div className="grid grid-flow-col grid-rows-7 gap-1.5">
-            {data.map((d, i) => (
-               <div
-                  key={i}
-                  title={`${d.date}: ${d.level} operations`}
-                  className={cn(
-                     "w-full pt-[100%] rounded-sm transition-all duration-300 hover:scale-150 hover:z-10 cursor-crosshair border border-border/30",
-                     d.level === 0 ? "bg-muted/60" :
-                        d.level === 1 ? "bg-blue-500/20" :
-                           d.level === 2 ? "bg-blue-500/40" :
-                              d.level === 3 ? "bg-blue-500/70" : "bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                  )}
-               />
-            ))}
-         </div>
-         <div className="mt-8 flex justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] font-['Fira_Code']">
-            <span>OCT_SYNC</span>
-            <span>NOV_SYNC</span>
-            <span>DEC_SYNC</span>
-            <span>JAN_SYNC</span>
-            <span>FEB_SYNC</span>
-         </div>
-      </div>
-   );
-};
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-   if (active && payload && payload.length) {
-      return (
-         <div className="bg-popover border border-border p-4 rounded-lg shadow-xl font-['Fira_Code'] backdrop-blur-xl">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-2">{label || "DATA_PACKET"}</p>
-            <div className="flex items-center gap-3">
-               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-               <p className="text-sm font-black text-foreground uppercase tracking-tight">INTENSITY: {payload[0].value.toLocaleString()}</p>
-            </div>
-         </div>
-      );
-   }
-   return null;
-};
-
-// --- Main View ---
 
 export function ProductivityView() {
-
    const {
       user,
-      personalNotes,
+      teams,
+      allProfiles,
       personalReminders,
       milestones,
-      professionalHistory,
-      teams,
-      addPersonalNote,
-      deletePersonalNote,
       addPersonalReminder,
       toggleReminder,
       deleteReminder,
-      analytics
+      fetchPublicProfiles,
+      claimTacticalBounty,
+      syncStreak
    } = useAppContext();
 
-   const [noteDraft, setNoteDraft] = useState("");
-   const [noteTitle, setNoteTitle] = useState("");
-   const [isAddingNote, setIsAddingNote] = useState(false);
-   const [reminderText, setReminderText] = useState("");
+   const [newReminder, setNewReminder] = useState("");
 
-   // --- Calculated Data ---
-   // Individual sparklines are handled directly in the cards via analytics.trends
+   // Sync streak on load
+   useEffect(() => {
+      syncStreak();
+   }, []);
 
-   const achievements: Achievement[] = [
-      { id: 'a1', title: 'Tactical Breach', description: 'Immediate urgent task resolution.', icon: Target, unlocked: true },
-      { id: 'a2', title: 'Ghost Protocol', description: 'Maintain zero latency for 7 cycles.', icon: Shield, unlocked: true },
-      { id: 'a3', title: 'Deep Scribe', description: 'Commit 10 strategic intel nodes.', icon: Bookmark, unlocked: (personalNotes?.length || 0) >= 10, requirement: '10 Intel Nodes' },
-      { id: 'a4', title: 'Nexus Node', description: 'Inter-squad collaboration link.', icon: Layers, unlocked: (teams?.length || 0) >= 3, requirement: '3 Squad Connections' },
+   // Focus Timer State
+   const [timeLeft, setTimeLeft] = useState(25 * 60);
+   const [isFocusActive, setIsFocusActive] = useState(false);
+   const [focusPhase, setFocusPhase] = useState<'work' | 'break'>('work');
+
+   useEffect(() => {
+      let interval: any;
+      if (isFocusActive && timeLeft > 0) {
+         interval = setInterval(() => {
+            setTimeLeft(prev => prev - 1);
+         }, 1000);
+      } else if (timeLeft === 0) {
+         setIsFocusActive(false);
+         if (focusPhase === 'work') {
+            setFocusPhase('break');
+            setTimeLeft(5 * 60);
+         } else {
+            setFocusPhase('work');
+            setTimeLeft(25 * 60);
+         }
+      }
+      return () => clearInterval(interval);
+   }, [isFocusActive, timeLeft, focusPhase]);
+
+   const formatTime = (seconds: number) => {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+   };
+
+   // Fetch profiles if not already present for global ranking
+   useEffect(() => {
+      if (!allProfiles || allProfiles.length === 0) {
+         fetchPublicProfiles();
+      }
+   }, []);
+
+   // Calculate personal stats from all teams
+   const allPersonalTasks = (teams || []).flatMap((t: any) => (t.tasks || []).filter((task: any) => task.assignee_id === user?.id));
+   const completedPersonalTasks = allPersonalTasks.filter((t: any) => t.status === 'done');
+   const totalImpact = completedPersonalTasks.length;
+
+   // Global Ranking Logic
+   const sortedProfiles = [...(allProfiles || [])].sort((a, b) => (b.reputation || b.xp || 0) - (a.reputation || a.xp || 0));
+   const globalRank = sortedProfiles.findIndex(p => p.id === user?.id) + 1 || "N/A";
+   const topPerformers = sortedProfiles.slice(0, 5);
+
+   // Domain Analysis Logic (Dynamic parsing of task labels)
+   const domainMap: Record<string, number> = {
+      "Frontend": 0,
+      "Backend": 0,
+      "Design": 0,
+      "Security": 0,
+      "Database": 0
+   };
+
+   completedPersonalTasks.forEach((task: any) => {
+      const labels = (task.labels || []).map((l: string) => l.toLowerCase());
+      if (labels.some((l: string) => l.includes('front') || l.includes('ui') || l.includes('css'))) domainMap["Frontend"]++;
+      if (labels.some((l: string) => l.includes('back') || l.includes('node') || l.includes('api'))) domainMap["Backend"]++;
+      if (labels.some((l: string) => l.includes('design') || l.includes('ux') || l.includes('figma'))) domainMap["Design"]++;
+      if (labels.some((l: string) => l.includes('sec') || l.includes('auth') || l.includes('cyber'))) domainMap["Security"]++;
+      if (labels.some((l: string) => l.includes('db') || l.includes('sql') || l.includes('mongo') || l.includes('supabase'))) domainMap["Database"]++;
+   });
+
+   const totalDomainScore = Object.values(domainMap).reduce((a, b) => a + b, 0) || 1;
+   const masteryData = [
+      { label: "Frontend Architecture", progress: Math.min(100, Math.floor((domainMap["Frontend"] / 5) * 100)), color: "bg-blue-500", glow: "shadow-blue-500/20", icon: Layout },
+      { label: "Neural Backend", progress: Math.min(100, Math.floor((domainMap["Backend"] / 5) * 100)), color: "bg-emerald-500", glow: "shadow-emerald-500/20", icon: Cpu },
+      { label: "Logic Security", progress: Math.min(100, Math.floor((domainMap["Security"] / 3) * 100)), color: "bg-rose-500", glow: "shadow-rose-500/20", icon: ShieldAlert },
+      { label: "Data Mastery", progress: Math.min(100, Math.floor((domainMap["Database"] / 4) * 100)), color: "bg-amber-500", glow: "shadow-amber-500/20", icon: Database }
    ];
 
-   const handleSubmitNote = async () => {
-      if (!noteDraft.trim()) return;
-      await addPersonalNote({ title: noteTitle || "Untitled Intel", content: noteDraft });
-      setNoteDraft(""); setNoteTitle(""); setIsAddingNote(false);
+   const currentXP = user?.xp || 0;
+   const currentLevel = user?.level || 1;
+   const nextLevelXP = currentLevel * 100;
+   const progressToNextLevel = (currentXP % 100);
+
+   // Proper Real-time Stats
+   const activeStreak = user?.streak_count || 0;
+
+   const growthStats = [
+      { label: "GLOBAL_STANDING", value: `#${globalRank}`, icon: Crown, color: "text-amber-400" },
+      { label: "OPERATIONAL_IMPACT", value: totalImpact, icon: Target, color: "text-blue-500" },
+      { label: "ACTIVE_STREAK", value: `${activeStreak} DAYS`, icon: Flame, color: "text-rose-500" },
+      { label: "NEURAL_INTELLIGENCE", value: `${currentXP} XP`, icon: Zap, color: "text-emerald-400" },
+   ];
+
+   const handleAddReminder = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newReminder.trim()) return;
+      addPersonalReminder({
+         content: newReminder,
+         priority: 'medium',
+         due_at: new Date(Date.now() + 86400000).toISOString()
+      });
+      setNewReminder("");
    };
 
    return (
-      <div className="h-full overflow-y-auto bg-background scrollbar-hide font-['Fira_Sans'] selection:bg-blue-500/30 text-foreground">
-         {/* Subtle grid overlay — less visible in light mode */}
-         <div className="fixed inset-0 pointer-events-none opacity-[0.02] dark:opacity-[0.05] bg-[linear-gradient(rgba(0,0,0,.1)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,.1)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.05)_1px,transparent_1px)] bg-[size:50px_50px]" />
-         <div className="fixed inset-0 pointer-events-none bg-gradient-to-tr from-blue-600/[0.02] via-transparent to-orange-600/[0.02]" />
+      <div className="h-full overflow-y-auto bg-background scrollbar-hide selection:bg-blue-500/30 text-foreground relative">
+         {/* Glossy Overlay */}
+         <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-600/[0.03] to-transparent pointer-events-none" />
 
-         <div className="max-w-[1700px] mx-auto p-12 space-y-10 relative z-10">
-
-            {/* HEADER: INTELLIGENCE HUB */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border pb-12">
+         <div className="max-w-[1600px] mx-auto p-8 md:p-12 space-y-12 relative z-10">
+            {/* Header Section */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border/40 pb-12">
                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                     <div className="flex items-center gap-2 px-3 py-1 rounded-sm bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-500 uppercase tracking-[0.4em] font-['Fira_Code'] animate-pulse">
-                        <div className="w-1.5 h-1.5 rounded-full bg-current" /> SYSTEM_ONLINE
+                  <div className="flex items-center gap-3">
+                     <div className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[9px] font-black text-blue-500 uppercase tracking-[0.4em] animate-pulse">
+                        PERSONAL_EVOLUTION_PROTOCOLS_V4
                      </div>
-                     <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest font-['Fira_Code']">NODE_ID: {user?.id.split('-')[0]}</div>
                   </div>
-                  <h1 className="text-7xl font-black text-foreground uppercase tracking-[calc(-0.05em)] leading-none italic">
-                     INTEL_<span className="text-blue-500 not-italic">PRO</span>
+                  <h1 className="text-6xl md:text-8xl font-black text-foreground uppercase tracking-tighter leading-none italic">
+                     GROWTH_<span className="text-blue-500 not-italic">HUB</span>
                   </h1>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] max-w-xl font-['Fira_Code']">EXECUTIVE ANALYSIS // TACTICAL TELEMETRY STREAM // V.4.0.2</p>
+                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.4em] max-w-xl">
+                     REAL-TIME BIOMETRIC TRACKING // NEURAL PROGRESSION // OPERATIONAL IMPACT
+                  </p>
                </div>
-               <div className="flex items-center gap-12 bg-card p-8 rounded-2xl border border-border backdrop-blur-xl">
+
+               <div className="bg-card/40 backdrop-blur-3xl p-8 rounded-[2.5rem] border border-border/40 shadow-2xl flex items-center gap-10">
                   <div className="text-right">
-                     <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-2 font-['Fira_Code']">PRESTIGE_RANK</div>
-                     <div className="text-4xl font-black text-foreground uppercase tracking-tighter flex items-center gap-4 justify-end">
-                        <RollingValue value={user?.rank || ""} />
-                        <div className="p-2 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                           <Trophy className="w-6 h-6 text-orange-500" />
+                     <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-2">CURRENT_REPUTATION</div>
+                     <div className="text-4xl font-black text-foreground tracking-tighter uppercase font-mono">
+                        {(user as any)?.reputation?.toLocaleString() || 0} <span className="text-blue-500 text-sm ml-1">RP</span>
+                     </div>
+                  </div>
+                  <div className="h-12 w-[1px] bg-border/40" />
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                     <Trophy className="w-8 h-8 text-amber-500" />
+                  </div>
+               </div>
+            </header>
+
+            {/* Hero Progression Grid */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 items-stretch">
+               {/* Level Progress Hero */}
+               <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="xl:col-span-2 p-10 md:p-14 rounded-[4rem] bg-card border border-border/40 relative overflow-hidden group shadow-2xl"
+               >
+                  {/* Dynamic Gloss Background */}
+                  <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px] -mr-300 -mt-300 pointer-events-none group-hover:bg-blue-600/10 transition-all duration-1000" />
+
+                  <div className="relative z-10">
+                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+                        <div className="space-y-4">
+                           <h3 className="text-sm font-black text-muted-foreground uppercase tracking-[0.5em]">Neural Rank Protocol</h3>
+                           <div className="flex items-baseline gap-6 focus-within:">
+                              <span className="text-8xl md:text-[10rem] font-black text-foreground tracking-tighter uppercase font-mono leading-none">
+                                 {currentLevel}
+                              </span>
+                              <div className="flex flex-col">
+                                 <span className="text-2xl font-black text-blue-500 uppercase tracking-widest">RANK_#{globalRank}</span>
+                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1 italic">{user?.rank || "Verified Operative"}</span>
+                              </div>
+                           </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                           <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em]">XP PACKETS_CAPTURED</div>
+                           <div className="text-3xl font-black text-foreground font-mono italic">
+                              {currentXP} <span className="text-muted-foreground/30 text-lg mx-2">/</span> {nextLevelXP} <span className="text-blue-500 text-xs ml-1 tracking-widest">X</span>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="mt-16 space-y-6">
+                        <div className="h-6 w-full bg-secondary rounded-full overflow-hidden border border-border/20 p-1.5 shadow-inner">
+                           <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressToNextLevel}%` }}
+                              transition={{ duration: 2, ease: "circOut" }}
+                              className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 shadow-[0_0_30px_rgba(37,99,235,0.5)] relative"
+                           >
+                              <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-shimmer scale-150" />
+                           </motion.div>
+                        </div>
+                        <div className="flex justify-between text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em] font-mono">
+                           <span className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                              LVL_{currentLevel}_SYNC_STABLE
+                           </span>
+                           <span>{100 - progressToNextLevel} XP UNTIL LEVEL {currentLevel + 1}</span>
                         </div>
                      </div>
                   </div>
-                  <div className="h-14 w-[1px] bg-border" />
-                  <div className="text-right">
-                     <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.4em] mb-2 font-['Fira_Code']">REPUTATION_AGGREGATE</div>
-                     <div className="text-4xl font-black text-foreground tracking-tighter">
-                        <RollingValue value={user?.reputation?.toLocaleString() || 0} /> <span className="text-blue-500 text-sm ml-1 font-['Fira_Code']">RP</span>
+               </motion.div>
+
+               {/* Neural Streak Sync */}
+               <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-10 rounded-[4rem] bg-card border border-border/40 shadow-2xl relative overflow-hidden group"
+               >
+                  <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                  <div className="relative z-10 flex flex-col justify-between h-full space-y-8">
+                     <div className="space-y-2">
+                        <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                           <Flame className="w-4 h-4 text-rose-500 animate-pulse" />
+                           Neural Streak Sync
+                        </h3>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic font-mono">Continuous_Chain_v2.0</p>
                      </div>
+
+                     <div className="flex items-end justify-between">
+                        <div className="text-8xl font-black text-foreground tracking-tighter italic font-mono leading-none">
+                           {user?.streak_count || 0}
+                           <span className="text-rose-500 text-2xl not-italic ml-2 uppercase font-black tracking-widest">Days</span>
+                        </div>
+                     </div>
+
+                     <div className="grid grid-cols-7 gap-3 py-4">
+                        {[0, 1, 2, 3, 4, 5, 6].map((day) => {
+                           const isActive = (user?.streak_count || 0) > day;
+                           return (
+                              <div key={day} className="space-y-3 flex flex-col items-center">
+                                 <div className={cn(
+                                    "w-full aspect-square rounded-2xl border transition-all duration-700 relative group/node",
+                                    isActive
+                                       ? "bg-rose-500/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)]"
+                                       : "bg-secondary/40 border-border/40"
+                                 )}>
+                                    {isActive && (
+                                       <div className="absolute inset-2 bg-rose-500 rounded-lg opacity-40 animate-pulse" />
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent pointer-events-none" />
+                                 </div>
+                                 <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">D_0{day + 1}</span>
+                              </div>
+                           );
+                        })}
+                     </div>
+
+                     <p className="text-[9px] text-rose-500/60 font-black uppercase tracking-widest leading-relaxed italic border-l-2 border-rose-500/20 pl-4">
+                        // Streak sustained. Neural synapses optimizing for peak efficiency. Performance multiplier active: 1.2x XP.
+                     </p>
                   </div>
-               </div>
+               </motion.div>
             </div>
 
-            {/* BENTO GRID SHOWCASE */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+            {/* Active Performance Layer (Timer + Bounties) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+               {/* Focus Timer */}
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="lg:col-span-2 p-10 rounded-[3.5rem] bg-card border border-border/40 shadow-2xl relative overflow-hidden group"
+               >
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
 
-               {/* TOP KPI CARDS */}
-               <div className="xl:col-span-2">
-                  <KPICard title="OPS_EFFICIENCY" value={`${analytics.efficiency.toFixed(1)}%`} change="SYNC: STABLE" icon={TrendingUp} color="text-blue-500" data={analytics.trends.efficiency} />
-               </div>
-               <div className="xl:col-span-2">
-                  <KPICard title="INTEL_PULSE" value={analytics.pulseCount} change="LAST_24H" icon={CheckCircle2} color="text-emerald-500" data={analytics.trends.pulse} />
-               </div>
-               <div className="xl:col-span-2">
-                  <KPICard title="MERIT_VOLTAGE" value={user?.reputation?.toLocaleString() || 0} change="SYSTEM_XP" icon={Award} color="text-orange-500" data={analytics.trends.merit} />
-               </div>
-
-               {/* ACTIVITY HEATMAP (Large Bento) */}
-               <div className="md:col-span-2 lg:col-span-4 xl:col-span-4 row-span-2">
-                  <ActivityHeatmap history={professionalHistory || []} />
-               </div>
-
-               {/* RADAR DOSSIER */}
-               <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 row-span-2 p-10 rounded-2xl bg-card border border-border backdrop-blur-3xl group hover:border-blue-500/30 transition-all duration-500">
-                  <div className="flex items-center justify-between mb-10">
-                     <div>
-                        <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">EXPERT_SPECTRUM</h3>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1 font-['Fira_Code']">QUALITATIVE ANALYSIS</p>
-                     </div>
-                     <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                        <Hexagon className="w-5 h-5 text-blue-500 animate-spin-slow" />
-                     </div>
-                  </div>
-                  <div className="h-[260px] w-full filter contrast-110">
-                     <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.skillMatrix}>
-                           <PolarGrid stroke="currentColor" className="text-border" gridType="polygon" />
-                           <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900, fontFamily: 'Fira Code', letterSpacing: '0.1em' }} />
-                           {/* Glow Layer */}
-                           <Radar name="Expertise" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.05} strokeWidth={8} strokeLinecap="round" />
-                           {/* Primary Layer */}
-                           <Radar name="Level" dataKey="A" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.2} strokeWidth={3} />
-                           <Tooltip content={<CustomTooltip />} />
-                        </RadarChart>
-                     </ResponsiveContainer>
-                  </div>
-                  <div className="mt-8 space-y-4">
-                     {analytics.skillMatrix.map(s => (
-                        <div key={s.subject} className="flex items-center justify-between group/row">
-                           <div className="flex items-center gap-3">
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500/30 group-hover/row:bg-blue-500 transition-colors" />
-                              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] font-['Fira_Code']">{s.subject}</span>
-                           </div>
-                           <div className="flex-1 mx-6 h-[2px] bg-border rounded-full overflow-hidden">
-                              <motion.div
-                                 initial={{ width: 0 }}
-                                 animate={{ width: `${(s.A / 150) * 100}%` }}
-                                 className="h-full bg-blue-500/50 group-hover/row:bg-blue-500 transition-all duration-500"
-                              />
-                           </div>
-                           <span className="text-[10px] font-black text-foreground font-['Fira_Code']">{s.A}</span>
-                        </div>
-                     ))}
-                  </div>
-               </div>
-
-               {/* MERIT PORTFOLIO BENTO */}
-               <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 p-10 rounded-2xl bg-card border border-border backdrop-blur-3xl group hover:border-orange-500/30 transition-all duration-500">
-                  <div className="flex items-center justify-between mb-10">
-                     <div>
-                        <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">MERIT_PORTFOLIO</h3>
-                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1 font-['Fira_Code']">CERTIFIED ACHIEVEMENTS</p>
-                     </div>
-                     <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                        <Award className="w-5 h-5 text-orange-500" />
-                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     {achievements.map((ach) => (
-                        <div key={ach.id} className={cn(
-                           "p-5 rounded-2xl border transition-all duration-500 relative overflow-hidden group/ach",
-                           ach.unlocked ? "bg-card border-border hover:border-blue-500/40 shadow-sm" : "bg-muted/30 border-border/30 opacity-40 grayscale"
-                        )}>
-                           {!ach.unlocked && <Lock className="absolute top-3 right-3 w-3 h-3 text-muted-foreground" />}
-                           <ach.icon className={cn("w-6 h-6 mb-4 transition-all duration-500 group-hover/ach:scale-110 group-hover/ach:rotate-3", ach.unlocked ? "text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "text-muted-foreground")} />
-                           <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest mb-1 truncate">{ach.title}</h4>
-                           <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-tighter line-clamp-2 leading-relaxed">{ach.description}</p>
-                        </div>
-                     ))}
-                  </div>
-               </div>
-
-               {/* MISSION CHRONOLOGY (Large Centered Bento) */}
-               <div className="md:col-span-2 lg:col-span-4 xl:col-span-4 row-span-2 p-10 rounded-2xl bg-card border border-border backdrop-blur-3xl overflow-hidden flex flex-col group hover:border-border/80 transition-all duration-500">
-                  <div className="flex items-center justify-between mb-10">
-                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                           <Terminal className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                           <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">MISSION_CHRONOLOGY</h3>
-                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1 font-['Fira_Code']">SECURE_TELEMETRY_STREAM</p>
-                        </div>
-                     </div>
-                     <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.4em] font-['Fira_Code']">ENTRIES: {professionalHistory?.length || 0} // BUFFER_OK</div>
-                  </div>
-                  <div className="flex-1 space-y-4 overflow-y-auto pr-4 scrollbar-hide font-['Fira_Code']">
-                     {professionalHistory?.slice(0, 20).map((log, i) => (
-                        <div key={log.id} className="relative pl-12 group/log cursor-default py-4 border-l border-border ml-3 hover:bg-muted/30 transition-all rounded-r-xl">
-                           <div className="absolute -left-[7px] top-6 w-3 h-3 rounded-full bg-background border-2 border-border group-hover/log:border-blue-500 transition-all duration-300 z-10 shadow-md">
-                              <div className={cn("w-full h-full rounded-full", log.type === 'task' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]')} />
-                           </div>
-                           <div className="flex items-center justify-between mb-2">
-                              <div className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-                                 [{new Date(log.created_at).toLocaleTimeString([], { hour12: false })}] // TYPE::{log.type.toUpperCase()}
-                              </div>
-                              <div className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-widest opacity-0 group-hover/log:opacity-100 transition-opacity">PID_{log.id.split('-')[0]}</div>
-                           </div>
-                           <h4 className="text-sm font-bold text-foreground uppercase tracking-tight group-hover/log:text-blue-500 transition-all duration-300 leading-none">{log.action}</h4>
-                           {log.details && <p className="text-[10px] text-muted-foreground mt-3 italic leading-relaxed max-w-2xl border-l-2 border-border pl-4 opacity-60 group-hover/log:opacity-100 group-hover/log:border-blue-500/50 transition-all">"{log.details}"</p>}
-                        </div>
-                     ))}
-                     {professionalHistory?.length === 0 && (
-                        <div className="text-center py-24 border border-dashed border-border rounded-3xl opacity-40">
-                           <History className="w-12 h-12 mx-auto mb-6 text-muted-foreground opacity-50" />
-                           <p className="text-xs font-black uppercase tracking-[0.5em] text-muted-foreground">NO_TELEMETRY_DETECTED</p>
-                        </div>
-                     )}
-                  </div>
-               </div>
-
-               {/* STRATEGIC TRAY (Right Column) */}
-               <div className="md:col-span-2 lg:col-span-2 xl:col-span-2 row-span-2 space-y-6">
-                  {/* INTEL ENTRY BENTO */}
-                  <div className="p-10 rounded-2xl bg-card border border-border backdrop-blur-3xl group hover:border-blue-500/30 transition-all duration-500">
-                     <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-4">
-                           <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                              <Plus className="w-5 h-5 text-blue-500" />
-                           </div>
-                           <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">INTEL_ENTRY</h3>
-                        </div>
-                     </div>
-                     <div className="space-y-5 font-['Fira_Code']">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+                     <div className="space-y-6 flex-1">
                         <div className="space-y-2">
-                           <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest ml-1">CLASSIFICATION_HEADER</label>
-                           <input
-                              className="w-full bg-background border border-border rounded-xl p-4 text-xs font-bold text-foreground uppercase tracking-tight outline-none focus:border-blue-500 transition-all placeholder:text-muted-foreground/40 shadow-inner"
-                              placeholder="INPUT_SUBJECT..."
-                              value={noteTitle}
-                              onChange={e => setNoteTitle(e.target.value)}
-                           />
+                           <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                              <Clock className={cn("w-4 h-4", isFocusActive ? "text-blue-500 animate-pulse" : "text-muted-foreground")} />
+                              Biometric Focus Sync
+                           </h3>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic">
+                              {focusPhase === 'work' ? "DEEP WORK PROTOCOL ACTIVE" : "NEURAL COOLDOWN INITIATED"}
+                           </p>
                         </div>
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest ml-1">DATA_PAYLOAD</label>
-                           <textarea
-                              className="w-full bg-background border border-border rounded-xl p-5 text-xs font-medium text-foreground min-h-[140px] outline-none focus:border-blue-500 transition-all resize-none placeholder:text-muted-foreground/40 shadow-inner leading-relaxed"
-                              placeholder="SECURE_TRANSMISSION_INPUT..."
-                              value={noteDraft}
-                              onChange={e => setNoteDraft(e.target.value)}
-                           />
-                        </div>
-                        <Button onClick={handleSubmitNote} className="w-full h-14 bg-blue-600 hover:bg-blue-500 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] shadow-[0_10px_30px_rgba(37,99,235,0.3)] transition-all hover:shadow-[0_15px_40px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 active:translate-y-0">EXECUTE_APPEND</Button>
-                     </div>
-                  </div>
 
-                  {/* ACTIVE BEACONS BENTO */}
-                  <div className="p-10 rounded-2xl bg-card border border-border backdrop-blur-3xl group hover:border-orange-500/30 transition-all duration-500">
-                     <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center gap-4">
-                           <div className="p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                              <Bell className="w-5 h-5 text-orange-500" />
+                        <div className="flex items-center gap-8">
+                           <div className="text-7xl md:text-8xl font-black text-foreground font-mono tracking-tighter tabular-nums italic">
+                              {formatTime(timeLeft)}
                            </div>
-                           <h3 className="text-sm font-black text-foreground uppercase tracking-[0.3em]">ACTIVE_BEACONS</h3>
-                        </div>
-                        <div className="w-2 h-2 rounded-full bg-orange-500 animate-ping" />
-                     </div>
-                     <div className="space-y-4 font-['Fira_Code']">
-                        {personalReminders?.slice(0, 5).map(rem => (
-                           <div key={rem.id} className="group/rem flex items-center gap-5 p-4 rounded-xl bg-background border border-border hover:border-orange-500/30 transition-all cursor-pointer">
-                              <div
-                                 onClick={() => toggleReminder(rem.id, !rem.is_completed)}
-                                 className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-300", rem.is_completed ? "bg-emerald-500 border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" : "border-border group-hover/rem:border-orange-500/50")}
+                           <div className="flex flex-col gap-2">
+                              <Button
+                                 onClick={() => setIsFocusActive(!isFocusActive)}
+                                 size="icon"
+                                 className={cn(
+                                    "h-14 w-14 rounded-2xl transition-all duration-500",
+                                    isFocusActive ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                                 )}
                               >
-                                 {rem.is_completed && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                                 {isFocusActive ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                              </Button>
+                              <Button
+                                 onClick={() => { setTimeLeft(focusPhase === 'work' ? 25 * 60 : 5 * 60); setIsFocusActive(false); }}
+                                 variant="ghost"
+                                 size="icon"
+                                 className="h-10 w-10 rounded-xl hover:bg-secondary text-muted-foreground"
+                              >
+                                 <RotateCcw className="w-4 h-4" />
+                              </Button>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="relative w-48 h-48 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90">
+                           <circle
+                              cx="96"
+                              cy="96"
+                              r="88"
+                              className="stroke-secondary fill-none stroke-[8px]"
+                           />
+                           <motion.circle
+                              cx="96"
+                              cy="96"
+                              r="88"
+                              className="stroke-blue-500 fill-none stroke-[8px]"
+                              strokeDasharray="553"
+                              animate={{
+                                 strokeDashoffset: 553 - (553 * (timeLeft / (focusPhase === 'work' ? 25 * 60 : 5 * 60)))
+                              }}
+                              transition={{ duration: 1, ease: "linear" }}
+                           />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                           <Zap className={cn("w-10 h-10", isFocusActive ? "text-blue-500 animate-pulse" : "text-muted-foreground/20")} />
+                        </div>
+                     </div>
+                  </div>
+               </motion.div>
+
+               {/* Daily Bounties */}
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="p-10 rounded-[3.5rem] bg-card border border-border/40 shadow-2xl space-y-8 relative overflow-hidden group"
+               >
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+
+                  <div className="space-y-2 relative z-10">
+                     <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                        <Gamepad2 className="w-4 h-4 text-amber-500" />
+                        Tactical Bounties
+                     </h3>
+                     <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic">Daily Mission Parameters</p>
+                  </div>
+
+                  <div className="space-y-4 relative z-10">
+                     {[
+                        { id: "reminders_sync", label: "Sync 3 Reminders", reward: 50, done: personalReminders.length >= 3 },
+                        { id: "deep_work", label: "Deep Work Session", reward: 75, done: false }, // Tie to timer later
+                        { id: "secure_objective", label: "Secure 1 Objective", reward: 100, done: totalImpact > 0 }
+                     ].map((mission, i) => {
+                        const isClaimed = user?.bounties_claimed?.includes(mission.id);
+                        return (
+                           <div key={i} className={cn(
+                              "group p-5 rounded-3xl bg-secondary/20 border border-border/20 flex items-center justify-between hover:border-blue-500/20 transition-all duration-500",
+                              isClaimed && "opacity-50 grayscale-[0.5]"
+                           )}>
+                              <div className="flex items-center gap-4">
+                                 <div className={cn(
+                                    "w-10 h-10 rounded-2xl flex items-center justify-center border transition-all duration-500",
+                                    mission.done ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-secondary border-border/40 text-muted-foreground/40"
+                                 )}>
+                                    {isClaimed ? <CheckCircle2 className="w-5 h-5" /> : <Target className="w-5 h-5" />}
+                                 </div>
+                                 <div className="flex flex-col">
+                                    <span className={cn("text-[11px] font-black uppercase tracking-tight", mission.done ? "text-emerald-500" : "text-foreground")}>
+                                       {mission.label}
+                                    </span>
+                                    <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">Rewarding {mission.reward} XP</span>
+                                 </div>
                               </div>
-                              <span className={cn("text-[11px] font-bold uppercase truncate flex-1 tracking-tight transition-colors", rem.is_completed ? "line-through text-muted-foreground/40" : "text-foreground")}>{rem.content}</span>
-                              <Trash2 onClick={() => deleteReminder(rem.id)} className="w-4 h-4 text-muted-foreground/30 hover:text-red-500 opacity-0 group-hover/rem:opacity-100 transition-all duration-300" />
+
+                              {mission.done && !isClaimed ? (
+                                 <Button
+                                    onClick={() => claimTacticalBounty(mission.id, mission.reward)}
+                                    size="sm"
+                                    className="h-8 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-[9px] font-black uppercase tracking-widest"
+                                 >
+                                    Claim
+                                 </Button>
+                              ) : isClaimed ? (
+                                 <Badge variant="outline" className="text-[8px] font-black border-emerald-500/20 text-emerald-500 bg-emerald-500/5 uppercase tracking-widest">Claimed</Badge>
+                              ) : (
+                                 <Badge variant="outline" className="text-[8px] font-black border-border/40 text-muted-foreground/60 uppercase tracking-widest">{mission.reward} XP</Badge>
+                              )}
+                           </div>
+                        );
+                     })}
+                  </div>
+               </motion.div>
+            </div>
+
+            {/* Secondary Data Layer */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+               {/* Neural Reminders & Tactical Log */}
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="p-10 rounded-[3.5rem] bg-card border border-border/40 flex flex-col shadow-2xl space-y-8"
+               >
+                  <div className="space-y-6">
+                     <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                           <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                              <Bell className="w-4 h-4 text-blue-400" />
+                              Neural Reminders
+                           </h3>
+                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic">Active personal beacons</p>
+                        </div>
+                        <Badge variant="outline" className="px-3 py-1 text-[9px] border-border/50 uppercase tracking-widest font-black">Live_Alerts</Badge>
+                     </div>
+
+                     <form onSubmit={handleAddReminder} className="flex gap-4">
+                        <Input
+                           value={newReminder}
+                           onChange={(e) => setNewReminder(e.target.value)}
+                           placeholder="ARM NEW REMINDER..."
+                           className="bg-secondary/40 border-border/40 rounded-xl font-mono text-[10px] tracking-widest h-11"
+                        />
+                        <Button type="submit" size="icon" className="h-11 w-11 rounded-xl bg-blue-600 hover:bg-blue-500 shrink-0">
+                           <Plus className="w-5 h-5 text-white" />
+                        </Button>
+                     </form>
+
+                     <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                        {personalReminders.length === 0 ? (
+                           <div className="py-8 text-center opacity-30 text-[9px] font-black uppercase tracking-widest">No active beacons detected.</div>
+                        ) : (
+                           personalReminders.map((rem: any) => (
+                              <div key={rem.id} className="p-4 rounded-xl bg-secondary/20 border border-border/20 flex items-center justify-between group">
+                                 <div className="flex items-center gap-4">
+                                    <button
+                                       onClick={() => toggleReminder(rem.id, !rem.is_completed)}
+                                       className={cn(
+                                          "w-5 h-5 rounded-md border transition-all flex items-center justify-center",
+                                          rem.is_completed ? "bg-blue-500 border-blue-500 text-white" : "border-border/60 hover:border-blue-500/50"
+                                       )}
+                                    >
+                                       {rem.is_completed && <CheckCircle2 className="w-3 h-3" />}
+                                    </button>
+                                    <span className={cn(
+                                       "text-sm font-bold uppercase tracking-tight",
+                                       rem.is_completed ? "text-muted-foreground/40 line-through" : "text-foreground/90"
+                                    )}>
+                                       {rem.content}
+                                    </span>
+                                 </div>
+                                 <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => deleteReminder(rem.id)}
+                                    className="opacity-0 group-hover:opacity-100 text-rose-500/60 hover:text-rose-500 hover:bg-rose-500/10 h-8 w-8 transition-opacity"
+                                 >
+                                    <Trash2 className="w-4 h-4" />
+                                 </Button>
+                              </div>
+                           ))
+                        )}
+                     </div>
+                  </div>
+
+                  <div className="pt-8 border-t border-border/30">
+                     <div className="flex items-center justify-between mb-8">
+                        <div className="space-y-1">
+                           <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                              <LucideHistory className="w-4 h-4 text-emerald-400" />
+                              Tactical Log
+                           </h3>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                        {completedPersonalTasks.length === 0 ? (
+                           <div className="py-12 flex flex-col items-center justify-center text-center opacity-30">
+                              <Activity className="w-8 h-8 mb-4 animate-pulse" />
+                              <div className="text-[9px] font-black uppercase tracking-[0.3em]">Neural Interface Idle</div>
+                           </div>
+                        ) : (
+                           completedPersonalTasks.slice(0, 5).map((task: any, i: number) => (
+                              <div key={i} className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/30 transition-colors">
+                                 <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                 <span className="text-[11px] font-bold text-foreground/80 lowercase tracking-wide font-mono truncate flex-1">{task.title}</span>
+                                 <span className="text-[9px] text-muted-foreground/40 font-mono">SECURED</span>
+                              </div>
+                           ))
+                        )}
+                     </div>
+                  </div>
+               </motion.div>
+
+               {/* Neural Skill Tree & Domain Matrix */}
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="p-10 rounded-[3.5rem] bg-card border border-border/40 shadow-2xl relative overflow-hidden group"
+               >
+                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+
+                  <div className="flex items-center justify-between mb-10 relative z-10">
+                     <div className="space-y-1">
+                        <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                           <Binary className="w-4 h-4 text-blue-400" />
+                           Neural Skill Tree
+                        </h3>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic">Path of the Elite Operative</p>
+                     </div>
+                     <Badge variant="outline" className="text-[9px] font-black border-border/40 text-blue-500 bg-blue-500/5 px-3 py-1">v4.2_STABLE</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 relative z-10">
+                     {/* SVG Skill Tree Visualization */}
+                     <div className="relative aspect-square max-w-[400px] mx-auto xl:mx-0">
+                        <svg viewBox="0 0 200 200" className="w-full h-full">
+                           <defs>
+                              <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                 <stop offset="0%" stopColor="rgba(59,130,246,0.3)" />
+                                 <stop offset="100%" stopColor="rgba(37,99,235,0.05)" />
+                              </linearGradient>
+                           </defs>
+
+                           {/* Connecting Lines */}
+                           <line x1="100" y1="100" x2="100" y2="40" stroke="url(#lineGrad)" strokeWidth="1" strokeDasharray="4 4" />
+                           <line x1="100" y1="100" x2="160" y2="100" stroke="url(#lineGrad)" strokeWidth="1" strokeDasharray="4 4" />
+                           <line x1="100" y1="100" x2="100" y2="160" stroke="url(#lineGrad)" strokeWidth="1" strokeDasharray="4 4" />
+                           <line x1="100" y1="100" x2="40" y2="100" stroke="url(#lineGrad)" strokeWidth="1" strokeDasharray="4 4" />
+
+                           {/* Center Node */}
+                           <circle cx="100" cy="100" r="12" fill="rgba(59,130,246,0.1)" stroke="rgba(59,130,246,0.5)" strokeWidth="2" />
+
+                           {/* Frontend Node */}
+                           <g className="cursor-help">
+                              <circle cx="100" cy="40" r="8" fill={domainMap["Frontend"] > 0 ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.05)"} stroke={domainMap["Frontend"] > 0 ? "#3b82f6" : "rgba(255,255,255,0.1)"} />
+                              {domainMap["Frontend"] > 0 && <circle cx="100" cy="40" r="12" fill="none" stroke="rgba(59,130,246,0.2)" strokeWidth="0.5" className="animate-ping" style={{ animationDuration: '3s' }} />}
+                           </g>
+
+                           {/* Backend Node */}
+                           <g className="cursor-help">
+                              <circle cx="160" cy="100" r="8" fill={domainMap["Backend"] > 0 ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.05)"} stroke={domainMap["Backend"] > 0 ? "#10b981" : "rgba(255,255,255,0.1)"} />
+                           </g>
+
+                           {/* Security Node */}
+                           <g className="cursor-help">
+                              <circle cx="100" cy="160" r="8" fill={domainMap["Security"] > 0 ? "rgba(244,63,94,0.2)" : "rgba(255,255,255,0.05)"} stroke={domainMap["Security"] > 0 ? "#f43f5e" : "rgba(255,255,255,0.1)"} />
+                           </g>
+
+                           {/* Database Node */}
+                           <g className="cursor-help">
+                              <circle cx="40" cy="100" r="8" fill={domainMap["Database"] > 0 ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.05)"} stroke={domainMap["Database"] > 0 ? "#f59e0b" : "rgba(255,255,255,0.1)"} />
+                           </g>
+                        </svg>
+
+                        {/* Floating Labels */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 text-[8px] font-black text-blue-500 uppercase tracking-widest">Architect</div>
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 text-[8px] font-black text-rose-500 uppercase tracking-widest">Guardian</div>
+                        <div className="absolute left-0 top-1/2 -translate-x-4 -translate-y-1/2 text-[8px] font-black text-amber-500 uppercase tracking-widest -rotate-90">Master</div>
+                        <div className="absolute right-0 top-1/2 translate-x-4 -translate-y-1/2 text-[8px] font-black text-emerald-500 uppercase tracking-widest rotate-90">Engine</div>
+                     </div>
+
+                     {/* Details / Legend */}
+                     <div className="space-y-6 flex flex-col justify-center">
+                        <div className="p-4 rounded-2xl bg-secondary/30 border border-border/20 space-y-4">
+                           <h4 className="text-[10px] font-black text-foreground/60 uppercase tracking-[0.3em]">Current Specialization</h4>
+                           <div className="space-y-4">
+                              {masteryData.map((skill, i) => (
+                                 <div key={i} className="space-y-2">
+                                    <div className="flex justify-between items-center text-[9px] font-black tracking-widest uppercase">
+                                       <span className="text-muted-foreground">{skill.label}</span>
+                                       <span className="text-foreground">{skill.progress}%</span>
+                                    </div>
+                                    <div className="h-1 w-full bg-secondary rounded-full overflow-hidden">
+                                       <motion.div
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${skill.progress}%` }}
+                                          className={cn("h-full rounded-full", skill.color)}
+                                       />
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground leading-relaxed font-black uppercase tracking-tight italic border-l-2 border-blue-500/20 pl-4">
+                           // Neural mapping indicates high affinity for {Object.entries(domainMap).sort((a, b) => b[1] - a[1])[0][0]} protocols. Continue operations to unlock advanced nodes.
+                        </p>
+                     </div>
+                  </div>
+               </motion.div>
+
+               {/* Leaderboard Hub */}
+               <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="p-10 rounded-[3.5rem] bg-card border border-border/40 shadow-2xl relative overflow-hidden"
+               >
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                     <Globe className="w-32 h-32 text-blue-500 rotate-12" />
+                  </div>
+                  <div className="relative z-10">
+                     <div className="flex items-center justify-between mb-8">
+                        <div className="space-y-1">
+                           <h3 className="text-xs font-black text-foreground uppercase tracking-[0.5em] flex items-center gap-3">
+                              <Trophy className="w-4 h-4 text-amber-500" />
+                              Global Collective Standing
+                           </h3>
+                           <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest pl-7 italic">Top performing operatives</p>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4">
+                        {topPerformers.map((profile: any, i: number) => (
+                           <div key={profile.id} className={cn(
+                              "p-4 rounded-2xl flex items-center justify-between transition-all",
+                              profile.id === user?.id ? "bg-blue-500/10 border border-blue-500/20" : "bg-secondary/10 border border-transparent hover:border-border/40"
+                           )}>
+                              <div className="flex items-center gap-4">
+                                 <div className="text-[10px] font-black text-muted-foreground/40 font-mono w-4">0{i + 1}</div>
+                                 <div className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-border">
+                                    <img src={profile.avatar || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${profile.id}`} alt="" className="w-full h-full object-cover" />
+                                 </div>
+                                 <div className="flex flex-col">
+                                    <span className="text-xs font-black text-foreground uppercase tracking-tight">{profile.name}</span>
+                                    <span className="text-[8px] text-muted-foreground font-black uppercase tracking-widest">{profile.rank}</span>
+                                 </div>
+                              </div>
+                              <div className="text-[10px] font-black text-blue-500 font-mono">{(profile.reputation || profile.xp || 0).toLocaleString()} RP</div>
                            </div>
                         ))}
-                        {personalReminders?.length === 0 && <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.4em] text-center py-8 border border-dashed border-border rounded-2xl">NO_BEACONS_ACTIVE</p>}
                      </div>
-                  </div>
-               </div>
 
+                     {allProfiles && allProfiles.length > 5 && (
+                        <Button variant="ghost" className="w-full mt-6 text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-blue-500">
+                           View Full Leaderboard Protocol <ChevronRight className="w-3 h-3 ml-2" />
+                        </Button>
+                     )}
+                  </div>
+               </motion.div>
             </div>
          </div>
       </div>

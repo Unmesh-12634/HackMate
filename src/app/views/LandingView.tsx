@@ -166,15 +166,20 @@ export function LandingView() {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              {["Arsenal", "Network", "Intel", "Docs"].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-blue-400 transition-colors">
-                  {item}
+              {[
+                { label: "Features", href: "#features" },
+                { label: "Global", href: "#global" },
+                { label: "Intelligence", href: "#intelligence" },
+                { label: "Briefing", href: "#briefing" }
+              ].map((item) => (
+                <a key={item.label} href={item.href} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-blue-400 transition-colors">
+                  {item.label}
                 </a>
               ))}
             </div>
 
             <div className="flex items-center gap-4">
-              <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Sign In</button>
+              <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Log In</button>
               <Button onClick={() => navigate("/signup")} className="h-9 px-6 rounded-lg font-bold uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/25 group transition-all duration-300">
                 Initialize <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
               </Button>
@@ -291,8 +296,8 @@ export function LandingView() {
             </motion.div>
           </section>
 
-          {/* ─── Features Section (Arsenal) ─────────────────────────────────────── */}
-          <section id="arsenal" className="relative z-10 py-32 px-6">
+          {/* ─── Features Section ─────────────────────────────────────── */}
+          <section id="features" className="relative z-10 py-32 px-6">
             <div className="max-w-7xl mx-auto rounded-[4rem] bg-crystal-black border border-white/[0.05] p-12 md:p-24 shadow-2xl overflow-hidden min-h-[900px] flex flex-col items-center justify-center relative">
               <div className="absolute inset-0 bg-blue-600/[0.02] pointer-events-none" />
               <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
@@ -448,7 +453,7 @@ export function LandingView() {
             </div>
           </section>
 
-          <section className="relative z-10 py-32 px-6 bg-black rounded-[4rem] my-12 mx-4 border border-white/[0.03] shadow-[0_0_100px_rgba(37,99,235,0.05)] overflow-hidden">
+          <section id="global" className="relative z-10 py-32 px-6 bg-black rounded-[4rem] my-12 mx-4 border border-white/[0.03] shadow-[0_0_100px_rgba(37,99,235,0.05)] overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] via-transparent to-transparent pointer-events-none" />
             <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center relative z-10">
               <div className="order-2 lg:order-1 relative h-[600px] flex items-center justify-center">
@@ -474,7 +479,7 @@ export function LandingView() {
                 </div>
               </div>
 
-              <div className="order-1 lg:order-2 space-y-10">
+              <div id="intelligence" className="order-1 lg:order-2 space-y-10">
                 <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Autonomous Intel</h2>
                 <h3 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white leading-[0.85]">
                   The <span className="text-blue-500">Architect</span> <br /> Always Watches.
@@ -512,7 +517,7 @@ export function LandingView() {
           </section>
 
           {/* ─── CTA Section ──────────────────────────────────────────────────── */}
-          <section className="relative py-32 px-6 text-center overflow-hidden mx-4">
+          <section id="briefing" className="relative py-32 px-6 text-center overflow-hidden mx-4">
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 30 }}

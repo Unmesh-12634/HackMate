@@ -1,0 +1,84 @@
+
+> @figma/my-make-file@0.0.1 build
+> vite build
+
+[36mvite v6.3.5 [32mbuilding for production...[36m[39m
+transforming...
+node.exe : 
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) 
+    [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+/noise.png referenced in /noise.png didn't resolve at 
+build time, it will remain unchanged to be resolved 
+at runtime
+[32m???[39m 3910 modules transformed.
+rendering chunks...
+[33m[plugin vite:reporter] 
+(!) D:/Projects/HackMate SaaS/src/lib/github.ts is 
+dynamically imported by D:/Projects/HackMate 
+SaaS/src/app/context/AppContext.tsx, 
+D:/Projects/HackMate 
+SaaS/src/app/context/AppContext.tsx but also 
+statically imported by D:/Projects/HackMate 
+SaaS/src/app/components/workspace/CodebaseCenter.tsx, 
+dynamic import will not move module into another 
+chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mmanifest.webmanifest                        [39m[1m[2m    0.49 kB[22m[1m[22m
+[2mdist/[22m[32mindex.html                                  [39m[1m[2m    0.83 kB[22m[1m[22m[2m ??? gzip:   0.46 kB[22m
+[2mdist/[22m[35massets/index-CuOl_tsp.css                   [39m[1m[2m  264.48 kB[22m[1m[22m[2m ??? gzip:  33.67 kB[22m
+[2mdist/[22m[36massets/workbox-window.prod.es5-BIl4cyR9.js  [39m[1m[2m    5.76 kB[22m[1m[22m[2m ??? gzip:   2.37 kB[22m
+[2mdist/[22m[36massets/index-Col3KwKt.js                    [39m[1m[33m2,666.86 kB[39m[22m[2m ??? gzip: 780.85 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after 
+minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to 
+improve chunking: https://rollupjs.org/configuration-o
+ptions/#output-manualchunks
+- Adjust chunk size limit for this warning via 
+build.chunkSizeWarningLimit.[39m
+[32m??? built in 16.13s[39m
+[31merror during build:
+Error: 
+  Configure "workbox.maximumFileSizeToCacheInBytes" 
+to change the limit: the default value is 2 MiB.
+  Check https://vite-pwa-org.netlify.app/guide/faq.htm
+l#missing-assets-from-sw-precache-manifest for more 
+information.
+  Assets exceeding the limit:
+  - assets/index-Col3KwKt.js is 2.67 MB, and won't be 
+precached.
+
+    at logWorkboxResult (file:///D:/Projects/HackMate%
+20SaaS/node_modules/vite-plugin-pwa/dist/chunk-G4TAN34
+B.js:44:13)
+    at generateServiceWorker (file:///D:/Projects/Hack
+Mate%20SaaS/node_modules/vite-plugin-pwa/dist/index.js
+:209:3)
+    at async _generateSW (file:///D:/Projects/HackMate
+%20SaaS/node_modules/vite-plugin-pwa/dist/index.js:234
+:5)
+    at async Object.handler (file:///D:/Projects/HackM
+ate%20SaaS/node_modules/vite-plugin-pwa/dist/index.js:
+427:13)
+    at async PluginDriver.hookParallel (file:///D:/Pro
+jects/HackMate%20SaaS/node_modules/rollup/dist/es/shar
+ed/node-entry.js:22475:17)
+    at async Object.close (file:///D:/Projects/HackMat
+e%20SaaS/node_modules/rollup/dist/es/shared/node-entry
+.js:23494:13)
+    at async buildEnvironment (file:///D:/Projects/Hac
+kMate%20SaaS/node_modules/vite/dist/node/chunks/dep-DB
+xKXgDP.js:46229:17)
+    at async Object.defaultBuildApp [as buildApp] (fil
+e:///D:/Projects/HackMate%20SaaS/node_modules/vite/dis
+t/node/chunks/dep-DBxKXgDP.js:46684:5)
+    at async CAC.<anonymous> (file:///D:/Projects/Hack
+Mate%20SaaS/node_modules/vite/dist/node/cli.js:863:7)
+[39m

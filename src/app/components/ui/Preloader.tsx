@@ -1,13 +1,11 @@
-"use client";
-
+import React, { useEffect, useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useEffect, useState } from "react";
 
 interface PreloaderProps {
     onComplete: () => void;
 }
 
-export default function Preloader({ onComplete }: PreloaderProps) {
+const Preloader = forwardRef<HTMLDivElement, PreloaderProps>(({ onComplete }, ref) => {
     const [step, setStep] = useState(0);
 
     useEffect(() => {
@@ -23,7 +21,7 @@ export default function Preloader({ onComplete }: PreloaderProps) {
     }, [onComplete]);
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden">
+        <div ref={ref} className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden">
             {/* ─── The Boom Flash ─── */}
             <AnimatePresence>
                 {step === 4 && (
@@ -90,4 +88,6 @@ export default function Preloader({ onComplete }: PreloaderProps) {
             />
         </div>
     );
-}
+});
+
+export default Preloader;

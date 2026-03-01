@@ -32,7 +32,11 @@ import {
     Trophy,
     Calendar,
     CheckCircle2,
-    Circle
+    Circle,
+    Award,
+    Flame,
+    History as LucideHistory,
+    TrendingUp
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -730,10 +734,10 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-hide">
                     {documents.filter(d => d.title.toLowerCase().includes(searchQuery.toLowerCase())).map((doc) => (
-                        <button
+                        <div
                             key={doc.id}
                             onClick={() => setSelectedDocId(doc.id)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group relative ${selectedDocId === doc.id
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all group relative cursor-pointer ${selectedDocId === doc.id
                                 ? "bg-blue-600/15 border border-blue-500/30 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
                                 : "border border-transparent hover:bg-muted/50"
                                 }`}
@@ -761,7 +765,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                                     <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                             )}
-                        </button>
+                        </div>
                     ))}
                 </div>
             </aside>
@@ -926,7 +930,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
     ];
 
     return (
-        <div className="h-full overflow-y-auto p-8 bg-background scrollbar-hide">
+        <div className="h-full overflow-y-auto p-8 bg-background scrollbar-hide text-foreground">
             <header className="mb-8">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
@@ -1027,7 +1031,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                                             initial={{ width: 0 }}
                                             animate={{ width: `${progress}%` }}
                                             transition={{ duration: 1, delay: i * 0.2 }}
-                                            className={`h-full ${colors[i % colors.length]} rounded-full shadow-[0_0_12px_rgba(0,0,0,0.5)]`}
+                                            className={`h-full ${colors[i % colors.length]} rounded-full shadow-[0_0_12px_rgba(0,0,0,0.3)]`}
                                         />
                                     </div>
                                 </div>

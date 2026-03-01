@@ -41,7 +41,11 @@ export interface User {
   following_count?: number;
   preferences?: any;
   auth_methods?: string[];
+  xp: number;
   level: number;
+  streak_count?: number;
+  last_activity_at?: string;
+  bounties_claimed?: string[];
 }
 
 export interface Task {
@@ -318,9 +322,6 @@ interface AppContextType {
   toggleCritical: (taskId: string, isCritical: boolean) => Promise<void>;
   syncGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
   disconnectGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
-  calculateMissionXP: (teamId: string) => Promise<{ totalXP: number, memberStats: any[] }>;
-  completeMission: (teamId: string, summary: string) => Promise<boolean>;
-  redeploySquad: (teamId: string, missionName: string, missionGoal: string, deadline: string) => Promise<boolean>;
 
   // Community & Chat State
   posts: Post[];
@@ -448,6 +449,11 @@ interface AppContextType {
   setHudEvent: (event: { type: string; payload: any } | null) => void;
   pinnedTasks: Record<string, string | null>;
   pinTask: (teamId: string, taskId: string | null) => void;
+  claimTacticalBounty: (bountyId: string, xpReward: number) => Promise<void>;
+  syncStreak: () => Promise<void>;
+  calculateMissionXP: (teamId: string) => Promise<{ totalXP: number, memberStats: any[] }>;
+  completeMission: (teamId: string, summary: string) => Promise<boolean>;
+  redeploySquad: (teamId: string, missionName: string, missionGoal: string, deadline: string) => Promise<boolean>;
 }
 
 
@@ -1177,6 +1183,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (authUser: any, token?: string | null) => {
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      console.warn("Network offline. Profile synchronization suspended.");
+      return;
+    }
     try {
       // 1. Try to fetch profile
       let { data, error } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
@@ -1252,7 +1262,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           following_count: data.following_count || 0,
           preferences: data.preferences || {},
           auth_methods: authMethods,
-          level: data.level || 1
+          level: data.current_level || data.level || 1,
+          xp: data.total_xp || data.xp || 0,
+          streak_count: data.streak_count || 0,
+          last_activity_at: data.last_activity_at,
+          bounties_claimed: data.bounties_claimed || []
         };
         setUser(formattedUser);
         await fetchTeams(formattedUser);
@@ -1270,6 +1284,79 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toast.error("⚡ Could not reach the server. Check your connection or try again.", { duration: 6000 });
       }
       setLoading(false);
+    }
+  };
+
+  const claimTacticalBounty = async (bountyId: string, xpReward: number) => {
+    if (!user) return;
+
+    const newXP = (user.xp || 0) + xpReward;
+    const newLevel = Math.floor(newXP / 100) + 1;
+    const newBounties = [...(user.bounties_claimed || []), bountyId];
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        total_xp: newXP,
+        current_level: newLevel,
+        bounties_claimed: newBounties,
+        reputation_points: (user.reputation || 0) + Math.floor(xpReward / 2)
+      })
+      .eq('id', user.id);
+
+    if (!error) {
+      setUser(prev => prev ? {
+        ...prev,
+        xp: newXP,
+        level: newLevel,
+        bounties_claimed: newBounties,
+        reputation: (prev.reputation || 0) + Math.floor(xpReward / 2)
+      } : null);
+      toast.success(`TACTICAL BOUNTY SECURED: +${xpReward} XP`, {
+        icon: <Zap className="w-4 h-4 text-blue-500" />
+      });
+      recordActivity("tactical_bounty", `Secured bounty: ${bountyId}`, xpReward, "system");
+    }
+  };
+
+  const syncStreak = async () => {
+    if (!user) return;
+    const now = new Date();
+    const lastActivity = user.last_activity_at ? new Date(user.last_activity_at) : null;
+
+    let newStreak = user.streak_count || 0;
+    const todayStr = now.toISOString().split('T')[0];
+    const lastStr = lastActivity ? lastActivity.toISOString().split('T')[0] : null;
+
+    if (!lastActivity) {
+      newStreak = 1;
+    } else if (todayStr !== lastStr) {
+      const diffTime = Math.abs(now.getTime() - lastActivity.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        newStreak += 1;
+      } else if (diffDays > 1) {
+        newStreak = 1;
+      }
+    } else {
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        streak_count: newStreak,
+        last_activity_at: now.toISOString()
+      })
+      .eq('id', user.id);
+
+    if (!error) {
+      setUser(prev => prev ? {
+        ...prev,
+        streak_count: newStreak,
+        last_activity_at: now.toISOString()
+      } : null);
     }
   };
 
@@ -2923,7 +3010,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         reputation: d.reputation_points || 0,
         rank: d.prestige_rank || 'Operative',
         velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
-        level: d.level || 1
+        level: d.level || 1,
+        xp: d.xp || 0
       }));
       setAllProfiles(formatted);
       return formatted;
@@ -2950,7 +3038,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         reputation: d.reputation_points || 0,
         rank: d.prestige_rank || 'Operative',
         velocity: d.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
-        level: d.level || 1
+        level: d.level || 1,
+        xp: d.xp || 0
       }));
     }
     return [];
@@ -3443,7 +3532,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     pinTask,
     calculateMissionXP,
     completeMission,
-    redeploySquad
+    redeploySquad,
+    claimTacticalBounty,
+    syncStreak
   };
 
   return (
