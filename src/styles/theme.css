@@ -113,4 +113,98 @@
   .gradient-bg {
     @apply bg-gradient-to-br from-hack-blue/10 via-hack-purple/10 to-hack-neon/10;
   }
+
+  /* Orbital Timeline Custom Utilities */
+  .animate-orbital-spin {
+    animation: orbital-spin 100s linear infinite;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 3s ease-in-out infinite;
+  }
+
+  .backdrop-blur-orbital {
+    backdrop-filter: blur(8px);
+  }
+
+  @keyframes orbital-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse-subtle {
+
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
+  }
+}
+
+/* Crystal & Shiny Black Utilities */
+.bg-crystal-black {
+  background: radial-gradient(circle at top left, #0a0a0a, #000000);
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-crystal-black::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 60% at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.bg-shiny-black {
+  background: linear-gradient(135deg, #050505 0%, #000000 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-shiny-black::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05) 0%, transparent 40%);
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+.animate-terminal-cursor {
+  animation: terminal-cursor 1s step-end infinite;
+}
+
+@keyframes terminal-cursor {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {}
+}
+
+@keyframes ping {
+
+  75%,
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-ping-slow {
+  animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
