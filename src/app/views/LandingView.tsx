@@ -191,7 +191,6 @@ export function LandingView() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          ref={containerRef}
           className="min-h-screen bg-black text-slate-200 selection:bg-blue-500/30 overflow-x-hidden font-sans scroll-smooth"
         >
 
