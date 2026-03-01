@@ -37,7 +37,8 @@ import {
   Github,
   Mail,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  Download
 } from "lucide-react";
 import RadialOrbitalTimeline from "../components/ui/radial-orbital-timeline";
 import { InteractiveGlobe } from "../components/ui/interactive-globe";
@@ -126,6 +127,27 @@ export function LandingView() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
+  };
 
   // ─── Scroll-Linked Animations ───
   const { scrollYProgress } = useScroll({
@@ -261,6 +283,15 @@ export function LandingView() {
                   >
                     Read Briefing
                   </Button>
+                  {installPrompt && (
+                    <Button
+                      onClick={handleInstall}
+                      className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-600/30 hover:scale-[1.02] hover:shadow-emerald-500/40 transition-all duration-300 flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      Get Phone App
+                    </Button>
+                  )}
                 </motion.div>
 
                 {/* Live stats strip */}
