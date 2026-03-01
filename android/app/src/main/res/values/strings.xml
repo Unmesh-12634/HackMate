@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HackMate</string>
+    <string name="title_activity_main">HackMate</string>
+    <string name="package_name">com.unmesh.hackmate</string>
+    <string name="custom_url_scheme">com.unmesh.hackmate</string>
+</resources>

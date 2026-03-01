@@ -40,6 +40,7 @@ import {
   ChevronDown,
   Download
 } from "lucide-react";
+import { toast } from "sonner";
 import RadialOrbitalTimeline from "../components/ui/radial-orbital-timeline";
 import { InteractiveGlobe } from "../components/ui/interactive-globe";
 import Preloader from "../components/ui/Preloader";
@@ -141,7 +142,12 @@ export function LandingView() {
   }, []);
 
   const handleInstall = async () => {
-    if (!installPrompt) return;
+    if (!installPrompt) {
+      toast.info(
+        "To install HackMate, open this page in Chrome or Safari on your phone, tap the browser menu, and select 'Add to Home Screen'."
+      );
+      return;
+    }
     installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
     if (outcome === 'accepted') {
@@ -283,15 +289,13 @@ export function LandingView() {
                   >
                     Read Briefing
                   </Button>
-                  {installPrompt && (
-                    <Button
-                      onClick={handleInstall}
-                      className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-600/30 hover:scale-[1.02] hover:shadow-emerald-500/40 transition-all duration-300 flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Get Phone App
-                    </Button>
-                  )}
+                  <Button
+                    onClick={handleInstall}
+                    className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-600/30 hover:scale-[1.02] hover:shadow-emerald-500/40 transition-all duration-300 flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Get Phone App
+                  </Button>
                 </motion.div>
 
                 {/* Live stats strip */}
