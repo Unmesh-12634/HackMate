@@ -59,7 +59,7 @@ const HIDE_BADGE_CSS = `
 // ─── Unicorn Studio WebGL Scene ───────────────────────────────────────────────
 const UNICORN_SDK_URL = "https://cdn.jsdelivr.net/gh/hiunicornstudio/unicornstudio.js@v2.0.5/dist/unicornStudio.umd.js";
 
-function UnicornHero() {
+const UnicornHero = React.forwardRef<HTMLDivElement>((props, externalRef) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<any>(null);
 
@@ -116,13 +116,24 @@ function UnicornHero() {
       <style>{HIDE_BADGE_CSS}</style>
       <div
         id="unicorn-hero-bg"
-        ref={containerRef}
+        ref={(node) => {
+          // Keep our internal mount ref for the SDK
+          (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          // Forward the ref back up to React (motion)
+          if (typeof externalRef === "function") {
+            externalRef(node);
+          } else if (externalRef) {
+            externalRef.current = node;
+          }
+        }}
         className="absolute inset-0 w-full h-full"
         aria-hidden="true"
       />
     </>
   );
-}
+});
+
+UnicornHero.displayName = "UnicornHero";
 
 export function LandingView() {
   const navigate = useNavigate();
