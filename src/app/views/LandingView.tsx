@@ -207,6 +207,9 @@ export function LandingView() {
             </div>
 
             <div className="flex items-center gap-3 md:gap-4">
+              <Button onClick={handleInstall} className="hidden md:flex h-8 md:h-9 px-4 rounded-lg font-bold uppercase text-[9px] md:text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-500 border-none shadow-lg shadow-emerald-600/25 group transition-all duration-300 gap-2">
+                <Download className="w-3 h-3" /> Get App
+              </Button>
               <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Log In</button>
               <Button onClick={() => navigate("/signup")} className="h-8 md:h-9 px-4 md:px-6 rounded-lg font-bold uppercase text-[9px] md:text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/25 group transition-all duration-300">
                 Initialize <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
@@ -288,13 +291,6 @@ export function LandingView() {
                     className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] border-white/15 bg-white/[0.06] backdrop-blur-xl hover:bg-white/[0.12] hover:border-white/25 transition-all"
                   >
                     Read Briefing
-                  </Button>
-                  <Button
-                    onClick={handleInstall}
-                    className="h-14 px-10 rounded-xl text-[11px] font-black uppercase tracking-[0.3em] bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-600/30 hover:scale-[1.02] hover:shadow-emerald-500/40 transition-all duration-300 flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Get Phone App
                   </Button>
                 </motion.div>
 
@@ -586,10 +582,13 @@ export function LandingView() {
                   >
                     Initialize Command
                   </Button>
-                  <button className="flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 hover:text-white transition-colors h-16 px-8 group">
-                    <div className="w-1.5 h-1.5 rounded-full border border-slate-700 group-hover:border-blue-500 transition-colors" />
-                    Request Intel
-                  </button>
+                  <Button
+                    onClick={handleInstall}
+                    className="h-16 px-12 rounded-xl text-[10px] font-black uppercase tracking-[0.4em] bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-600/30 transition-all hover:scale-[1.02] active:scale-98 group flex items-center gap-2"
+                  >
+                    <Download className="w-5 h-5 mb-[1px]" />
+                    Get Phone App
+                  </Button>
                 </div>
               </div>
             </motion.div>
