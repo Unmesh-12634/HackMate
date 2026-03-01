@@ -333,7 +333,6 @@ export function ProfileView() {
                </div>
 
                <div className="flex-1 relative h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
-                  <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
                   <div
                      className="absolute top-0 left-0 h-full bg-gradient-to-r from-hack-blue via-indigo-500 to-hack-neon transition-all duration-1000 ease-out relative"
                      style={{ width: `${reputation % 100}%` }}

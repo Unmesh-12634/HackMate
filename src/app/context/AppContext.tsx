@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "../../lib/supabase";
 import { aiSquadService } from "../../lib/ai_squad";
 import { Zap, AlertTriangle, Trophy, Target, CheckCircle2, Clock } from "lucide-react";
+import { getGitHubProfile, getGitHubRepos, getGitHubLanguages } from "../../lib/github";
 
 export type Theme = "light" | "dark";
 
@@ -1330,7 +1331,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const fetchGitHubData = async (username: string, tokenOverride?: string | null) => {
     try {
       const activeToken = tokenOverride || githubToken;
-      const { getGitHubProfile, getGitHubRepos, getGitHubLanguages } = await import("../../lib/github");
       const profile = await getGitHubProfile(username, activeToken || undefined);
       if (!profile) return;
       const repos = await getGitHubRepos(username, 5, activeToken || undefined);
@@ -1376,7 +1376,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const connectGitHubManual = async (username: string): Promise<boolean> => {
     if (!user) return false;
     try {
-      const { getGitHubProfile } = await import("../../lib/github");
       const profile = await getGitHubProfile(username, githubToken || undefined);
 
       if (!profile) {
