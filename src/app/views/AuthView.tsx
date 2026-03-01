@@ -139,18 +139,18 @@ export function AuthView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 lg:p-8 relative overflow-hidden selection:bg-white/10 selection:text-white">
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4 lg:p-8 relative overflow-hidden selection:bg-white/10 selection:text-white">
       {/* Back to Home Button */}
       <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
         whileHover={{ x: -4, scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => navigate("/")}
-        className="absolute top-8 left-8 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl text-white/40 hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-all group shadow-2xl"
+        className="absolute top-4 left-4 md:top-8 md:left-8 z-[60] flex items-center gap-2 md:gap-3 px-4 py-2 md:px-5 md:py-3 rounded-xl md:rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl text-white/40 hover:text-white hover:bg-white/[0.08] hover:border-white/20 transition-all group shadow-2xl"
       >
-        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-        <span className="text-[10px] font-black uppercase tracking-[0.3em]">Back to Home</span>
+        <ArrowLeft className="w-3 h-3 md:w-4 md:h-4 transition-transform group-hover:-translate-x-1" />
+        <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] whitespace-nowrap">Back to Home</span>
       </motion.button>
 
       {/* Enhanced Silky Cloth Background */}
@@ -180,7 +180,7 @@ export function AuthView() {
 
       <motion.div
         layout
-        className="w-full max-w-[1000px] flex flex-col lg:flex-row bg-[#FAFAFA] rounded-[48px] shadow-[0_60px_120px_-30px_rgba(0,0,0,1)] overflow-hidden relative z-10 border border-white/20"
+        className="w-full max-w-[1000px] flex flex-col lg:flex-row bg-[#FAFAFA] rounded-[24px] md:rounded-[48px] shadow-[0_60px_120px_-30px_rgba(0,0,0,1)] overflow-hidden relative z-10 border border-white/20 mt-12 md:mt-0"
       >
         {/* Decorative Silky Panel (Desktop) */}
         <div className="hidden lg:flex w-[42%] bg-[#080808] relative flex-col justify-between p-16 text-white overflow-hidden">
@@ -225,14 +225,14 @@ export function AuthView() {
         </div>
 
         {/* Main Form Section */}
-        <div className="flex-1 p-10 md:p-16 lg:p-20 flex flex-col justify-center bg-white relative">
+        <div className="flex-1 p-6 sm:p-10 md:p-16 lg:p-20 flex flex-col justify-center bg-white relative">
           <div className="max-w-[380px] mx-auto w-full">
-            <div className="mb-12">
-              <h2 className="text-4xl font-black text-[#050505] tracking-tight mb-2 uppercase">
+            <div className="mb-8 md:mb-12 mt-4 md:mt-0">
+              <h2 className="text-3xl md:text-4xl font-black text-[#050505] tracking-tight mb-2 uppercase text-center md:text-left">
                 {isLogin ? "Sign In" : "Sign Up"}
               </h2>
-              <div className="h-1 w-8 bg-[#050505] rounded-full mb-4" />
-              <p className="text-[11px] font-bold text-[#050505]/40 uppercase tracking-[0.2em]">
+              <div className="h-1 w-8 bg-[#050505] rounded-full mb-4 mx-auto md:mx-0" />
+              <p className="text-[9px] md:text-[11px] font-bold text-[#050505]/40 uppercase tracking-[0.2em] text-center md:text-left">
                 {isLogin ? "Neural uplink requested" : "Establish new operative signature"}
               </p>
             </div>

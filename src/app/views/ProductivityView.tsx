@@ -188,7 +188,7 @@ export function ProductivityView() {
          {/* Glossy Overlay */}
          <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-600/[0.03] to-transparent pointer-events-none" />
 
-         <div className="max-w-[1600px] mx-auto p-8 md:p-12 space-y-12 relative z-10">
+         <div className="max-w-[1600px] mx-auto p-4 md:p-8 lg:p-12 space-y-8 md:space-y-12 relative z-10">
             {/* Header Section */}
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-border/40 pb-12">
                <div className="space-y-4">

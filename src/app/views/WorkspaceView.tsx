@@ -24,6 +24,7 @@ import {
     Lock,
     ChevronLeft,
     X,
+    Menu,
     Users,
     Trash2,
     AlertTriangle,
@@ -78,7 +79,7 @@ function getDeadlineInfo(deadline?: string) {
 }
 
 const TaskCard: React.FC<{ task: any; team: any; onOpenDetail: (task: any) => void }> = ({ task, team, onOpenDetail }) => {
-    const { user, toggleCritical, pinTask, pinnedTasks } = useAppContext();
+    const { user, toggleCritical, pinTask, pinnedTasks, updateTaskStatus } = useAppContext();
     const isPinned = pinnedTasks[team.id] === task.id;
     const isLeader = team.currentMembers.some((m: any) => m.id === user?.id && m.role === 'Leader');
     const isAssignee = task.assignee_id === user?.id;
@@ -191,6 +192,22 @@ const TaskCard: React.FC<{ task: any; team: any; onOpenDetail: (task: any) => vo
                 <div className="flex items-center gap-1.5 mb-3 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                     <Eye className="w-3 h-3 text-amber-400" />
                     <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">Review: {reviewAssignee.name}</span>
+                </div>
+            )}
+
+            {/* Mobile Task Shifting */}
+            {canInteract && (
+                <div className="md:hidden mt-2 mb-4" onClick={(e) => e.stopPropagation()}>
+                    <select
+                        value={task.status}
+                        onChange={(e) => updateTaskStatus(task.id, e.target.value as any)}
+                        className="w-full bg-card border border-border/50 text-[10px] uppercase font-bold text-muted-foreground p-2 rounded-xl focus:outline-none focus:border-blue-500/50 appearance-none text-center"
+                    >
+                        <option value="todo">Move to Backlog</option>
+                        <option value="in_progress">Move to Execution</option>
+                        <option value="review">Move to Analysis</option>
+                        <option value="done">Move to Secure</option>
+                    </select>
                 </div>
             )}
 
@@ -314,7 +331,7 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
 
     return (
         <DndProvider backend={HTML5Backend}>
-            <div className="h-full flex flex-col p-8">
+            <div className="h-full flex flex-col p-4 md:p-8">
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0 mb-4 md:mb-8">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -334,25 +351,23 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                 </header>
 
                 {/* Mobile Column Nav */}
-                <div className="flex md:hidden bg-card/50 p-1 rounded-2xl border border-border/30 gap-1 overflow-x-auto no-scrollbar shrink-0 mb-4">
-                    {columns.map((col) => (
-                        <button
-                            key={col.id}
-                            onClick={() => setActiveMobileTab(col.id)}
-                            className={cn(
-                                "flex-1 py-2.5 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
-                                activeMobileTab === col.id
-                                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                                    : "text-muted-foreground hover:bg-muted/50"
-                            )}
-                        >
-                            {col.title.split(' ')[0]}
-                        </button>
-                    ))}
+                <div className="flex md:hidden mb-4 shrink-0 relative">
+                    <select
+                        value={activeMobileTab}
+                        onChange={(e) => setActiveMobileTab(e.target.value as any)}
+                        className="w-full bg-card/60 backdrop-blur-md border border-border/30 text-xs font-black uppercase tracking-widest text-foreground p-3 rounded-2xl appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-center shadow-lg shadow-black/20"
+                    >
+                        {columns.map((col) => (
+                            <option key={col.id} value={col.id}>{col.title}</option>
+                        ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                        <ChevronLeft className="w-4 h-4 text-muted-foreground -rotate-90" />
+                    </div>
                 </div>
 
                 <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 custom-scrollbar">
-                    <div className="flex gap-4 h-full" style={{ minWidth: 'max(100%, 900px)' }}>
+                    <div className="flex gap-4 h-full min-w-full md:min-w-[max(100%,900px)]">
                         {columns.map((col) => (
                             <div
                                 key={col.id}
@@ -402,13 +417,13 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                                 className="w-full max-w-2xl bg-card border border-border/50 rounded-[2.5rem] shadow-2xl overflow-hidden"
                             >
-                                <div className="p-8 border-b border-border/30 flex items-center justify-between bg-card/50">
+                                <div className="p-4 sm:p-6 md:p-8 border-b border-border/30 flex items-center justify-between bg-card/50">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                                             <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">New Tactical Deployment</span>
                                         </div>
-                                        <h3 className="text-2xl font-black text-foreground uppercase tracking-tighter">Deploy Task</h3>
+                                        <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tighter">Deploy Task</h3>
                                     </div>
                                     <button
                                         onClick={() => setIsAddingTask(false)}
@@ -417,7 +432,7 @@ const TacticalBoard: React.FC<{ team: any }> = ({ team }) => {
                                         <X className="w-6 h-6" />
                                     </button>
                                 </div>
-                                <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                                <div className="p-4 sm:p-6 md:p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
                                     <AddTaskForm
                                         teamId={team.id}
                                         onClose={() => {
@@ -534,13 +549,13 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
 
     return (
         <div className="h-full flex flex-col bg-card/20">
-            <header className="p-6 border-b border-border/30 flex items-center justify-between bg-card/40 backdrop-blur-md">
+            <header className="p-4 sm:p-6 border-b border-border/30 flex items-center justify-between bg-card/40 backdrop-blur-md">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">Encrypted Tactical Channel</span>
                     </div>
-                    <h2 className="text-2xl font-black text-foreground tracking-tighter uppercase">Comms Link</h2>
+                    <h2 className="text-xl md:text-2xl font-black text-foreground tracking-tighter uppercase">Comms Link</h2>
                 </div>
                 {/* Member avatars with presence dots */}
                 <div className="flex -space-x-3">
@@ -677,7 +692,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (<>
-        <div className="h-full flex bg-background">
+        <div className="h-full flex flex-col md:flex-row bg-background">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -685,8 +700,11 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 onChange={handleFileUpload}
             />
 
-            <aside className="w-80 border-r border-border/30 flex flex-col bg-card/20">
-                <header className="p-6 border-b border-border/30">
+            <aside className={cn(
+                "w-full md:w-80 md:border-r border-border/30 flex-col bg-card/20 shrink-0 md:h-auto overflow-y-auto custom-scrollbar",
+                selectedDocId ? "hidden md:flex" : "flex h-full"
+            )}>
+                <header className="p-4 md:p-6 border-b border-border/30 shrink-0">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Document Vault</h3>
                         <div className="flex gap-2">
@@ -770,14 +788,20 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                 </div>
             </aside>
 
-            <main className="flex-1 flex flex-col min-w-0 bg-background relative">
+            <main className={cn(
+                "flex-1 flex-col min-w-0 bg-background relative",
+                !selectedDocId ? "hidden md:flex" : "flex"
+            )}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
 
                 {selectedDoc ? (
                     <>
-                        <header className="p-6 border-b border-border/30 flex items-center justify-between bg-card/20 backdrop-blur-sm relative z-10">
-                            <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
+                        <header className="p-4 md:p-6 border-b border-border/30 flex md:items-center justify-between bg-card/20 backdrop-blur-sm relative z-10 flex-col md:flex-row gap-4 md:gap-0 items-start">
+                            <div className="flex items-center gap-2 md:gap-4">
+                                <button onClick={() => setSelectedDocId(null)} className="md:hidden p-2 -ml-2 text-muted-foreground hover:text-white transition-colors">
+                                    <ChevronLeft className="w-5 h-5" />
+                                </button>
+                                <div className="p-3 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20 hidden sm:flex">
                                     {getDocIcon(selectedDoc)}
                                 </div>
                                 <div>
@@ -820,7 +844,7 @@ const IntelArchives: React.FC<{ team: any }> = ({ team }) => {
                             </div>
                         </header>
 
-                        <div className="flex-1 overflow-y-auto p-8 relative z-10">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 relative z-10">
                             {selectedDoc.type === 'markdown' ? (
                                 <textarea
                                     value={selectedDoc.content}
@@ -930,13 +954,13 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
     ];
 
     return (
-        <div className="h-full overflow-y-auto p-8 bg-background scrollbar-hide text-foreground">
-            <header className="mb-8">
+        <div className="h-full overflow-y-auto p-4 md:p-8 bg-background scrollbar-hide text-foreground">
+            <header className="mb-4 md:mb-8">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] animate-pulse" />
                     <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em]">Signal Processing Optimized</span>
                 </div>
-                <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Squad Intel</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter uppercase">Squad Intel</h2>
             </header>
 
             {/* Stats Grid */}
@@ -947,7 +971,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="p-6 rounded-3xl bg-card/40 border border-border/30 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
+                        className="p-4 md:p-6 rounded-3xl bg-card/40 border border-border/30 backdrop-blur-sm group hover:border-blue-500/20 transition-all"
                     >
                         <div className={`p-3 rounded-2xl bg-card w-fit mb-4 border border-border/30 ${stat.color}`}>
                             <stat.icon className="w-6 h-6" />
@@ -960,7 +984,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Performance Chart */}
-                <div className="lg:col-span-2 p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
+                <div className="lg:col-span-2 p-4 md:p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-8">
                         <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Productivity Pulse</h3>
                         <Badge variant="outline" className="border-blue-500/30 text-blue-400 uppercase text-[10px]">Real-time Telemetry</Badge>
@@ -1014,7 +1038,7 @@ const SquadIntel: React.FC<{ team: any }> = ({ team }) => {
                 </div>
 
                 {/* Task Distribution */}
-                <div className="p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
+                <div className="p-4 md:p-8 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm">
                     <h3 className="text-sm font-black text-foreground uppercase tracking-widest mb-8">Sector Deployment</h3>
                     <div className="space-y-6">
                         {["Design", "Backend", "Frontend", "Research"].map((label, i) => {
@@ -1549,7 +1573,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
     const progress = Math.min(((totalXP - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100, 100);
 
     return (
-        <div className="h-full flex flex-col bg-background p-8 overflow-hidden relative">
+        <div className="h-full flex flex-col bg-background p-4 md:p-8 overflow-hidden relative">
             {/* Holographic Scanline Gradient */}
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%)] z-10 opacity-30" style={{ backgroundSize: '100% 4px' }} />
 
@@ -1566,13 +1590,13 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="text-3xl font-black text-foreground tracking-tighter uppercase"
+                    className="text-2xl md:text-3xl font-black text-foreground tracking-tighter uppercase"
                 >
                     Mission Logs
                 </motion.h2>
             </header>
 
-            <div className="flex-1 overflow-y-auto pr-4 space-y-4 scrollbar-hide relative z-20">
+            <div className="flex-1 overflow-y-auto pr-0 md:pr-4 space-y-4 scrollbar-hide relative z-20">
                 <AnimatePresence mode="popLayout">
                     {teamBounties.length === 0 ? (
                         <motion.div
@@ -1592,9 +1616,9 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                                 whileHover={{ scale: 1.01, borderColor: 'rgba(99, 102, 241, 0.3)' }}
-                                className="p-6 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm group transition-all flex items-center justify-between"
+                                className="p-4 md:p-6 rounded-[2rem] bg-card/40 border border-border/30 backdrop-blur-sm group transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0"
                             >
-                                <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-3 md:gap-6 w-full">
                                     <div className={cn(
                                         "w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500",
                                         bounty.status === 'completed' ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
@@ -1609,7 +1633,7 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                                         <p className="text-xs text-muted-foreground font-medium max-w-sm">{bounty.description}</p>
                                     </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-left md:text-right w-full md:w-auto">
                                     <div className="text-[10px] font-bold text-muted-foreground uppercase mb-1">Status</div>
                                     <div className={cn(
                                         "text-xs font-black uppercase tracking-widest",
@@ -1629,14 +1653,14 @@ const MissionLogs: React.FC<{ team: any }> = ({ team }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="mt-8 p-6 rounded-3xl bg-indigo-600/5 border border-indigo-500/10 flex items-center justify-between shadow-2xl shadow-indigo-500/5 relative z-20"
+                className="mt-8 p-4 md:p-6 rounded-3xl bg-indigo-600/5 border border-indigo-500/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0 shadow-2xl shadow-indigo-500/5 relative z-20"
             >
                 <div>
                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Squad Reputation</div>
                     <div className="text-2xl font-black text-foreground">LEVEL_{level.toString().padStart(2, '0')}</div>
                 </div>
-                <div className="h-12 w-[1px] bg-indigo-500/20 mx-6" />
-                <div className="flex-1">
+                <div className="hidden md:block h-12 w-[1px] bg-indigo-500/20 mx-6" />
+                <div className="flex-1 w-full">
                     <div className="flex justify-between text-[10px] font-black text-muted-foreground/70 uppercase mb-2">
                         <span>XP Progress</span>
                         <span>{totalXP} / {nextLevelXP}</span>
@@ -2019,7 +2043,7 @@ const TerminalConsole: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="h-full bg-black p-8 font-mono text-emerald-500 overflow-hidden flex flex-col relative border border-border/30 rounded-[2rem] shadow-2xl">
+        <div className="h-full bg-black p-4 md:p-8 font-mono text-emerald-500 overflow-hidden flex flex-col relative border border-border/30 rounded-[2rem] shadow-2xl">
             {/* Scanline Effect */}
             <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10" style={{ backgroundSize: '100% 2px, 3px 100%' }} />
             <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.8)] z-10" />
@@ -2183,26 +2207,26 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 px-4 md:px-6 py-4 md:py-3 bg-card/40 border-b border-border/30 backdrop-blur-xl relative z-30 md:min-h-[64px]">
+        <div className="flex flex-row items-center justify-between md:justify-start gap-2 md:gap-6 px-3 md:px-6 py-2 md:py-3 bg-card/40 border-b border-border/30 backdrop-blur-xl relative z-30 md:min-h-[64px] overflow-hidden shrink-0">
             {/* Real-time Clock */}
-            <div className="flex md:flex-col border-r border-border/50 pr-4 md:pr-6 items-center md:items-start gap-3 md:gap-0.5">
-                <span className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">System Time</span>
-                <span className="text-xs md:text-sm font-mono font-bold text-emerald-400 tabular-nums">
+            <div className="flex flex-row md:flex-col border-r border-border/50 pr-2 md:pr-6 items-center md:items-start gap-1 md:gap-0.5 shrink-0">
+                <span className="text-[8px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] hidden md:block">System Time</span>
+                <span className="text-[10px] md:text-sm font-mono font-bold text-emerald-400 tabular-nums">
                     {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
                 </span>
             </div>
 
             {/* Mission Countdown */}
-            <div className="flex-1 flex items-center md:gap-8 overflow-hidden">
+            <div className="flex-1 flex flex-row items-center gap-2 md:gap-8 overflow-hidden">
                 {deadlineDate ? (
-                    <div className="flex flex-col">
-                        <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex flex-row md:flex-col items-center md:items-start gap-2 md:gap-0 w-full">
+                        <div className="flex items-center gap-1.5 md:mb-0.5">
                             <span className={cn(
-                                "w-1 h-1 md:w-1.5 md:h-1.5 rounded-full shadow-[0_0_8px]",
+                                "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full shadow-[0_0_8px]",
                                 isOvertime ? "bg-rose-500 shadow-rose-500/50 animate-pulse" : "bg-blue-500 shadow-blue-500/50"
                             )} />
                             <span className={cn(
-                                "text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em]",
+                                "text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] hidden md:block",
                                 isOvertime ? "text-rose-500 animate-pulse" : "text-blue-500"
                             )}>
                                 {isOvertime ? "Mission_Overtime" : "Time_Remaining"}
@@ -2210,7 +2234,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         </div>
                         <div className="flex items-baseline gap-2 md:gap-3">
                             <span className={cn(
-                                "text-lg md:text-2xl font-black font-mono tracking-tighter tabular-nums truncate",
+                                "text-[10px] md:text-2xl font-black font-mono tracking-tighter tabular-nums truncate",
                                 isOvertime ? "text-rose-400" : "text-foreground"
                             )}>
                                 {isOvertime && "-"}
@@ -2229,11 +2253,12 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col">
-                        <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.2em] mb-0.5">Status</span>
+                    <div className="flex flex-row md:flex-col items-center md:items-start gap-2 md:gap-0">
+                        <span className="text-[8px] md:text-[10px] font-black text-muted-foreground/70 uppercase tracking-[0.2em] mb-0.5 hidden md:block">Status</span>
                         <div className="text-[9px] md:text-xs font-black text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-                            <Shield className="w-2.5 h-2.5 opacity-30" />
-                            Mission_Timeline_Not_Sync'd
+                            <Shield className="w-2.5 h-2.5 opacity-30 hidden md:block" />
+                            <span className="md:hidden">No Target</span>
+                            <span className="hidden md:block">Timeline_Not_Sync'd</span>
                         </div>
                     </div>
                 )}
@@ -2246,7 +2271,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                         <Button
                             size="sm"
                             onClick={() => setShowDeadlineModal(true)}
-                            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 px-5"
+                            className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/20 rounded-xl font-black uppercase tracking-widest text-[9px] md:text-[10px] h-8 md:h-10 px-3 md:px-5"
                         >
                             <Target className="w-3.5 h-3.5 mr-2" />
                             Launch Mission
@@ -2257,16 +2282,16 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                 size="sm"
                                 onClick={handleCompleteMission}
                                 disabled={isProcessing}
-                                className="bg-hack-blue hover:bg-blue-600 text-white shadow-lg shadow-hack-blue/20 rounded-xl font-black uppercase tracking-widest text-[10px] h-10 px-5 group disabled:opacity-60"
+                                className="bg-hack-blue hover:bg-blue-600 text-white shadow-lg shadow-hack-blue/20 rounded-xl font-black uppercase tracking-widest text-[8px] md:text-[10px] h-8 md:h-10 px-3 md:px-5 group disabled:opacity-60"
                             >
-                                <Trophy className="w-3.5 h-3.5 mr-2 group-hover:rotate-12 transition-transform" />
+                                <Trophy className="w-3.5 h-3.5 mr-1.5 md:mr-2 group-hover:rotate-12 transition-transform" />
                                 {isProcessing ? "Processing..." : "End Mission"}
                             </Button>
                             <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setShowDeadlineModal(true)}
-                                className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl font-black uppercase tracking-widest text-[9px] h-10 px-3"
+                                className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl font-black uppercase tracking-widest text-[8px] md:text-[9px] h-8 md:h-10 px-2 md:px-3"
                             >
                                 Adjust
                             </Button>
@@ -2274,7 +2299,7 @@ const MissionClock: React.FC<{ team: any }> = ({ team }) => {
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setShowAbortModal(true)}
-                                className="text-rose-500/50 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl text-[9px] font-black uppercase tracking-widest h-10 px-3 border border-rose-500/20"
+                                className="text-rose-500/50 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest h-8 md:h-10 px-2 md:px-3 border border-rose-500/20"
                             >
                                 <Trash2 className="w-3 h-3" />
                             </Button>
@@ -2505,10 +2530,12 @@ export const WorkspaceView: React.FC = () => {
         { id: "console", name: "Console", icon: Activity, color: "text-muted-foreground" },
     ];
 
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
     return (
         <div className="flex h-screen bg-background relative overflow-hidden">
             {/* Workspace Sidebar - Desktop Only */}
-            <aside className="w-64 border-r border-border/30 bg-card/60 backdrop-blur-xl flex flex-col hidden md:flex shrink-0">
+            <aside className="w-64 border-r border-border/30 bg-card/60 backdrop-blur-xl flex flex-col hidden md:flex shrink-0 z-40 relative">
                 <div className="p-4 border-b border-border/30">
                     <button
                         onClick={() => navigate("/workspace")}
@@ -2577,7 +2604,36 @@ export const WorkspaceView: React.FC = () => {
 
             {/* Main Content Area */}
             <main className="flex-1 overflow-hidden relative flex flex-col">
+                {/* Mission Clock goes to the VERY TOP on mobile */}
                 <MissionClock team={team} />
+
+                {/* Mobile Header & Tabs - Mobile Only */}
+                <div className="flex flex-col md:hidden shrink-0 border-b border-border/30 bg-card/60 backdrop-blur-xl z-40 relative">
+                    <div className="flex items-center justify-between p-4 px-3">
+                        <button
+                            onClick={() => navigate("/workspace")}
+                            className="flex items-center gap-2 text-muted-foreground hover:text-white transition-colors"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest mt-0.5">Dashboard</span>
+                        </button>
+
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                <span className="text-[10px] font-bold text-foreground uppercase truncate max-w-[100px]">{team.name}</span>
+                            </div>
+                            <button
+                                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                                className="w-8 h-8 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400"
+                            >
+                                {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sub-components space */}
                 <div className="flex-1 relative overflow-hidden">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -2600,6 +2656,65 @@ export const WorkspaceView: React.FC = () => {
                     </AnimatePresence>
                 </div>
             </main>
+
+            {/* Collapsible Mobile Navigation Drawer - Ported to Root to escape backdrop-blur constraints */}
+            <AnimatePresence>
+                {isMobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+                        />
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="fixed top-0 right-0 bottom-0 w-64 bg-card/95 backdrop-blur-xl border-l border-border/30 shadow-2xl z-[70] flex flex-col"
+                        >
+                            <div className="flex items-center justify-between p-4 border-b border-border/10">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
+                                        <Zap className="w-4 h-4 text-white" />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{team.name} NAV</span>
+                                </div>
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+                                {tabs.map((tab) => {
+                                    const Icon = tab.icon;
+                                    const isActive = activeTab === tab.id;
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => {
+                                                setActiveTab(tab.id);
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                                                isActive ? "bg-blue-600/15 text-blue-400 shadow-md border border-blue-500/30" : "text-muted-foreground hover:text-foreground/80 hover:bg-muted/50 border border-transparent bg-muted/10"
+                                            )}
+                                        >
+                                            <Icon className={cn("w-5 h-5 shrink-0", isActive ? tab.color : "opacity-70")} />
+                                            <span className="truncate">{tab.name}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

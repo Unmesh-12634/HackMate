@@ -236,6 +236,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               variant="minimal"
             />
 
+            {/* Mobile Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="md:hidden w-11 h-11 flex items-center justify-center rounded-2xl hover:bg-secondary border border-border/50 shadow-sm transition-all active:scale-95"
+            >
+              {theme === "light" ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
+            </button>
+
             {/* Notification Trigger & Panel */}
             <div className="relative">
               <button
@@ -265,7 +273,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-4 w-[380px] bg-card border border-border shadow-2xl rounded-[32px] z-50 overflow-hidden"
+                      className="absolute -right-4 md:right-0 mt-4 w-[calc(100vw-32px)] md:w-[380px] max-w-[380px] bg-card border border-border shadow-2xl rounded-[32px] z-50 overflow-hidden"
                     >
                       <div className="p-6 border-b border-border flex items-center justify-between bg-secondary/20">
                         <div className="flex items-center gap-3">
@@ -326,8 +334,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </AnimatePresence>
             </div>
 
-            <div className="h-8 w-px bg-border/50" />
-            <div className="flex items-center gap-4">
+            <div className="hidden md:block h-8 w-px bg-border/50" />
+            <div className="hidden md:flex items-center gap-4">
               <div className="text-right hidden sm:block">
                 <p className="text-xs font-black tracking-tight leading-none uppercase">{user?.name || "Alex Hacker"}</p>
                 <p className="text-[9px] text-hack-blue font-black uppercase tracking-[0.2em] mt-1 opacity-70">
@@ -508,30 +516,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                     Install App
                   </button>
                 )}
-                <div className="flex gap-2">
-                  <button
-                    onClick={toggleTheme}
-                    className="flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl bg-secondary/50 text-muted-foreground hover:bg-secondary transition-all"
-                  >
-                    {theme === "light" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                    <span className="text-[10px] font-black uppercase tracking-widest">Theme</span>
-                  </button>
-                  <button
-                    onClick={logout}
-                    className="w-16 flex items-center justify-center p-4 rounded-2xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-4 p-2">
-                  <Avatar className="h-10 w-10 rounded-xl border-2 border-background shadow-lg ring-2 ring-hack-blue/10">
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback className="bg-hack-blue text-white font-black text-[10px]">A</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black uppercase tracking-tight truncate">{user?.name || "Operative"}</p>
-                    <p className="text-[8px] text-hack-blue font-black uppercase tracking-[0.2em] opacity-60">Control Access Level: {user?.level || 1}</p>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-muted/20 border border-border/30">
+                  <div className="flex items-center gap-3 w-full">
+                    <Avatar className="h-10 w-10 rounded-xl border-2 border-background shadow-lg ring-2 ring-hack-blue/10">
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback className="bg-hack-blue text-white font-black text-[10px]">A</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-tight truncate">{user?.name || "Operative"}</p>
+                      <p className="text-[8px] text-hack-blue font-black uppercase tracking-[0.2em] opacity-60">Access: Lvl {user?.level || 1}</p>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="w-10 h-10 ml-auto flex items-center justify-center rounded-xl bg-destructive/10 text-destructive hover:bg-destructive text-white transition-all shadow-sm"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>

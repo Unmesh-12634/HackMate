@@ -58,7 +58,7 @@ const Preloader = forwardRef<HTMLDivElement, PreloaderProps>(({ onComplete }, re
                         initial={{ opacity: 0, y: 20 }}
                         animate={step >= 2 ? { opacity: 1, y: 0 } : {}}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="text-4xl md:text-6xl font-black tracking-[0.2em] text-white uppercase italic"
+                        className="text-3xl md:text-6xl font-black tracking-[0.2em] text-white uppercase italic"
                     >
                         HACKMATE
                     </motion.h1>
@@ -69,10 +69,10 @@ const Preloader = forwardRef<HTMLDivElement, PreloaderProps>(({ onComplete }, re
                         transition={{ duration: 1 }}
                         className="flex flex-col items-center gap-1"
                     >
-                        <span className="text-[10px] md:text-[12px] font-black tracking-[0.6em] text-blue-400 uppercase">
+                        <span className="text-[10px] md:text-[12px] font-black tracking-[0.3em] md:tracking-[0.6em] text-blue-400 uppercase">
                             BY UNMESH JOSHI
                         </span>
-                        <span className="text-[8px] md:text-[10px] font-bold tracking-[0.4em] text-slate-500 uppercase">
+                        <span className="text-[8px] md:text-[10px] font-bold tracking-[0.2em] md:tracking-[0.4em] text-slate-500 uppercase">
               // EST. 2026 TRANSMISSION
                         </span>
                     </motion.div>

@@ -41,9 +41,9 @@ export const PostCard = React.forwardRef<HTMLDivElement, PostCardProps>(({ post,
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#0F172A] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden hover:border-blue-500/30 transition-all group"
+            className="bg-[#0F172A] md:rounded-2xl border-y border-transparent md:border-slate-800 md:shadow-2xl overflow-hidden hover:border-blue-500/30 transition-all group mb-2 md:mb-0"
         >
-            <div className="p-5">
+            <div className="p-4 md:p-5">
                 {/* Header */}
                 <div className="flex items-center gap-4 mb-4">
                     <Avatar
@@ -249,7 +249,7 @@ export const PostCard = React.forwardRef<HTMLDivElement, PostCardProps>(({ post,
                 </div>
 
                 {/* Reactions Stats */}
-                <div className="flex items-center justify-between py-3 border-t border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <div className="flex items-center justify-between pb-2 pt-2 md:pt-3 md:border-t border-slate-800/0 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     <div className="flex items-center gap-1.5 hover:text-blue-400 cursor-pointer transition-colors group/stat">
                         <div className="w-5 h-5 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover/stat:bg-blue-500 transition-all">
                             <Heart className="w-3 h-3 text-blue-500 group-hover/stat:text-white fill-current" />
@@ -265,7 +265,7 @@ export const PostCard = React.forwardRef<HTMLDivElement, PostCardProps>(({ post,
                 </div>
 
                 {/* Action Buttons */}
-                <div className="grid grid-cols-4 gap-1 pt-3 border-t border-white/[0.03]">
+                <div className="grid grid-cols-4 gap-1 pt-2 border-t border-slate-800/50">
                     <button
                         onClick={(e) => { e.stopPropagation(); likePost(post.id); }}
                         className={cn(

@@ -10,10 +10,13 @@ import {
     Settings
 } from "lucide-react";
 import { cn } from "../ui/button";
+import { useAppContext } from "../../context/AppContext";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function MobileNav() {
     const navigate = useNavigate();
     const location = useLocation();
+    const { user } = useAppContext();
 
     const navItems = [
         { id: "workspace", label: "Work", icon: LayoutDashboard, path: "/workspace" },
@@ -39,9 +42,19 @@ export function MobileNav() {
                                 "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-300",
                                 isActive
                                     ? "bg-hack-blue/20 text-hack-blue shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                                    : "text-muted-foreground hover:bg-secondary/50"
+                                    : "text-muted-foreground hover:bg-secondary/50",
+                                item.id === "profile" && "p-0 bg-transparent shadow-none"
                             )}>
-                                <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
+                                {item.id === "profile" && user?.avatar ? (
+                                    <Avatar className={cn("w-7 h-7 border-2", isActive ? "border-hack-blue shadow-[0_0_10px_rgba(59,130,246,0.3)]" : "border-border/50")}>
+                                        <AvatarImage src={user.avatar} />
+                                        <AvatarFallback className="bg-hack-blue/20 text-hack-blue text-[8px] font-black">
+                                            {user.name?.[0]?.toUpperCase() || 'ME'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                ) : (
+                                    <item.icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
+                                )}
                             </div>
                             <span className={cn(
                                 "text-[10px] font-black uppercase tracking-widest transition-all duration-300",

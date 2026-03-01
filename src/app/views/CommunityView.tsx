@@ -1150,10 +1150,10 @@ export function CommunityView() {
 
    return (
       <div className="h-full overflow-y-auto bg-card scrollbar-hide font-['IBM_Plex_Sans'] selection:bg-blue-500/30 text-foreground relative">
-         <div className="max-w-[1440px] mx-auto p-6 md:p-8 space-y-8 relative z-10 transition-all">
+         <div className="max-w-[1440px] mx-auto md:p-8 space-y-4 md:space-y-8 relative z-10 transition-all pb-24 md:pb-8">
 
             {/* TOP BAR: SEARCH & NAV */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 border-b border-border/25 pb-4 md:pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 border-b border-border/25 pb-4 md:pb-6 px-4 pt-4 md:p-0">
                <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 md:gap-3 text-foreground mb-1">
                      <Shield className="w-5 h-5 md:w-6 md:h-6 text-blue-500" />
@@ -1162,8 +1162,8 @@ export function CommunityView() {
                   </div>
                </div>
 
-               <div className="flex-1 max-w-xl mx-auto">
-                  <div className="relative group">
+               <div className="flex items-center gap-3 w-full md:flex-1 md:max-w-xl mx-auto justify-between">
+                  <div className="flex-1 relative group min-w-0">
                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
                      <input
                         className="w-full h-11 bg-card border border-border rounded-lg pl-11 pr-4 text-sm font-medium text-foreground outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-muted-foreground"
@@ -1224,13 +1224,11 @@ export function CommunityView() {
                         )}
                      </AnimatePresence>
                   </div>
-               </div>
 
-               <div className="flex items-center gap-4">
                   <button
                      onClick={() => setIsChatOpen(!isChatOpen)}
                      className={cn(
-                        "relative p-2.5 bg-card border border-border rounded-lg hover:border-blue-500/50 hover:bg-muted transition-all cursor-pointer",
+                        "relative p-2.5 bg-card border border-border rounded-lg hover:border-blue-500/50 hover:bg-muted transition-all cursor-pointer shrink-0 h-11 w-11 flex items-center justify-center",
                         isChatOpen && "border-blue-500 bg-slate-800"
                      )}
                   >
@@ -1323,10 +1321,10 @@ export function CommunityView() {
                </div>
 
                {/* CENTER: FEED */}
-               <div className="lg:col-span-1 md:col-span-2 col-span-1 flex flex-col gap-6 overflow-y-auto scrollbar-hide pb-20 px-0 md:px-0">
+               <div className="lg:col-span-1 md:col-span-2 col-span-1 flex flex-col gap-2 md:gap-6 overflow-y-auto scrollbar-hide pb-20 px-0 md:px-0 bg-background/50 md:bg-transparent">
                   {/* Post Composer */}
                   {user && (
-                     <div className="bg-card rounded-xl border border-border p-4 shadow-sm flex flex-col gap-3">
+                     <div className="bg-card md:rounded-xl border-y md:border border-border p-4 shadow-sm flex flex-col gap-3 relative z-10">
                         <div className="flex gap-3">
                            <Avatar className="w-12 h-12 rounded-full border border-border shrink-0">
                               <AvatarImage src={user.avatar} />
@@ -1355,7 +1353,7 @@ export function CommunityView() {
                      </div>
                   )}
 
-                  <div className="flex items-center gap-2 border-b border-border pb-1 overflow-x-auto scrollbar-hide no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 mt-2">
+                  <div className="flex items-center gap-2 border-b border-border pb-1 overflow-x-auto scrollbar-hide no-scrollbar px-4 md:px-0 mt-0 md:mt-2 bg-card md:bg-transparent">
                      {["all", "PROJECTS", "CODE_SNIPPETS", "DISCUSSIONS"].map(filter => (
                         <button
                            key={filter}
@@ -1372,7 +1370,7 @@ export function CommunityView() {
                   </div>
 
                   {/* Feed */}
-                  <div className="space-y-4 relative">
+                  <div className="space-y-2 md:space-y-4 relative bg-background/50 md:bg-transparent">
                      <div id="community-feed-top" className="absolute -top-32" />
 
                      <AnimatePresence>

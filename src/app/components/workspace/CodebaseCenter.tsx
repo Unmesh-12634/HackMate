@@ -209,9 +209,9 @@ export const CodebaseCenter: React.FC<CodebaseCenterProps> = ({ team }) => {
 
     return (
         <>
-            <div className="h-full flex bg-background overflow-hidden">
+            <div className="h-full flex flex-col md:flex-row bg-background overflow-hidden">
                 {/* Left Sidebar: Repo List */}
-                <div className="w-64 border-r border-border/50 bg-card flex flex-col shrink-0 z-20 shadow-[4px_0_16px_rgba(0,0,0,0.08)]">
+                <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border/50 bg-card flex flex-col shrink-0 z-20 shadow-[4px_0_16px_rgba(0,0,0,0.08)] flex-none max-h-[150px] md:max-h-none md:h-auto">
                     <div className="p-4 border-b border-border/50 mb-2 flex items-center justify-between bg-muted/30">
                         <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Repositories</h3>
                         <Button variant="ghost" size="icon" className="w-6 h-6 text-emerald-600 hover:bg-emerald-500/10" onClick={() => setIsAddingRepo(true)}>
@@ -266,46 +266,46 @@ export const CodebaseCenter: React.FC<CodebaseCenterProps> = ({ team }) => {
                     {repo && (
                         <div className="h-full flex flex-col overflow-hidden w-full relative">
                             {/* Header */}
-                            <header className="p-8 border-b border-border/50 bg-card flex flex-col md:flex-row md:items-center justify-between gap-6 shrink-0 z-10 shadow-sm">
-                                <div className="flex items-center gap-6 overflow-hidden">
-                                    <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-emerald-500/20 border border-border shadow-lg shrink-0">
+                            <header className="p-3 md:p-8 border-b border-border/50 bg-card flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-6 shrink-0 z-10 shadow-sm">
+                                <div className="flex items-center gap-2 md:gap-6 overflow-hidden">
+                                    <div className="hidden md:block w-10 h-10 md:w-16 md:h-16 rounded-xl md:rounded-2xl overflow-hidden ring-1 md:ring-2 ring-emerald-500/20 border border-border shadow-lg shrink-0">
                                         <img src={repo.owner.avatar_url} alt="Owner Avatar" className="w-full h-full object-cover" />
                                     </div>
                                     <div className="min-w-0">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.2em] whitespace-nowrap">Live Telemetry</span>
-                                            <Badge variant="outline" className="border-border text-muted-foreground text-[10px] uppercase bg-muted whitespace-nowrap">{repo.language || "Unknown"}</Badge>
+                                        <div className="flex items-center gap-2 flex-wrap md:flex-nowrap">
+                                            <span className="hidden md:inline text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.2em] whitespace-nowrap">Live Telemetry</span>
+                                            <Badge variant="outline" className="border-border text-muted-foreground text-[8px] md:text-[10px] uppercase bg-muted whitespace-nowrap px-1 md:px-2.5 py-0 md:py-0.5">{repo.language || "Unknown"}</Badge>
+                                            <h2 className="text-base md:text-3xl font-black text-foreground tracking-tighter hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer truncate" onClick={() => window.open(repo.html_url, '_blank')}>
+                                                {repo.full_name} <ExternalLink className="hidden md:inline w-4 h-4 md:w-5 md:h-5 opacity-40 relative -top-1 ml-1" />
+                                            </h2>
                                         </div>
-                                        <h2 className="text-3xl font-black text-foreground tracking-tighter hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer truncate" onClick={() => window.open(repo.html_url, '_blank')}>
-                                            {repo.full_name} <ExternalLink className="inline w-5 h-5 opacity-40 relative -top-1 ml-1" />
-                                        </h2>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-6 flex-wrap justify-end">
+                                <div className="flex items-center gap-2 md:gap-6 flex-wrap justify-start md:justify-end mt-2 md:mt-0">
                                     {/* Stats strip */}
-                                    <div className="flex items-center gap-4 bg-muted/60 p-3 rounded-2xl border border-border whitespace-nowrap shrink-0">
-                                        <div className="flex items-center gap-2 px-3">
-                                            <Star className="w-4 h-4 text-amber-500" />
+                                    <div className="flex items-center gap-2 md:gap-4 bg-muted/60 p-1.5 md:p-3 rounded-lg md:rounded-2xl border border-border whitespace-nowrap shrink-0">
+                                        <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3">
+                                            <Star className="w-3 h-3 md:w-4 md:h-4 text-amber-500" />
                                             <div>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Stars</p>
-                                                <p className="text-sm font-black text-foreground">{repo.stargazers_count.toLocaleString()}</p>
+                                                <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Stars</p>
+                                                <p className="text-xs md:text-sm font-black text-foreground">{repo.stargazers_count.toLocaleString()}</p>
                                             </div>
                                         </div>
-                                        <div className="w-px h-8 bg-border" />
-                                        <div className="flex items-center gap-2 px-3">
-                                            <GitFork className="w-4 h-4 text-emerald-500" />
+                                        <div className="w-px h-6 md:h-8 bg-border" />
+                                        <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3">
+                                            <GitFork className="w-3 h-3 md:w-4 md:h-4 text-emerald-500" />
                                             <div>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Forks</p>
-                                                <p className="text-sm font-black text-foreground">{repo.forks_count.toLocaleString()}</p>
+                                                <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Forks</p>
+                                                <p className="text-xs md:text-sm font-black text-foreground">{repo.forks_count.toLocaleString()}</p>
                                             </div>
                                         </div>
-                                        <div className="w-px h-8 bg-border" />
-                                        <div className="flex items-center gap-2 px-3">
-                                            <CircleDot className="w-4 h-4 text-rose-500" />
+                                        <div className="w-px h-6 md:h-8 bg-border" />
+                                        <div className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3">
+                                            <CircleDot className="w-3 h-3 md:w-4 md:h-4 text-rose-500" />
                                             <div>
-                                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Issues</p>
-                                                <p className="text-sm font-black text-foreground">{repo.open_issues_count.toLocaleString()}</p>
+                                                <p className="hidden md:block text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Issues</p>
+                                                <p className="text-xs md:text-sm font-black text-foreground">{repo.open_issues_count.toLocaleString()}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -321,9 +321,9 @@ export const CodebaseCenter: React.FC<CodebaseCenterProps> = ({ team }) => {
                                 </div>
                             </header>
 
-                            <div className="flex-1 flex overflow-hidden">
+                            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                                 {/* README viewer */}
-                                <div className="flex-1 overflow-y-auto custom-scrollbar p-8 border-r border-border/50 bg-background">
+                                <div className="flex-none md:flex-1 h-[50vh] md:h-auto overflow-y-auto custom-scrollbar p-4 md:p-8 border-b md:border-b-0 md:border-r border-border/50 bg-background">
                                     <div className="flex items-center gap-3 mb-8">
                                         <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                                             <FileText className="w-4 h-4" />
@@ -343,8 +343,8 @@ export const CodebaseCenter: React.FC<CodebaseCenterProps> = ({ team }) => {
                                 </div>
 
                                 {/* Commit Feed */}
-                                <div className="w-[400px] bg-card flex flex-col border-l border-border/50">
-                                    <div className="p-6 border-b border-border/50 shrink-0 bg-muted/30">
+                                <div className="w-full md:w-[400px] bg-card flex flex-col flex-1 md:flex-none">
+                                    <div className="p-4 md:p-6 border-b border-border/50 shrink-0 bg-muted/30">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <Activity className="w-4 h-4 text-emerald-500" />

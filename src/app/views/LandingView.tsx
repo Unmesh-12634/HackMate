@@ -157,7 +157,7 @@ export function LandingView() {
         >
 
           {/* ─── Floating Navigation ──────────────────────────────────────────── */}
-          <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-16 border border-white/[0.06] bg-black/40 backdrop-blur-2xl px-6 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/80">
+          <nav className="fixed top-4 md:top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl h-14 md:h-16 border border-white/[0.06] bg-black/40 backdrop-blur-2xl px-4 md:px-6 rounded-2xl flex items-center justify-between shadow-2xl shadow-black/80">
             <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
               <div className="w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 <img src="/assets/logo.png" className="w-7 h-7 object-contain" alt="HackMate" />
@@ -178,9 +178,9 @@ export function LandingView() {
               ))}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <button onClick={() => navigate("/login")} className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-white transition-colors">Log In</button>
-              <Button onClick={() => navigate("/signup")} className="h-9 px-6 rounded-lg font-bold uppercase text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/25 group transition-all duration-300">
+              <Button onClick={() => navigate("/signup")} className="h-8 md:h-9 px-4 md:px-6 rounded-lg font-bold uppercase text-[9px] md:text-[10px] tracking-widest bg-blue-600 hover:bg-blue-500 border-none shadow-lg shadow-blue-600/25 group transition-all duration-300">
                 Initialize <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
               </Button>
             </div>
@@ -199,7 +199,7 @@ export function LandingView() {
 
             <motion.div
               style={{ opacity: springOpacity, y: springY, scale: heroScale }}
-              className="relative z-10 flex flex-col items-center text-center px-6 pt-28 pb-24 max-w-6xl mx-auto w-full"
+              className="relative z-10 flex flex-col items-center text-center px-4 md:px-6 pt-32 md:pt-28 pb-24 max-w-6xl mx-auto w-full"
             >
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -223,7 +223,7 @@ export function LandingView() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-6xl md:text-[8rem] font-black tracking-tight uppercase leading-[0.85] text-white drop-shadow-[0_4px_32px_rgba(0,0,0,0.5)]"
+                  className="text-5xl sm:text-6xl md:text-[8rem] font-black tracking-tight uppercase leading-[1.1] md:leading-[0.85] text-white drop-shadow-[0_4px_32px_rgba(0,0,0,0.5)]"
                 >
                   Command Your <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-300 via-blue-400 to-blue-600">
@@ -236,7 +236,7 @@ export function LandingView() {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.8 }}
-                  className="max-w-xl mx-auto text-sm md:text-base text-slate-300/80 font-medium leading-relaxed uppercase tracking-wider"
+                  className="max-w-xl mx-auto text-xs sm:text-sm md:text-base text-slate-300/80 font-medium leading-relaxed uppercase tracking-wider"
                 >
                   The high-precision workspace for elite development squads.
                   Built to scale, engineered for speed, designed for impact.
@@ -297,8 +297,8 @@ export function LandingView() {
           </section>
 
           {/* ─── Features Section ─────────────────────────────────────── */}
-          <section id="features" className="relative z-10 py-32 px-6">
-            <div className="max-w-7xl mx-auto rounded-[4rem] bg-crystal-black border border-white/[0.05] p-12 md:p-24 shadow-2xl overflow-hidden min-h-[900px] flex flex-col items-center justify-center relative">
+          <section id="features" className="relative z-10 py-20 md:py-32 px-4 md:px-6">
+            <div className="max-w-7xl mx-auto rounded-[2rem] md:rounded-[4rem] bg-crystal-black border border-white/[0.05] p-6 sm:p-12 md:p-24 shadow-2xl overflow-hidden min-h-[700px] md:min-h-[900px] flex flex-col items-center justify-center relative">
               <div className="absolute inset-0 bg-blue-600/[0.02] pointer-events-none" />
               <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
               <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-indigo-600/5 rounded-full blur-[100px] pointer-events-none" />
@@ -314,7 +314,7 @@ export function LandingView() {
                     <div className="h-px w-8 bg-blue-500/50" />
                     <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Weaponry // Arsenal</h2>
                   </motion.div>
-                  <h3 className="text-4xl md:text-7xl font-black uppercase tracking-tighter text-white leading-none">
+                  <h3 className="text-3xl sm:text-4xl md:text-7xl font-black uppercase tracking-tighter text-white leading-tight md:leading-none">
                     Full Spectrum <br /> Capabilities.
                   </h3>
                   <motion.div
@@ -453,13 +453,13 @@ export function LandingView() {
             </div>
           </section>
 
-          <section id="global" className="relative z-10 py-32 px-6 bg-black rounded-[4rem] my-12 mx-4 border border-white/[0.03] shadow-[0_0_100px_rgba(37,99,235,0.05)] overflow-hidden">
+          <section id="global" className="relative z-10 py-20 md:py-32 px-4 md:px-6 bg-black rounded-[2rem] md:rounded-[4rem] my-8 md:my-12 mx-2 md:mx-4 border border-white/[0.03] shadow-[0_0_100px_rgba(37,99,235,0.05)] overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] via-transparent to-transparent pointer-events-none" />
-            <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center relative z-10">
-              <div className="order-2 lg:order-1 relative h-[600px] flex items-center justify-center">
+            <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 md:gap-20 items-center relative z-10">
+              <div className="order-2 lg:order-1 relative h-[350px] sm:h-[450px] md:h-[600px] flex items-center justify-center overflow-hidden rounded-full md:rounded-none">
                 {/* Ambient globe glow */}
                 <div className="absolute inset-0 blur-[120px] bg-blue-500/10 scale-110 pointer-events-none" />
-                <div className="w-full h-full relative z-10">
+                <div className="w-full h-full relative z-10 scale-[0.6] sm:scale-75 md:scale-100 origin-center flex items-center justify-center">
                   <InteractiveGlobe
                     size={600}
                     className="opacity-80 hover:opacity-100 transition-opacity duration-700"
@@ -468,36 +468,36 @@ export function LandingView() {
                 </div>
 
                 {/* Tactical data frame */}
-                <div className="absolute -bottom-6 -left-6 md:-left-12 p-6 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl z-20 max-w-[240px]">
-                  <div className="flex items-center gap-2 mb-4">
+                <div className="absolute bottom-0 md:-bottom-6 left-0 md:-left-12 p-4 md:p-6 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl z-20 max-w-[200px] md:max-w-[240px]">
+                  <div className="flex items-center gap-2 mb-2 md:mb-4">
                     <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
-                    <span className="text-[8px] font-black uppercase tracking-[0.3em] text-blue-500">Live Intel Feed</span>
+                    <span className="text-[7px] md:text-[8px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-blue-500">Live Intel Feed</span>
                   </div>
-                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">
+                  <p className="text-[8px] md:text-[9px] font-bold text-slate-400 leading-relaxed uppercase tracking-wider md:tracking-widest">
                     Analyzing global squad velocity patterns. 150+ edge nodes operational. High-authority sync active.
                   </p>
                 </div>
               </div>
 
-              <div id="intelligence" className="order-1 lg:order-2 space-y-10">
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.5em] text-blue-500">Autonomous Intel</h2>
-                <h3 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white leading-[0.85]">
+              <div id="intelligence" className="order-1 lg:order-2 space-y-6 md:space-y-10 px-2 md:px-0 w-full overflow-hidden">
+                <h2 className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em] md:tracking-[0.5em] text-blue-500 break-words w-full">Autonomous Intel</h2>
+                <h3 className="text-4xl sm:text-5xl md:text-8xl font-black uppercase tracking-tight text-white leading-[1.1] md:leading-[0.85] break-words w-full">
                   The <span className="text-blue-500">Architect</span> <br /> Always Watches.
                 </h3>
-                <p className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em] leading-loose max-w-md">
+                <p className="text-[10px] md:text-[11px] text-slate-400 font-bold uppercase tracking-[0.1em] md:tracking-[0.2em] leading-relaxed md:leading-loose max-w-md break-words w-full pr-4">
                   Experience the first AI-driven project refinery. It doesn't just suggest—it predicts bottlenecks before they compromise your mission. Powered by neural-sync v2.
                 </p>
 
-                <div className="grid grid-cols-2 gap-8 py-4">
+                <div className="grid grid-cols-2 gap-4 md:gap-8 py-4">
                   {[{ label: "Predictive", val: "94%" }, { label: "Efficiency", val: "2.4x" }].map(stat => (
                     <div key={stat.label} className="space-y-1">
-                      <div className="text-3xl font-black text-white">{stat.val}</div>
-                      <div className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
+                      <div className="text-2xl md:text-3xl font-black text-white">{stat.val}</div>
+                      <div className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-500">{stat.label}</div>
                     </div>
                   ))}
                 </div>
 
-                <Button className="h-16 px-12 rounded-xl text-[11px] font-black uppercase tracking-[0.4em] bg-white text-[#020617] hover:bg-slate-200 transition-all">
+                <Button className="h-14 md:h-16 px-8 md:px-12 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.4em] bg-white text-[#020617] hover:bg-slate-200 transition-all w-full max-w-[280px] md:max-w-none">
                   Initialize Neural Relay
                 </Button>
               </div>
