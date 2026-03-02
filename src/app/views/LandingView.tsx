@@ -155,7 +155,7 @@ export function LandingView() {
   const handleInstall = async () => {
     // Trigger download of the APK file placed in the public/ folder
     const link = document.createElement("a");
-    link.href = "/app-debug.apk"; // Pointing to the public directory
+    link.href = "/HackMate.apk"; // Pointing to the public directory
     link.download = "HackMate.apk";
     document.body.appendChild(link);
     link.click();
