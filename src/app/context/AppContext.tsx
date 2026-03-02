@@ -1142,24 +1142,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Auth Listener
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    let isMounted = true;
+
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      if (error) {
+        console.error("Session fetch error:", error);
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
+        return;
+      }
+
       if (session?.user) {
-        // Only set GitHub token if the current session provider is actually GitHub
-        const provider = session.user.app_metadata.provider;
+        const provider = session.user.app_metadata?.provider;
         const isGithub = provider === 'github';
         const token = isGithub ? (session.provider_token || null) : null;
 
-        setGithubToken(token);
+        if (isMounted) setGithubToken(token);
+
         try {
-          await fetchProfile(session.user, token);
+          // Add a timeout to fetchProfile so it never hangs indefinitely
+          await Promise.race([
+            fetchProfile(session.user, token),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 8000))
+          ]);
         } catch (e) {
-          console.error("Profile fetch failed", e);
-          setUser(null);
+          console.error("Profile fetch failed or timed out", e);
+          if (isMounted) setUser(null); // Fallback to unauthenticated so the user can try again instead of sticking on white screen
         }
       } else {
-        setUser(null);
+        if (isMounted) setUser(null);
       }
-      setLoading(false);
+
+      if (isMounted) setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
