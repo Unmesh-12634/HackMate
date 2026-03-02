@@ -153,13 +153,17 @@ export function LandingView() {
   }, []);
 
   const handleInstall = async () => {
-    // Trigger download of the APK file placed in the public/ folder
-    const link = document.createElement("a");
-    link.href = "/HackMate.apk"; // Pointing to the public directory
-    link.download = "HackMate.apk";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!installPrompt) {
+      toast.info(
+        "To install HackMate, open this page in Chrome or Safari on your phone, tap the browser menu, and select 'Add to Home Screen'."
+      );
+      return;
+    }
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+    }
   };
 
   // ─── Scroll-Linked Animations ───
