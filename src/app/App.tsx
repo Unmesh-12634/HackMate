@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -17,6 +17,7 @@ import { Toaster } from "sonner";
 import { CommandPalette } from "./components/CommandPalette";
 import { HUDLayer } from "./components/HUDLayer";
 import { cn } from "./components/ui/utils";
+import { initGA, logPageView } from "../lib/analytics";
 
 /**
  * ProtectedLayout wrapper to enforce authentication.
@@ -61,6 +62,10 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => (
 function AppContent() {
   const { theme } = useAppContext();
   const location = useLocation();
+
+  useEffect(() => {
+    logPageView();
+  }, [location]);
 
   return (
     <div className={cn(
@@ -152,6 +157,10 @@ function AppContent() {
 }
 
 export default function App() {
+  useEffect(() => {
+    initGA();
+  }, []);
+
   return (
     <AppProvider>
       <BrowserRouter>

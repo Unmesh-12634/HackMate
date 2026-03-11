@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
@@ -464,9 +464,19 @@ const CommsLink: React.FC<{ team: any }> = ({ team }) => {
 
     // Auto-scroll
     useEffect(() => {
-        if (scrollRef.current)
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }, [teamMessages]);
+        if (scrollRef.current) {
+            const container = scrollRef.current;
+            const lastMessage = teamMessages[teamMessages.length - 1];
+            const isMe = lastMessage?.author_id === user?.id;
+            
+            // If user is within 150px of the bottom, we consider them "at the bottom"
+            const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150;
+
+            if (isMe || isNearBottom) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+    }, [teamMessages, user?.id]);
 
     // Typing indicator + Presence channels
     useEffect(() => {
