@@ -9,7 +9,7 @@ export const ROLE_GROUPS = [
     {
         group: "🛠️ Engineering & Dev",
         roles: [
-            "Frontend Developer",
+            "Developer",
             "Backend Developer",
             "Full Stack Developer",
             "Mobile Developer (iOS)",

@@ -1,9 +1,10 @@
-﻿import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "../../lib/supabase";
 import { aiSquadService } from "../../lib/ai_squad";
 import { Zap, AlertTriangle, Trophy, Target, CheckCircle2, Clock } from "lucide-react";
 import { getGitHubProfile, getGitHubRepos, getGitHubLanguages } from "../../lib/github";
+import { getLevelInfo } from "../utils/xpEngine";
 
 export type Theme = "light" | "dark";
 
@@ -204,6 +205,7 @@ export interface Team {
   maxMembers: number;
   currentMembers: TeamMember[];
   tasksCount: number;
+  tasks_completed?: number;
   progress: number;
   color: string;
   role: "Leader" | "Member";
@@ -454,6 +456,11 @@ interface AppContextType {
   calculateMissionXP: (teamId: string) => Promise<{ totalXP: number, memberStats: any[] }>;
   completeMission: (teamId: string, summary: string) => Promise<boolean>;
   redeploySquad: (teamId: string, missionName: string, missionGoal: string, deadline: string) => Promise<boolean>;
+  systemStats: {
+    activeOperatives: number;
+    networkLoad: string;
+    systemNodes: string;
+  };
 }
 
 
@@ -624,15 +631,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // 2. Increase reputation if needed
     if (reputation_gain > 0) {
       const newPoints = (user.reputation || 0) + reputation_gain;
+      const { level: newLevel } = getLevelInfo(newPoints);
 
       // Update DB (Rank is handled by DB Trigger)
       await supabase.from('profiles').update({
         reputation_points: newPoints,
+        level: newLevel,
         updated_at: new Date().toISOString()
       }).eq('id', user.id);
 
       // Local optimistic update
-      setUser((prev: User | null) => prev ? { ...prev, reputation: newPoints } : null);
+      setUser((prev: User | null) => prev ? { ...prev, reputation: newPoints, level: newLevel } : null);
       toast.success(`REPUTATION GAINED: +${reputation_gain} XP`, {
         style: { background: '#1e293b', color: '#38bdf8', border: '1px solid #334155' }
       });
@@ -961,17 +970,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
 
-    return data.map((d: any) => ({
+    return (data || []).map((d: any) => ({
       id: d.profiles.id,
       name: d.profiles.full_name || "Unknown",
       email: d.profiles.email || "",
       avatar: d.profiles.avatar_url,
       role: d.profiles.primary_role,
       reputation: d.profiles.reputation_points || 0,
+      xp: d.profiles.total_xp || 0,
       rank: d.profiles.prestige_rank || 'Operative',
       velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
       level: d.profiles.level || 1
-    }));
+    } as any as User));
   };
 
   const fetchFollowingList = async (userId: string): Promise<User[]> => {
@@ -985,17 +995,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return [];
     }
 
-    return data.map((d: any) => ({
+    return (data || []).map((d: any) => ({
       id: d.profiles.id,
       name: d.profiles.full_name || "Unknown",
       email: d.profiles.email || "",
       avatar: d.profiles.avatar_url,
       role: d.profiles.primary_role,
       reputation: d.profiles.reputation_points || 0,
+      xp: d.profiles.total_xp || 0,
       rank: d.profiles.prestige_rank || 'Operative',
       velocity: d.profiles.weekly_velocity || [0, 0, 0, 0, 0, 0, 0],
       level: d.profiles.level || 1
-    }));
+    } as any as User));
   };
 
   const followUser = async (targetId: string) => {
@@ -1140,6 +1151,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [documents, setDocuments] = useState<TeamDocument[]>([]);
   const [allProfiles, setAllProfiles] = useState<User[]>([]);
 
+  // System Health Metrics Simulation
+  const [systemStats, setSystemStats] = useState({
+    activeOperatives: 6,
+    networkLoad: "4.2 TB/s",
+    systemNodes: "1,204"
+  });
+
+  useEffect(() => {
+    setSystemStats(prev => ({
+      ...prev,
+      activeOperatives: allProfiles.length || 6
+    }));
+  }, [allProfiles]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSystemStats(prev => {
+        const load = (4.1 + Math.random() * 0.3).toFixed(1);
+        const nodes = (1200 + Math.floor(Math.random() * 11)).toLocaleString();
+        return {
+          ...prev,
+          networkLoad: `${load} TB/s`,
+          systemNodes: nodes
+        };
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Auth Listener
   useEffect(() => {
     let isMounted = true;
@@ -1215,7 +1255,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           email: authUser.email,
           full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'Agent',
           avatar_url: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || `https://i.pravatar.cc/150?u=${authUser.email}`,
-          primary_role: 'Full Stack Developer',
+          primary_role: 'Developer',
           updated_at: new Date().toISOString()
         };
 
@@ -2815,7 +2855,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     fetchDirectMessages();
-    toast.success("Intelligence inbox cleared.");
   };
 
   const sendGlobalMessage = async (content: string) => {
@@ -3087,12 +3126,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         following_count: profileData.following_count || 0,
         preferences: profileData.preferences || {},
         auth_methods: [],
-        level: profileData.level || 1
+        level: profileData.level || 1,
+        xp: profileData.total_xp || 0
       };
 
       const { data: milestonesData } = await supabase.from('user_milestones').select('*').eq('user_id', userId);
 
-      const { data: memberships } = await supabase.from('memberships').select('team_id, role, joined_at').eq('user_id', userId);
+      const { data: memberships } = await supabase.from('memberships').select('team_id, role, joined_at, tasks_completed').eq('user_id', userId);
       let teamsList: Team[] = [];
       if (memberships && memberships.length > 0) {
         const teamIds = memberships.map(m => m.team_id);
@@ -3102,7 +3142,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             id: t.id,
             name: t.name,
             description: t.description,
-            role: memberships.find(m => m.team_id === t.id)?.role || 'Member',
+            role: (memberships as any[]).find(m => m.team_id === t.id)?.role || 'Member',
+            tasks_completed: (memberships as any[]).find(m => m.team_id === t.id)?.tasks_completed || 0,
             color: 'bg-hack-blue',
             progress: 0,
             tasksCount: 0,
@@ -3550,7 +3591,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     completeMission,
     redeploySquad,
     claimTacticalBounty,
-    syncStreak
+    syncStreak,
+    systemStats
   };
 
   return (

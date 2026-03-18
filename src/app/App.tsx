@@ -12,6 +12,8 @@ import { ProfileView } from "./views/ProfileView";
 import { SettingsView } from "./views/SettingsView";
 import { ProductivityView } from "./views/ProductivityView";
 import AchievementsView from "./views/AchievementsView";
+import { LeaderboardView } from "./views/LeaderboardView";
+import ChatView from "./views/ChatView";
 import { DashboardLayout } from "./components/layout/DashboardLayout";
 import { Toaster } from "sonner";
 import { CommandPalette } from "./components/CommandPalette";
@@ -99,6 +101,12 @@ function AppContent() {
               </DashboardLayout>
             } />
 
+            <Route path="/chats" element={
+              <DashboardLayout>
+                <PageWrapper><ChatView /></PageWrapper>
+              </DashboardLayout>
+            } />
+
             <Route path="/profile" element={
               <DashboardLayout>
                 <PageWrapper><ProfileView /></PageWrapper>
@@ -126,6 +134,12 @@ function AppContent() {
             <Route path="/achievements" element={
               <DashboardLayout>
                 <PageWrapper><AchievementsView /></PageWrapper>
+              </DashboardLayout>
+            } />
+            
+            <Route path="/leaderboard" element={
+              <DashboardLayout>
+                <PageWrapper><LeaderboardView /></PageWrapper>
               </DashboardLayout>
             } />
           </Route>

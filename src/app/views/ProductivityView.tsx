@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNavigate } from "react-router-dom";
 import {
    Zap,
    Shield,
@@ -63,8 +64,10 @@ const StatCard: React.FC<{
 );
 
 export function ProductivityView() {
+   const navigate = useNavigate();
    const {
       user,
+      systemStats,
       teams,
       allProfiles,
       personalReminders,
@@ -708,7 +711,11 @@ export function ProductivityView() {
                      </div>
 
                      {allProfiles && allProfiles.length > 5 && (
-                        <Button variant="ghost" className="w-full mt-6 text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-blue-500">
+                        <Button 
+                           variant="ghost" 
+                           className="w-full mt-6 text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-blue-500"
+                           onClick={() => navigate('/leaderboard')}
+                        >
                            View Full Leaderboard Protocol <ChevronRight className="w-3 h-3 ml-2" />
                         </Button>
                      )}

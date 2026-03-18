@@ -23,7 +23,9 @@ import {
    PlusCircle,
    Heart,
    ShieldCheck,
-   Gauge
+   Gauge,
+   ChevronRight,
+   Binary
 } from "lucide-react";
 import { cn } from "../components/ui/utils";
 import { useNavigate, useParams } from "react-router-dom";
@@ -32,6 +34,7 @@ import { SocialListModal } from "../components/SocialListModal";
 import { ProfileShareModal } from "../components/ProfileShareModal";
 import { User, Activity, Team } from "../context/AppContext";
 import { supabase } from "../../lib/supabase";
+import { getLevelInfo } from "../utils/xpEngine";
 
 export function ProfileView() {
    const {
@@ -105,9 +108,25 @@ export function ProfileView() {
             )
             .subscribe();
 
+         const profileChannel = supabase.channel(`profile_stats_${userId}`)
+            .on('postgres_changes',
+               { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${userId}` },
+               (payload: any) => {
+                  setTargetData(prev => {
+                     if (!prev) return prev;
+                     return {
+                        ...prev,
+                        profile: { ...prev.profile, ...payload.new }
+                     };
+                  });
+               }
+            )
+            .subscribe();
+
          return () => {
             supabase.removeChannel(channel);
             supabase.removeChannel(milestoneChannel);
+            supabase.removeChannel(profileChannel);
          };
       }
    }, [userId, isOwner, supabase]); // Add supabase to dependency array
@@ -257,12 +276,12 @@ export function ProfileView() {
                               {user?.rank || "Operative"}
                            </Badge>
                            <div className="bg-hack-neon/10 border border-hack-neon/20 px-2 py-0.5 rounded text-[10px] font-black text-hack-neon uppercase">
-                              Lvl {Math.floor((user?.reputation || 0) / 100) + 1}
+                              Lvl {getLevelInfo(user?.reputation || 0).level}
                            </div>
                         </div>
                      </div>
                      <p className="text-muted-foreground font-medium flex items-center justify-center md:justify-start gap-2">
-                        {user?.role} <span className="w-1 h-1 rounded-full bg-slate-600" /> {user?.email}
+                        {user?.role || "Developer"} <span className="w-1 h-1 rounded-full bg-slate-600" /> {user?.email}
                      </p>
                   </div>
                   <div className="flex gap-3 pb-2">
@@ -324,27 +343,33 @@ export function ProfileView() {
                </div>
             </CardContent>
             {/* ENHANCED XP PROGRESS BAR */}
-            <div className="absolute bottom-0 left-0 w-full bg-black/40 backdrop-blur-md border-t border-white/5 px-8 flex items-center gap-4 h-12">
-               <div className="flex items-center gap-2 w-16 shrink-0">
-                  <Star className="w-4 h-4 text-hack-neon" />
-                  <span className="text-[11px] font-black text-hack-neon uppercase tracking-widest">
-                     LVL {Math.floor(reputation / 100) + 1}
-                  </span>
-               </div>
-
-               <div className="flex-1 relative h-2 bg-black/50 rounded-full overflow-hidden border border-white/5 shadow-inner">
-                  <div
-                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-hack-blue via-indigo-500 to-hack-neon transition-all duration-1000 ease-out relative"
-                     style={{ width: `${reputation % 100}%` }}
-                  >
-                     {/* Glow effect on the leading edge */}
-                     <div className="absolute right-0 top-0 bottom-0 w-4 bg-white/50 blur-[2px]" />
+            <div className="absolute bottom-0 left-0 w-full bg-black/40 backdrop-blur-md border-t border-white/5 px-8 flex items-center gap-4 h-16">
+               <div className="flex flex-col justify-center">
+                  <div className="text-[9px] font-black text-hack-neon uppercase tracking-[0.3em] mb-0.5">NEURAL_RANK_PROTOCOL</div>
+                  <div className="flex items-center gap-2">
+                     <Star className="w-5 h-5 text-hack-neon animate-pulse" />
+                     <span className="text-2xl font-black text-white uppercase tracking-tighter">
+                        LEVEL {getLevelInfo(reputation).level}
+                     </span>
                   </div>
                </div>
 
-               <div className="text-[10px] font-black uppercase text-right w-32 shrink-0 tracking-widest flex flex-col justify-center leading-none">
-                  <span className="text-foreground">{reputation} XP</span>
-                  <span className="text-muted-foreground/60 text-[8px] mt-0.5">/ {(Math.floor(reputation / 100) + 1) * 100} NEXT LEVEL</span>
+               <div className="flex-1 relative h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/5 shadow-inner mx-4">
+                  <motion.div
+                     initial={{ width: 0 }}
+                     animate={{ width: `${getLevelInfo(reputation).progressPercent}%` }}
+                     transition={{ duration: 1.5 }}
+                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-hack-blue via-indigo-500 to-hack-neon shadow-[0_0_15px_rgba(0,255,255,0.4)]"
+                  >
+                     <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] animate-shimmer" />
+                  </motion.div>
+               </div>
+
+               <div className="text-right flex flex-col justify-center">
+                  <div className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-0.5">XP PACKETS_CAPTURED</div>
+                  <div className="text-2xl font-black text-foreground font-mono italic leading-none">
+                     {reputation} <span className="text-muted-foreground/30 text-lg mx-1">/</span> {getLevelInfo(reputation).level === 50 ? 'MAX' : getLevelInfo(reputation).nextLevelXp} <span className="text-hack-blue text-xs ml-1 tracking-widest">X</span>
+                  </div>
                </div>
             </div>
          </Card>
@@ -366,55 +391,120 @@ export function ProfileView() {
                   </CardContent>
                </Card>
 
-               <Card>
-                  <CardHeader><CardTitle className="text-sm uppercase tracking-wider">Skills</CardTitle></CardHeader>
+               <Card className="border border-border/40 bg-card shadow-lg relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-hack-blue/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none group-hover:bg-hack-blue/10 transition-all duration-500" />
+                  <CardHeader><CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center justify-between">
+                     <span>Neural Skills</span>
+                     <Badge variant="secondary" className="text-[9px] font-black bg-hack-blue/10 text-hack-blue border-hack-blue/20">
+                        {skills.filter((s: string) => s !== "No skills listed").length} NODES
+                     </Badge>
+                  </CardTitle></CardHeader>
                   <CardContent className="flex flex-wrap gap-2">
                      {skills.map((skill: string) => (
-                        <Badge key={skill} variant="secondary" className="bg-secondary/50 hover:bg-hack-blue/10 hover:text-hack-blue transition-all cursor-default text-xs py-1 px-3">
+                        <Badge key={skill} variant="secondary" className="bg-secondary/40 hover:bg-hack-blue/10 hover:text-hack-blue transition-all cursor-default text-[10px] font-black uppercase tracking-wider py-1.5 px-3 border border-border/20">
                            {skill}
                         </Badge>
                      ))}
                   </CardContent>
-               </Card>
-
-               <Card className="border-border/50 bg-secondary/5 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-hack-blue/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-                  <CardHeader><CardTitle className="text-sm uppercase tracking-widest flex items-center justify-between">
-                     <span>Neural Badges</span>
-                     <Badge variant="secondary" className="text-[9px] font-black bg-hack-blue/10 text-hack-blue border-hack-blue/20">
-                        {badges.filter(b => b.isUnlocked).length}/{badges.length}
-                     </Badge>
-                  </CardTitle></CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-3">
-                     {badges.map(badge => (
-                        <div
-                           key={badge.id}
-                           className={cn(
-                              "p-3 rounded-xl flex flex-col items-center gap-2 text-center border transition-all duration-300 relative group/badge",
-                              badge.isUnlocked
-                                 ? cn("border-border/50", badge.bg)
-                                 : "border-white/5 bg-secondary/20 opacity-40 grayscale"
-                           )}
-                        >
-                           {!badge.isUnlocked && (
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/badge:opacity-100 transition-opacity bg-black/40 rounded-xl backdrop-blur-[2px] z-10">
-                                 <span className="text-[8px] font-black text-white px-2 text-center leading-tight">
-                                    LOCKED<br />{badge.hint}
-                                 </span>
-                              </div>
-                           )}
-                           <badge.icon className={cn("w-6 h-6", badge.isUnlocked ? badge.color : "text-muted-foreground")} />
-                           <span className="text-[9px] font-black leading-tight uppercase tracking-tighter">
-                              {badge.name}
-                           </span>
-                        </div>
-                     ))}
-                  </CardContent>
                   <div className="px-6 pb-4">
-                     <Button variant="ghost" className="w-full text-[10px] uppercase font-black tracking-widest text-muted-foreground hover:text-hack-blue hover:bg-hack-blue/5" onClick={() => navigate('/achievements')}>
-                        Advanced Credentials
+                     <Button variant="ghost" className="w-full text-[9px] uppercase font-black tracking-[0.3em] text-muted-foreground hover:text-hack-blue hover:bg-hack-blue/5" onClick={() => navigate('/achievements')}>
+                        Advanced Credentials <ChevronRight className="w-3 h-3 ml-2" />
                      </Button>
                   </div>
+               </Card>
+
+               <Card className="border border-border/40 bg-card shadow-lg relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.05),transparent)] pointer-events-none" />
+                  <CardHeader className="pb-2">
+                     <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                           <Binary className="w-4 h-4 text-hack-blue" />
+                           <span>Neural Skill Tree</span>
+                        </div>
+                     </CardTitle></CardHeader>
+                  <CardContent>
+                     <div className="relative aspect-square max-w-[280px] mx-auto">
+                        <svg viewBox="0 0 200 200" className="w-full h-full overflow-visible">
+                           <defs>
+                              <linearGradient id="lineGradProfile" x1="0%" y1="0%" x2="100%" y2="100%">
+                                 <stop offset="0%" stopColor="rgba(59,130,246,0.3)" />
+                                 <stop offset="100%" stopColor="rgba(37,99,235,0.05)" />
+                              </linearGradient>
+                              <filter id="glowTree">
+                                 <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                                 <feMerge>
+                                    <feMergeNode in="coloredBlur"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                 </feMerge>
+                              </filter>
+                           </defs>
+
+                           <motion.g
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 1, ease: "easeOut" }}
+                           >
+                              {/* Center Node */}
+                              <circle cx="100" cy="100" r="10" fill="rgba(59,130,246,0.1)" stroke="rgba(59,130,246,0.5)" strokeWidth="1" />
+
+                              {/* Perimeter mapping */}
+                              {(() => {
+                                 const activeSkills = user?.skills?.length ? user.skills : ['Recon', 'Tactical', 'Intel', 'Bypass', 'Exploit'];
+                                 const totalNodes = activeSkills.length;
+                                 const r = 65; 
+                                 const textR = 85;
+                                 const colors = ['#3b82f6', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+                                 return activeSkills.map((skill, index) => {
+                                    const angle = (Math.PI * 2 * index) / totalNodes - Math.PI / 2;
+                                    const x = 100 + r * Math.cos(angle);
+                                    const y = 100 + r * Math.sin(angle);
+                                    
+                                    const nextAngle = (Math.PI * 2 * ((index + 1) % totalNodes)) / totalNodes - Math.PI / 2;
+                                    const nextX = 100 + r * Math.cos(nextAngle);
+                                    const nextY = 100 + r * Math.sin(nextAngle);
+
+                                    const textX = 100 + textR * Math.cos(angle);
+                                    const textY = 100 + textR * Math.sin(angle);
+                                    const skillColor = colors[index % colors.length];
+
+                                    return (
+                                       <g key={skill + index}>
+                                          <line x1="100" y1="100" x2={x} y2={y} stroke="url(#lineGradProfile)" strokeWidth="1" strokeDasharray="3 3" />
+                                          {totalNodes > 1 && (
+                                             <line x1={x} y1={y} x2={nextX} y2={nextY} stroke="url(#lineGradProfile)" strokeWidth="1" strokeDasharray="3 3" />
+                                          )}
+                                          
+                                          <motion.circle 
+                                             animate={{ r: [6, 8, 6] }}
+                                             transition={{ repeat: Infinity, duration: 3 + (index * 0.5) }}
+                                             cx={x} cy={y} r="6" fill={`${skillColor}33`} stroke={skillColor} strokeWidth="1" filter="url(#glowTree)"
+                                          />
+
+                                          <text
+                                             x={textX}
+                                             y={textY}
+                                             fill={skillColor}
+                                             fontSize="8"
+                                             fontFamily="monospace"
+                                             fontWeight="black"
+                                             textAnchor="middle"
+                                             alignmentBaseline="middle"
+                                             className="uppercase tracking-widest drop-shadow-[0_0_3px_rgba(255,255,255,0.3)]"
+                                          >
+                                             {skill}
+                                          </text>
+                                       </g>
+                                    );
+                                 });
+                              })()}
+                           </motion.g>
+                        </svg>
+                     </div>
+                     <p className="text-[9px] text-muted-foreground text-center mt-4 font-black uppercase tracking-widest italic opacity-60">
+                        Path of the Elite Operative
+                     </p>
+                  </CardContent>
                </Card>
             </div>
 
@@ -430,7 +520,7 @@ export function ProfileView() {
                      <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest bg-secondary/30 px-3 py-1.5 rounded-full">
                         <span>Less</span>
                         <div className="flex gap-1">
-                           {[0, 1, 3, 5, 10].map(count => <div key={count} className={cn("w-3 h-3 rounded-[2px]", getLevelClass(count))} />)}
+                           {[0, 1, 3, 5, 10].map(count => <div key={count} className={cn("w-[14px] h-[14px] rounded-[2px]", getLevelClass(count))} />)}
                         </div>
                         <span>More</span>
                      </div>
@@ -470,37 +560,50 @@ export function ProfileView() {
                <div className="grid md:grid-cols-2 gap-8">
                   {/* Pinned Projects / Premium Live Projects View - Only for Owner */}
                   {isOwner && (
-                     <Card className="flex flex-col h-full bg-gradient-to-b from-card to-background border-border/50">
-                        <CardHeader className="pb-4">
-                           <CardTitle className="text-sm uppercase tracking-wider flex items-center gap-2">
-                              <Trophy className="w-4 h-4 text-hack-purple" /> Pinned Projects
-                           </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3 flex-1">
-                           {teams.length === 0 ? (
-                              <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No projects joined yet.</p>
-                           ) : (
-                              teams.slice(0, 3).map(team => (
-                                 <div key={team.id} className="p-4 rounded-xl bg-secondary/20 border border-white/5 hover:border-hack-purple/50 hover:bg-secondary/40 transition-all group cursor-pointer relative overflow-hidden" onClick={() => navigate(`/team/${team.id}`)}>
-                                    <div className="absolute top-0 left-0 w-1 h-full bg-hack-purple opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div className="flex items-center gap-3">
-                                       <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-md", team.color)}>
-                                          {team.name[0]}
-                                       </div>
-                                       <div className="flex-1 overflow-hidden">
-                                          <p className="text-sm font-bold truncate group-hover:text-hack-purple transition-colors">{team.name}</p>
-                                          <p className="text-[10px] text-muted-foreground font-medium truncate">{team.event}</p>
-                                       </div>
-                                       <Badge variant="outline" className="text-[10px] bg-background/50 backdrop-blur">{team.role}</Badge>
-                                    </div>
-                                 </div>
-                              ))
-                           )}
-                           {teams.length > 3 && (
-                              <Button variant="ghost" className="w-full text-xs text-muted-foreground mt-2">View All {teams.length} Projects</Button>
-                           )}
-                        </CardContent>
-                     </Card>
+                   <Card className="flex flex-col h-full bg-gradient-to-b from-card to-background border-border/50 overflow-hidden relative">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-hack-purple via-indigo-500 to-hack-blue" />
+                      <CardHeader className="pb-4">
+                         <div className="flex items-center justify-between">
+                            <CardTitle className="text-xs font-black uppercase tracking-[0.3em] flex items-center gap-2">
+                               <Trophy className="w-4 h-4 text-hack-purple" /> 
+                               Path of the Elite Operative
+                            </CardTitle>
+                            <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[8px] font-black border-cyan-500/20 text-cyan-400 bg-cyan-500/5 uppercase tracking-widest">v4.2_STABLE</Badge>
+                                <Badge variant="outline" className="text-[8px] font-black border-hack-purple/20 text-hack-purple bg-hack-purple/5 uppercase tracking-widest">Live_Status</Badge>
+                             </div>
+                         </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4 flex-1">
+                         {teams.length === 0 ? (
+                            <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No projects joined yet.</p>
+                         ) : (
+                            <div className="space-y-3">
+                               {teams.map(team => (
+                                  <div key={team.id} className="p-4 rounded-2xl bg-secondary/20 border border-white/5 hover:border-hack-purple/30 hover:bg-secondary/40 transition-all group flex items-center gap-4 relative overflow-hidden" onClick={() => navigate(`/team/${team.id}`)}>
+                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-hack-purple opacity-40 group-hover:opacity-100 transition-opacity" />
+                                     <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg shrink-0", team.color)}>
+                                        {team.name[0]}
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-0.5">
+                                           <p className="text-sm font-black text-foreground truncate group-hover:text-hack-purple transition-colors uppercase tracking-tight">{team.name}</p>
+                                           <div className="flex gap-1">
+                                               <Badge variant="secondary" className="text-[8px] font-black bg-hack-purple/10 text-hack-purple border-hack-purple/20 uppercase tracking-widest px-1.5">{team.role}</Badge>
+                                               <Badge variant="outline" className="text-[8px] font-black border-white/10 text-muted-foreground uppercase tracking-widest px-1.5 whitespace-nowrap">MISSION_COMPLETE</Badge>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest truncate mb-2">{team.event} // {team.tasks_completed || 0} TASKS SECURED</p>
+                                        <div className="w-full h-1 bg-black/40 rounded-full overflow-hidden">
+                                           <div className="h-full bg-hack-purple rounded-full" style={{ width: `${team.progress || 0}%` }} />
+                                        </div>
+                                     </div>
+                                  </div>
+                               ))}
+                            </div>
+                         )}
+                      </CardContent>
+                   </Card>
                   )}
 
                   <Card className={cn("flex flex-col h-full border-border/50 bg-secondary/5", !isOwner && "md:col-span-2")}>
@@ -510,7 +613,9 @@ export function ProfileView() {
                         </CardTitle>
                      </CardHeader>
                      <CardContent className="flex-1 overflow-y-auto max-h-[500px] custom-scrollbar space-y-6 pr-2">
-                        {activities.length === 0 ? (
+                        {!isOwner ? (
+                           <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">Operative logs are classified.</p>
+                        ) : activities.length === 0 ? (
                            <p className="text-sm text-muted-foreground italic h-full flex items-center justify-center">No recorded activity pulses in the cloud.</p>
                         ) : (
                            <>
@@ -570,6 +675,16 @@ export function ProfileView() {
                                     </Button>
                                  </div>
                               )}
+                              {/* Assuming allProfiles is defined somewhere in your context or state */}
+                              {/* {allProfiles && allProfiles.length > 5 && ( */}
+                                 <Button 
+                                    variant="ghost" 
+                                    className="w-full mt-6 text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground hover:text-blue-500 hover:bg-blue-500/5 transition-all border border-dashed border-border/40 py-8 h-auto"
+                                    onClick={() => navigate('/leaderboard')}
+                                 >
+                                    View Full Leaderboard Protocol <ChevronRight className="w-3 h-3 ml-2" />
+                                 </Button>
+                              {/* )} */}
                            </>
                         )}
                      </CardContent>

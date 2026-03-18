@@ -2,7 +2,7 @@
 create extension if not exists "uuid-ossp";
 
 -- ENUMS (Strongly Typed Roles & Statuses)
-create type public.app_role as enum ('Full Stack Developer', 'Frontend Developer', 'Backend Developer', 'AI/ML Engineer', 'UI/UX Designer', 'Mobile Developer', 'DevOps Engineer', 'Product Manager', 'Data Scientist');
+create type public.app_role as enum ('Developer', 'Full Stack Developer', 'Frontend Developer', 'Backend Developer', 'AI/ML Engineer', 'UI/UX Designer', 'Mobile Developer', 'DevOps Engineer', 'Product Manager', 'Data Scientist');
 create type public.team_role as enum ('Leader', 'Member');
 create type public.task_status as enum ('todo', 'in_progress', 'review', 'done');
 create type public.task_priority as enum ('low', 'medium', 'high', 'urgent');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAppContext, Notification } from "../../context/AppContext";
 import { RoleSelector } from "../RoleSelector";
@@ -27,7 +27,8 @@ import {
   AlertTriangle,
   Flame,
   Clock,
-  Trophy
+  Trophy,
+  MessageSquare
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button, cn } from "../ui/button";
@@ -44,7 +45,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     markAsRead,
     markAllNotificationsAsRead,
     globalOnlineUsers,
-    updateProfile
+    updateProfile,
+    directMessages
   } = useAppContext();
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,11 +76,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [showPresence, setShowPresence] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadChatCount = directMessages.filter(m => m.receiver_id === user?.id && !m.is_read).length;
+
+  const threads = useMemo(() => {
+    const threadMap: Record<string, typeof directMessages[0][]> = {};
+    if (!user) return threadMap;
+    directMessages.forEach(m => {
+      const partnerId = m.sender_id === user.id ? m.receiver_id : m.sender_id;
+      if (!threadMap[partnerId]) threadMap[partnerId] = [];
+      threadMap[partnerId].push(m);
+    });
+    return threadMap;
+  }, [directMessages, user]);
 
   const navItems = [
     { id: "workspace", label: "Global Workspace", icon: LayoutDashboard, path: "/workspace" },
     { id: "productivity", label: "Productivity", icon: Target, path: "/productivity" },
     { id: "community", label: "Explore", icon: GlobeIcon, path: "/community" },
+    { id: "chats", label: "Personal Chat", icon: MessageSquare, path: "/chats", badge: unreadChatCount > 0 ? unreadChatCount : null },
     { id: "achievements", label: "Achievements", icon: Trophy, path: "/achievements" },
     { id: "profile", label: "Profile", icon: UserIcon, path: "/profile" },
     { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
@@ -110,9 +125,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-2">
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path || (item.path !== "/workspace" && location.pathname.startsWith(item.path));
+            const isActive = location.pathname === item.path && !location.search.includes("user=");
             return (
               <button
                 key={item.id}
@@ -128,12 +143,19 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                   <div className="absolute left-0 top-3 bottom-3 w-1.5 bg-hack-blue rounded-r-full shadow-[2px_0_10px_rgba(59,130,246,0.5)]" />
                 )}
                 <item.icon className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", isActive && "text-hack-blue")} />
-                <span className={cn("text-xs uppercase font-black tracking-widest transition-opacity duration-300", !isSidebarOpen && "lg:opacity-0 pointer-events-none")}>
+                <span className={cn("text-xs uppercase font-black tracking-widest transition-opacity duration-300 flex-1 text-left", !isSidebarOpen && "lg:opacity-0 pointer-events-none")}>
                   {item.label}
                 </span>
+                {item.badge && isSidebarOpen && (
+                  <span className="bg-hack-blue text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
+
+
         </nav>
 
         <div className="p-4 space-y-4">
@@ -228,7 +250,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
             {/* Tactical Specialization (Primary Role) Selector */}
             <RoleSelector
-              value={user?.role || ""}
+              value={user?.role || "Developer"}
               onChange={(role) => {
                 updateProfile({ role });
                 toast.success(`Specialization updated: ${role}`);
