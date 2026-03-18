@@ -138,7 +138,7 @@ UnicornHero.displayName = "UnicornHero";
 export function LandingView() {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !sessionStorage.getItem("hasSeenPreloader"));
 
   const [installPrompt, setInstallPrompt] = useState<any>(null);
 
@@ -183,7 +183,10 @@ export function LandingView() {
   return (
     <AnimatePresence mode="wait">
       {isLoading ? (
-        <Preloader key="preloader" onComplete={() => setIsLoading(false)} />
+        <Preloader key="preloader" onComplete={() => {
+          sessionStorage.setItem("hasSeenPreloader", "true");
+          setIsLoading(false);
+        }} />
       ) : (
         <motion.div
           key="landing-content"

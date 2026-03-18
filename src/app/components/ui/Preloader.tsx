@@ -10,11 +10,11 @@ const Preloader = forwardRef<HTMLDivElement, PreloaderProps>(({ onComplete }, re
 
     useEffect(() => {
         const timers = [
-            setTimeout(() => setStep(1), 500),   // Logo reveal
-            setTimeout(() => setStep(2), 1500),  // Wordmark reveal
-            setTimeout(() => setStep(3), 2200),  // Credentials reveal
-            setTimeout(() => setStep(4), 3500),  // The Boom
-            setTimeout(() => onComplete(), 4200), // Finish
+            setTimeout(() => setStep(1), 300),   // Logo reveal
+            setTimeout(() => setStep(2), 800),   // Wordmark reveal
+            setTimeout(() => setStep(3), 1200),  // Credentials reveal
+            setTimeout(() => setStep(4), 1800),  // The Boom
+            setTimeout(() => onComplete(), 2200), // Finish
         ];
 
         return () => timers.forEach(clearTimeout);
