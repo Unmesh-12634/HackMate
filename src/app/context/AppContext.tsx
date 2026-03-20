@@ -18,7 +18,6 @@ export interface User {
   skills?: string[];
   socials?: {
     github?: string;
-    twitter?: string;
     linkedin?: string;
     website?: string;
   };
@@ -74,6 +73,7 @@ export interface TeamMember {
   name: string;
   role: string;
   member_role?: string;
+  technical_roles?: string[];
   avatar: string;
   online: boolean;
   tasksDone: number;
@@ -321,6 +321,7 @@ interface AppContextType {
   updateSubtask: (taskId: string, subtaskId: string, done: boolean) => Promise<void>;
   setMissionObjective: (teamId: string, objective: string) => Promise<void>;
   assignMemberRole: (teamId: string, userId: string, role: string) => Promise<void>;
+  assignTechnicalRoles: (teamId: string, userId: string, roles: string[]) => Promise<void>;
   toggleCritical: (taskId: string, isCritical: boolean) => Promise<void>;
   syncGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
   disconnectGitHubRepo: (teamId: string, fullRepoName: string) => Promise<boolean>;
@@ -1718,14 +1719,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             id: m.profiles.id,
             name: m.profiles.full_name,
             role: m.role,
-            member_role: m.member_role || m.role,
+            member_role: (t.owner_id === m.profiles.id) ? "Leader" : (m.member_role || m.role),
+            technical_roles: m.technical_roles || [],
             avatar: m.profiles.avatar_url,
             online: true,
             tasksDone: tasks.filter((task: any) => task.assignee_id === m.profiles.id && task.status === 'done').length,
             // Gamification Fields
-            xp: m.xp || 0,
-            tasks_completed: m.tasks_completed || 0,
-            badges: m.badges || []
+            xp: m.profiles?.xp || 0,
+            tasks_completed: m.profiles?.tasks_done || 0,
+            badges: m.profiles?.badges || []
           })),
           tasksCount: t.tasks.length,
           progress: tasks.length > 0 ? Math.round((tasks.filter((task: any) => task.status === 'done').length / tasks.length) * 100) : 0,
@@ -1785,9 +1787,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setUser((prev: User | null) => prev ? {
             ...prev,
             name: newData.full_name || prev.name,
-            bio: newData.bio || prev.bio,
+            bio: newData.bio !== undefined ? newData.bio : prev.bio,
             skills: newData.skills || prev.skills,
             socials: newData.social_links || prev.socials,
+            role: newData.primary_role !== undefined ? newData.primary_role : prev.role,
             reputation: newData.reputation_points,
             rank: newData.prestige_rank,
             level: newData.level,
@@ -2340,6 +2343,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const team = teams.find(t => t.id === teamId);
       recordActivity("team_role_assignment", `Assigned role "${role}" to operative ${userId}`, 5, "team", teamId);
       broadcastTeamAction(teamId, 'ROLE_UPGRADE', { userId, role, memberName: team?.currentMembers.find((m: any) => m.id === userId)?.name });
+    }
+  };
+
+  const assignTechnicalRoles = async (teamId: string, userId: string, roles: string[]) => {
+    // Optimistic update
+    setTeams(prev => prev.map(t => {
+      if (t.id !== teamId) return t;
+      return {
+        ...t,
+        currentMembers: t.currentMembers.map(m => m.id === userId ? { ...m, technical_roles: roles } : m)
+      };
+    }));
+    const { error } = await supabase.from('memberships')
+      .update({ technical_roles: roles })
+      .eq('team_id', teamId)
+      .eq('user_id', userId);
+    if (error) {
+      toast.error("Failed to sync team roles");
+      fetchTeams();
+    } else {
+      toast.success("Technical designations updated");
+      recordActivity("team_technical_roles_assignment", `Designated operative ${userId} as [${roles.join(', ')}]`, 10, "team", teamId);
     }
   };
 
@@ -3528,7 +3553,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const value = {
     theme, toggleTheme, user, updateProfile, login, logout,
     teams, addTeam, updateTeam, activeTeamId, setActiveTeamId, updateTaskStatus, addTask, updateTask, deleteTask, sendTaskForReview, updateSubtask, joinTeam, updateTeamSettings, updateTeamDeadline, removeMember,
-    setMissionObjective, assignMemberRole, toggleCritical, syncGitHubRepo, disconnectGitHubRepo,
+    setMissionObjective, assignMemberRole, assignTechnicalRoles, toggleCritical, syncGitHubRepo, disconnectGitHubRepo,
     posts,
     fetchPosts,
     addPost,

@@ -17,7 +17,7 @@ import {
    Github,
    CheckCircle2,
    Globe,
-   Twitter,
+   Linkedin,
    Activity,
    Mail,
    Laptop,
@@ -109,7 +109,7 @@ export function SettingsView() {
 function AccountTab() {
    const { user, updateProfile, connectGitHub, connectGitHubManual, disconnectGitHub, githubData } = useAppContext();
    const [formData, setFormData] = useState({
-      name: "", email: "", bio: "", twitter: "", website: ""
+      name: "", email: "", bio: "", linkedin: "", website: ""
    });
    const [selectedRole, setSelectedRole] = useState("");
    const [skillsInput, setSkillsInput] = useState("");
@@ -124,7 +124,7 @@ function AccountTab() {
             name: user.name || "",
             email: user.email || "",
             bio: user.bio || "",
-            twitter: user.socials?.twitter || "",
+            linkedin: user.socials?.linkedin || "",
             website: user.socials?.website || ""
          });
          setSkillsInput(user.skills?.join(", ") || "");
@@ -138,13 +138,13 @@ function AccountTab() {
          await updateProfile({
             name: formData.name,
             bio: formData.bio,
-            skills: skillsInput.split(",").map(s => s.trim()).filter(Boolean),
-            socials: { ...user?.socials, twitter: formData.twitter, website: formData.website },
-            ...(selectedRole ? { role: selectedRole } : {}),
+            skills: skillsInput.split(",").map((s: string) => s.trim()).filter(Boolean),
+            role: selectedRole,
+            socials: { ...user?.socials, linkedin: formData.linkedin, website: formData.website }
          });
-         toast.success("Profile saved instantly!");
+         toast.success("Profile updated securely.");
       } catch (error) {
-         toast.error("Failed to update profile.");
+         toast.error("Failed to sync profile configuration.");
       } finally {
          setLoading(false);
       }
@@ -177,7 +177,10 @@ function AccountTab() {
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="space-y-2">
                      <label className="text-xs font-bold uppercase text-muted-foreground">Full Name</label>
-                     <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                     <Input 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-xs font-bold uppercase text-muted-foreground">Email Address</label>
@@ -209,7 +212,12 @@ function AccountTab() {
                   <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1.5">
                      <Briefcase className="w-3 h-3" /> Primary Role
                   </label>
-                  <RoleSelector value={selectedRole} onChange={setSelectedRole} />
+                  <RoleSelector 
+                     value={selectedRole} 
+                     onChange={(newRole) => {
+                        setSelectedRole(newRole);
+                     }} 
+                  />
                   <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                      Shown on your profile, in the global workspace sidebar, and across the platform in real-time.
                   </p>
@@ -217,18 +225,30 @@ function AccountTab() {
 
                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                     <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1"><Twitter className="w-3 h-3" /> Twitter</label>
-                     <Input value={formData.twitter} onChange={(e) => setFormData({ ...formData, twitter: e.target.value })} placeholder="https://twitter.com/..." />
+                     <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1"><Linkedin className="w-3 h-3" /> LinkedIn</label>
+                     <Input 
+                        value={formData.linkedin} 
+                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })} 
+                        placeholder="https://linkedin.com/in/..." 
+                     />
                   </div>
                   <div className="space-y-2">
                      <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1"><Globe className="w-3 h-3" /> Website</label>
-                     <Input value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://..." />
+                     <Input 
+                        value={formData.website} 
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })} 
+                        placeholder="https://..." 
+                     />
                   </div>
                </div>
 
-               <div className="pt-2">
-                  <Button onClick={handleSaveProfile} disabled={loading} className="w-full md:w-auto shadow-lg shadow-hack-blue/20 bg-gradient-to-r from-hack-blue to-hack-purple text-white border-0">
-                     {loading ? "Saving..." : "Save Profile Changes"}
+               <div className="pt-4 border-t border-border/50 flex space-x-4">
+                  <Button 
+                     onClick={handleSaveProfile} 
+                     disabled={loading}
+                     className="bg-hack-blue text-white hover:bg-hack-blue/90 font-black uppercase tracking-widest text-[10px]"
+                  >
+                     {loading ? <Activity className="w-4 h-4 mr-2 animate-spin" /> : "Save Profile Changes"}
                   </Button>
                </div>
             </CardContent>

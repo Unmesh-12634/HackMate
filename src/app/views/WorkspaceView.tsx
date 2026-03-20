@@ -37,7 +37,10 @@ import {
     Award,
     Flame,
     History as LucideHistory,
-    TrendingUp
+    TrendingUp,
+    Crown,
+    ChevronDown,
+    User
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -1099,6 +1102,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
         updateTeamSettings,
         removeMember,
         assignMemberRole,
+        assignTechnicalRoles,
         updateTeamDeadline,
         updateTask,
         updateTaskStatus: moveTask,
@@ -1115,6 +1119,8 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
     const [editingRepo, setEditingRepo] = useState(false);
     const [repoInput, setRepoInput] = useState(team.github_repo || "");
+
+    const [selectedMemberModal, setSelectedMemberModal] = useState<any>(null);
 
     const isLeader = team.role === "Leader" || team.currentMembers.find((m: any) => m.id === user?.id)?.role === "Leader";
 
@@ -1162,7 +1168,17 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                         <span className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)] animate-pulse" />
                         <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em]">Command Authorization Required</span>
                     </div>
-                    <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Command Center</h2>
+                    <div className="flex items-center gap-6">
+                        <h2 className="text-4xl font-black text-foreground tracking-tighter uppercase">Command Center</h2>
+                        {isLeader && (
+                            <Button 
+                                onClick={() => document.getElementById('active-squadron')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all flex items-center gap-2 h-10 px-6 mt-1"
+                            >
+                                <Users className="w-4 h-4" /> Assign Roles
+                            </Button>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="h-12 w-[1px] bg-white/10 mx-2" />
@@ -1176,7 +1192,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-2 space-y-8">
                     {/* Mission Objective Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-gradient-to-b from-card/80 to-card/40 border border-white/10 ring-1 ring-white/5 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-black/40">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Zap className="w-32 h-32 text-blue-500" />
                         </div>
@@ -1223,7 +1239,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
 
                     {/* GitHub Repository Link Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-gradient-to-b from-card/80 to-card/40 border border-white/10 ring-1 ring-white/5 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-black/40">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Activity className="w-32 h-32 text-emerald-500" />
                         </div>
@@ -1248,7 +1264,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
 
                     {/* ── Project Timeline Section ─────────────────── */}
-                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md relative overflow-hidden group">
+                    <section className="p-8 rounded-[2.5rem] bg-gradient-to-b from-card/80 to-card/40 border border-white/10 ring-1 ring-white/5 backdrop-blur-2xl relative overflow-hidden group shadow-2xl shadow-black/40">
                         <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                             <Calendar className="w-32 h-32 text-amber-500" />
                         </div>
@@ -1322,16 +1338,19 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 {/* Task selector */}
                                 <div>
                                     <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Select Task</label>
-                                    <select
-                                        value={taskCmd.taskId}
-                                        onChange={e => setTaskCmd(p => ({ ...p, taskId: e.target.value }))}
-                                        className="w-full bg-card/60 border border-border/40 rounded-2xl h-11 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                                    >
-                                        <option value="">-- Choose task --</option>
-                                        {(team.tasks || []).map((t: any, i: number) => (
-                                            <option key={t.id} value={t.id}>[{String(i + 1).padStart(2, '0')}] {t.title}</option>
-                                        ))}
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={taskCmd.taskId}
+                                            onChange={e => setTaskCmd(p => ({ ...p, taskId: e.target.value }))}
+                                            className="w-full appearance-none bg-black/40 border border-white/10 rounded-2xl h-11 px-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all hover:bg-black/60 shadow-inner"
+                                        >
+                                            <option value="" className="bg-[#0f1115] text-muted-foreground">-- Choose task --</option>
+                                            {(team.tasks || []).map((t: any, i: number) => (
+                                                <option key={t.id} value={t.id} className="bg-[#0f1115]">[{String(i + 1).padStart(2, '0')}] {t.title}</option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                    </div>
                                 </div>
 
                                 {/* Action selector */}
@@ -1352,16 +1371,19 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                 {taskCmd.action === 'assign' && (
                                     <div>
                                         <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1.5 block">Assign To</label>
-                                        <select
-                                            value={taskCmd.targetId}
-                                            onChange={e => setTaskCmd(p => ({ ...p, targetId: e.target.value }))}
-                                            className="w-full bg-card/60 border border-border/40 rounded-2xl h-11 px-4 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                                        >
-                                            <option value="">-- Select operative --</option>
-                                            {team.currentMembers.map((m: any) => (
-                                                <option key={m.id} value={m.id}>{m.name} ({m.member_role || m.role})</option>
-                                            ))}
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                value={taskCmd.targetId}
+                                                onChange={e => setTaskCmd(p => ({ ...p, targetId: e.target.value }))}
+                                                className="w-full appearance-none bg-black/40 border border-white/10 rounded-2xl h-11 px-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all hover:bg-black/60 shadow-inner"
+                                            >
+                                                <option value="" className="bg-[#0f1115] text-muted-foreground">-- Select operative --</option>
+                                                {team.currentMembers.map((m: any) => (
+                                                    <option key={m.id} value={m.id} className="bg-[#0f1115]">{m.name} ({m.member_role || m.role})</option>
+                                                ))}
+                                            </select>
+                                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                        </div>
                                     </div>
                                 )}
                                 {taskCmd.action === 'move' && (
@@ -1407,20 +1429,28 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                         )}
                     </section>
 
-                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md">
+                    <section id="active-squadron" className="p-8 rounded-[2.5rem] bg-gradient-to-b from-card/80 to-card/40 border border-white/10 ring-1 ring-white/5 backdrop-blur-2xl shadow-2xl shadow-black/40">
                         <div className="flex items-center justify-between mb-8">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                                     <Users className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Active Squadron</h3>
+                                <div>
+                                    <h3 className="text-xs font-black text-foreground uppercase tracking-[0.2em]">Active Squadron</h3>
+                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Click Operative to assign roles</p>
+                                </div>
                             </div>
-                            <Badge variant="outline" className="border-emerald-500/30 text-emerald-400 uppercase text-[10px]">{team.currentMembers.length} Operatives</Badge>
+                            <Button
+                                onClick={() => setSelectedMemberModal({})} // Open modal for new member or general role assignment
+                                className="rounded-2xl bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/30 text-emerald-400 hover:text-white px-6 font-black uppercase text-[10px] tracking-widest h-10 transition-all"
+                            >
+                                Assign Roles
+                            </Button>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[...team.currentMembers].sort((a: any, b: any) => (b.xp || 0) - (a.xp || 0)).map((member: any, index: number) => (
-                                <div key={member.id} className="p-4 rounded-[2rem] bg-card/60 border border-border/30 flex items-center gap-4 group hover:border-blue-500/30 transition-all duration-300 py-6 px-6 relative overflow-hidden">
+                                <div key={member.id} onClick={() => setSelectedMemberModal(member)} className="p-4 rounded-[2rem] bg-card/60 border border-border/30 flex items-center gap-4 group hover:border-blue-500/50 hover:bg-white/5 transition-all duration-300 py-6 px-6 relative overflow-hidden cursor-pointer shadow-lg shadow-black/20">
                                     {/* Leaderboard Rank Bubble */}
                                     <div className="absolute top-0 right-0 w-8 h-8 bg-blue-500/10 rounded-bl-2xl border-b border-l border-blue-500/20 flex items-center justify-center">
                                         <span className="text-[10px] font-black text-blue-400">#{index + 1}</span>
@@ -1439,17 +1469,30 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                         <div className="flex items-center gap-2 mb-1">
                                             {isLeader && member.id !== user?.id ? (
                                                 <button
-                                                    onClick={() => assignMemberRole(
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        assignMemberRole(
                                                         team.id, member.id,
                                                         (member.member_role || member.role) === 'Leader' ? 'Member' : 'Leader'
-                                                    )}
+                                                    )}}
                                                     title="Click to toggle role"
-                                                    className="text-[10px] font-black text-blue-400 hover:text-blue-300 uppercase tracking-widest border border-blue-500/20 rounded-lg px-2 py-0.5 hover:bg-blue-500/10 transition-all inline-flex items-center gap-1 shrink-0"
+                                                    className="text-[10px] font-black hover:text-blue-300 uppercase tracking-widest border border-white/10 rounded-lg px-2 py-0.5 hover:bg-white/5 transition-all inline-flex items-center gap-1 shrink-0"
                                                 >
-                                                    {member.member_role || member.role} <span className="text-[8px] opacity-70">↑↓</span>
+                                                    {(member.member_role || member.role) === 'Leader' ? (
+                                                        <span className="flex items-center gap-1.5"><Crown className="w-3 h-3 text-amber-400" /><span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">Team Leader</span> <span className="text-[8px] opacity-70 text-blue-400">↑↓</span></span>
+                                                    ) : (
+                                                        <span className="text-blue-400">{member.member_role || member.role} <span className="text-[8px] opacity-70">↑↓</span></span>
+                                                    )}
                                                 </button>
                                             ) : (
-                                                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">{member.member_role || member.role}</div>
+                                                (member.member_role || member.role) === 'Leader' ? (
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 shrink-0 shadow-[0_0_15px_rgba(245,158,11,0.1)] inline-flex w-max">
+                                                        <Crown className="w-3 h-3 text-amber-400" />
+                                                        <span className="text-[10px] font-black tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400 drop-shadow-md">Team Leader</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0 px-2">{member.member_role || member.role}</div>
+                                                )
                                             )}
 
                                             <div className="h-3 w-[1px] bg-border/50 shrink-0" />
@@ -1458,6 +1501,22 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                                                 LVL {Math.floor((member.xp || 0) / 100) + 1} <span className="text-muted-foreground/50">({member.xp || 0} XP)</span>
                                             </div>
                                         </div>
+
+                                        {/* Technical Roles row (Read Only summary) */}
+                                        {(member.technical_roles || []).length > 0 && (
+                                            <div className="flex flex-wrap gap-1 mt-2 items-center">
+                                                {(member.technical_roles || []).slice(0, 3).map((tr: string, i: number) => (
+                                                    <span key={i} className="text-[9px] font-black uppercase tracking-widest bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-md">
+                                                        {tr}
+                                                    </span>
+                                                ))}
+                                                {(member.technical_roles || []).length > 3 && (
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground px-1.5 py-0.5">
+                                                        +{member.technical_roles.length - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {/* Badges row */}
                                         {member.badges && member.badges.length > 0 && (
@@ -1486,7 +1545,7 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
 
                 <div className="space-y-8">
                     {/* Settings Section */}
-                    <section className="p-8 rounded-[2.5rem] bg-card/40 border border-border/30 backdrop-blur-md">
+                    <section className="p-8 rounded-[2.5rem] bg-gradient-to-b from-card/80 to-card/40 border border-white/10 ring-1 ring-white/5 backdrop-blur-2xl shadow-2xl shadow-black/40">
                         <div className="flex items-center gap-3 mb-8">
                             <div className="w-10 h-10 rounded-2xl bg-purple-600/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
                                 <Settings className="w-5 h-5" />
@@ -1566,6 +1625,157 @@ const CommandCenter: React.FC<{ team: any, onNavigateToCodebase: () => void }> =
                     </section>
                 </div>
             </div>
+
+            {/* Member Profile Modal */}
+            <AnimatePresence>
+                {selectedMemberModal && selectedMemberModal.id && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setSelectedMemberModal(null)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-[#0a0c10] border border-white/10 rounded-[2.5rem] p-8 max-w-2xl w-full shadow-[0_32px_64px_rgba(0,0,0,0.8)] ring-1 ring-white/5 relative overflow-hidden flex flex-col max-h-[90vh]"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-600/20 to-purple-600/20" />
+                            <div className="absolute top-0 right-0 p-8 opacity-5 overflow-hidden">
+                                <User className="w-64 h-64 text-blue-500 -translate-y-1/2 translate-x-1/4" />
+                            </div>
+                            
+                            <button 
+                                onClick={() => setSelectedMemberModal(null)}
+                                className="absolute top-6 right-6 p-2 bg-black/50 hover:bg-white/10 rounded-full transition-colors z-10"
+                            >
+                                <X className="w-5 h-5 text-muted-foreground hover:text-white" />
+                            </button>
+
+                            <div className="relative z-10 flex items-end gap-6 mb-8 mt-12">
+                                <div className="w-24 h-24 rounded-3xl overflow-hidden border-4 border-[#0a0c10] shadow-xl ring-2 ring-white/10 bg-black">
+                                    <img src={selectedMemberModal.avatar} alt={selectedMemberModal.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 pb-2">
+                                    <h2 className="text-3xl font-black text-white uppercase tracking-tighter">{selectedMemberModal.name}</h2>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <div className="text-[12px] font-black tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-400">
+                                            {selectedMemberModal.member_role || selectedMemberModal.role}
+                                        </div>
+                                        <div className="h-3 w-[1px] bg-white/20" />
+                                        <div className="text-[12px] font-black text-blue-400 uppercase tracking-widest">
+                                            LVL {Math.floor((selectedMemberModal.xp || 0) / 100) + 1}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto no-scrollbar space-y-8 relative z-10 pr-2">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-1">Total XP</div>
+                                        <div className="text-2xl font-black text-white">{selectedMemberModal.xp || 0}</div>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
+                                        <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-1">Tasks Secured</div>
+                                        <div className="text-2xl font-black text-white">{selectedMemberModal.tasksDone || 0}</div>
+                                    </div>
+                                </div>
+
+                                {/* Roles Section */}
+                                <div>
+                                    <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <Target className="w-4 h-4 text-blue-400" /> Technical Designations
+                                    </h3>
+                                    <div className="space-y-4">
+                                        <div className="flex flex-wrap gap-2">
+                                            {(selectedMemberModal.technical_roles || []).map((tr: string) => (
+                                                <span key={tr} className="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                                                    {tr}
+                                                    {isLeader && (
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const newRoles = (selectedMemberModal.technical_roles || []).filter((r:string) => r !== tr);
+                                                                assignTechnicalRoles(team.id, selectedMemberModal.id, newRoles);
+                                                                setSelectedMemberModal({ ...selectedMemberModal, technical_roles: newRoles });
+                                                            }}
+                                                            className="hover:bg-blue-500/20 p-0.5 rounded-full transition-colors hover:text-white"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </span>
+                                            ))}
+                                            {(selectedMemberModal.technical_roles || []).length === 0 && (
+                                                <span className="text-sm text-muted-foreground font-medium italic">No technical designations assigned.</span>
+                                            )}
+                                        </div>
+                                        
+                                        {isLeader && (selectedMemberModal.technical_roles || []).length < 5 && (
+                                            <div className="pt-2">
+                                                <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mb-2">Assign New Role</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {["Frontend", "Backend", "Full-stack", "Design", "DevOps", "Security", "Research", "AI/ML"]
+                                                        .filter(r => !(selectedMemberModal.technical_roles || []).includes(r))
+                                                        .map(r => (
+                                                            <button
+                                                                key={r}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const newRoles = [...(selectedMemberModal.technical_roles || []), r];
+                                                                    assignTechnicalRoles(team.id, selectedMemberModal.id, newRoles);
+                                                                    setSelectedMemberModal({ ...selectedMemberModal, technical_roles: newRoles });
+                                                                }}
+                                                                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 hover:border-blue-500/30 text-muted-foreground hover:text-white text-xs font-bold transition-all shadow-sm"
+                                                            >
+                                                                + {r}
+                                                            </button>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Activity Log */}
+                                <div>
+                                    <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-emerald-400" /> Recent Operative Log
+                                    </h3>
+                                    <div className="space-y-3">
+                                        {(team.history || [])
+                                            .filter((log: any) => log.user === selectedMemberModal.name)
+                                            .slice(0, 5)
+                                            .map((log: any) => (
+                                                <div key={log.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 flex gap-4 items-start shadow-inner">
+                                                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                                        <Activity className="w-4 h-4 text-emerald-400" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm text-white font-medium">{log.action}</div>
+                                                        <div className="text-xs text-muted-foreground mt-1">{log.details}</div>
+                                                        <div className="text-[10px] text-blue-400/80 font-black uppercase tracking-widest mt-2">{log.date} at {log.time}</div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        }
+                                        {(team.history || []).filter((log: any) => log.user === selectedMemberModal.name).length === 0 && (
+                                            <div className="text-sm text-muted-foreground font-medium italic p-4 text-center border border-dashed border-white/10 rounded-2xl bg-white/5">
+                                                No recent activity recorded for this operative.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };

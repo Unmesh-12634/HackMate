@@ -51,9 +51,9 @@ export const LeaderboardView: React.FC = () => {
             { event: '*', schema: 'public', table: 'profiles' },
             (payload) => {
                if (payload.eventType === 'INSERT') {
-                  setProfiles(prev => [...prev, payload.new as User]);
+                  setProfiles(prev => [...prev, { ...payload.new, role: payload.new.primary_role } as User]);
                } else if (payload.eventType === 'UPDATE') {
-                  setProfiles(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new as User } : p));
+                  setProfiles(prev => prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new, role: payload.new.primary_role } as User : p));
                } else if (payload.eventType === 'DELETE') {
                   setProfiles(prev => prev.filter(p => p.id !== payload.old.id));
                }

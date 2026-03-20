@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { useAppContext, Activity as ActivityType } from "../context/AppContext";
 import {
    Github,
-   Twitter,
+   Linkedin,
    Globe,
    Mail,
    Edit3,
@@ -116,7 +116,11 @@ export function ProfileView() {
                      if (!prev) return prev;
                      return {
                         ...prev,
-                        profile: { ...prev.profile, ...payload.new }
+                        profile: { 
+                           ...prev.profile, 
+                           ...payload.new,
+                           role: payload.new.primary_role !== undefined ? payload.new.primary_role : prev.profile.role 
+                        }
                      };
                   });
                }
@@ -384,7 +388,7 @@ export function ProfileView() {
                      </p>
                      <div className="mt-6 flex flex-wrap gap-4">
                         {user?.socials?.github && <a href={user.socials.github} target="_blank" rel="noreferrer"><Github className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" /></a>}
-                        {user?.socials?.twitter && <a href={user.socials.twitter} target="_blank" rel="noreferrer"><Twitter className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" /></a>}
+                        {user?.socials?.linkedin && <a href={user.socials.linkedin} target="_blank" rel="noreferrer"><Linkedin className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" /></a>}
                         {user?.socials?.website && <a href={user.socials.website} target="_blank" rel="noreferrer"><Globe className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" /></a>}
                         <a href={`mailto:${user?.email}`}><Mail className="w-5 h-5 text-muted-foreground hover:text-foreground cursor-pointer transition-colors" /></a>
                      </div>
